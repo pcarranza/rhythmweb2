@@ -1,0 +1,10 @@
+[RB Plugin]
+Loader=python
+Module=RhythmWeb
+IAge=1
+Name=RhythmWeb
+Description=Rhythmbox Web Page controller
+Authors=Yo
+Copyright=None
+Website=http://kasbah.homeip.net
+
