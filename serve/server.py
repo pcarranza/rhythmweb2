@@ -9,7 +9,6 @@ import threading
 class HttpServer(Loggable, threading.Thread):
     ''' Runs the http server, mainly  '''
     _HTTPServer = None
-    _keep_running = True
     _port = 8000
     
     def __init__(self):
@@ -24,25 +23,22 @@ class HttpServer(Loggable, threading.Thread):
         
         server_address = (bind_address, port)
         
-        self._HTTPServer = BaseHTTPServer.HTTPServer(server_address, NasRequest)
-        threading.Thread.__init__(self)
+        self._HTTPServer = BaseHTTPServer.HTTPServer(server_address, RBRequest)
+        threading.Thread.__init__(self, target=self.run)
+    
     
     def run(self):
-        self.start_listening()
-        
-        
-    def start_listening(self):
         self.info('Server up and running in port %d' % self._port)
-        while self._keep_running:
-            self._HTTPServer.handle_request()
-            
+        self._HTTPServer.serve_forever()
+        
+        
     def stop(self):
         self.info('Stopping server in port %d' % self._port)
-        self._keep_running = False
-        self._HTTPServer.server_close()
+        self._HTTPServer.shutdown()
+        self._HTTPServer.socket.close()
     
     
-class NasRequest(BaseHTTPServer.BaseHTTPRequestHandler, Loggable):
+class RBRequest(BaseHTTPServer.BaseHTTPRequestHandler, Loggable):
 
     _resources = {}
     _path_pattern = 'web.%s'

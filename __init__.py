@@ -1,7 +1,6 @@
 
 import rb, os
 
-from optparse import OptionParser
 from serve.server import HttpServer
 from serve.conf.config import Configuration
 
@@ -23,4 +22,5 @@ class RhythmWeb(rb.Plugin):
     
     def deactivate(self, shell):
         self.ns.stop()
+        
         print 'deactivated'
