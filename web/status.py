@@ -1,21 +1,20 @@
 
 from serve.page.base import BasePanel
+from RhythmWeb import RhythmWeb
 
 class StatusPanel(BasePanel):
     
-    handler = None
-    
-    def __init__(self, request, handler):
-        BasePanel.__init__(self, request, __file__)
-        self.handler = handler
+    def __init__(self):
+        super(BasePanel, self).__init__(__file__)
+        
         
     def name(self):
         return 'Status'
     
     
     def render_template(self, node):
-        handler = self.handler
-        bstatus = handler.getStatus()
+        handler = RhythmWeb.handler_instance()
+        bstatus = handler.get_playing_status()
         
         status = "Paused"
         artist = "[N/A]"
@@ -26,25 +25,15 @@ class StatusPanel(BasePanel):
         if bstatus:
             status = "Playing"
             
-        try:
-            artist = handler.getArtist()
-            album = handler.getAlbum()
-            title = handler.getTitle()
-        except Exception as e:
-            self.error(e.message)
+        pentry = handler.get_playing_entry_id()
+        if not pentry is None:
+            entry = handler.load_entry(pentry)
+            
+            artist = entry.artist
+            album = entry.album
+            title = entry.title
+            time = handler.get_time_playing_string()
         
-        try:
-            currentTime = handler.timeHumanReadable(handler.getTrackCurrentTime())
-            if handler.getTrackTotalTime() == 0:
-                time = currentTime
-            else:
-                totalTime = handler.timeHumanReadable(handler.getTrackTotalTime())
-                time = "%s/%s" % (currentTime, totalTime)
-                    
-        except Exception as e:
-            status = "Unknown"
-            self.error(e.message)
-
         node.status.content = status
         node.artist.content = artist
         node.album.content = album

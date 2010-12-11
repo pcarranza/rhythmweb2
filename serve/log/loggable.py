@@ -6,6 +6,7 @@ Created on 31/10/2010
 from serve.log.factory import LoggerFactory
 from serve.conf.config import Configuration
 import logging
+import sys
 
 class Loggable(object):
     '''
@@ -31,7 +32,8 @@ class Loggable(object):
         loggerclazz = self.__class__
         logname = loggerclazz.__name__
         if Configuration.instance().getBoolean('debug'):
-            print '%s - %s' % (logname, message)
+            sys.stderr.write('%s - %s\n' % (logname, message))
             
+        sys.stderr.write('%s - %s\n' % (logname, message))
         log = LoggerFactory.getLogger(loggerclazz)
         log.log(level, message)

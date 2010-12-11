@@ -1,9 +1,11 @@
 
 from web import home
+from RhythmWeb import RhythmWeb
 
 class Page(home.Page):
     
-    def __init__(self, request):
-        home.Page.__init__(self, request)
-        self.handler.playPause()
+    def __init__(self):
+        home.Page.__init__(self)
+        handler = RhythmWeb.handler_instance()
+        handler.play_pause()
     

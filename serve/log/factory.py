@@ -1,5 +1,6 @@
 
 import logging
+import sys
 from serve.conf.config import Configuration
 
 
@@ -11,6 +12,7 @@ class LoggerFactory():
     @staticmethod
     def getFactory():
         if LoggerFactory._instance is None:
+            sys.stdout.write('Creating new logger factory')
             LoggerFactory._instance = LoggerFactory()
         return LoggerFactory._instance
     

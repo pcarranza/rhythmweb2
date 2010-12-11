@@ -1,4 +1,5 @@
 import os
+import sys
 
 class Configuration:
     
@@ -93,12 +94,12 @@ class Configuration:
     
     
     def printConfiguration(self):
-        print '--------------------------'
-        print 'Showing app configuration:'
-        print '--------------------------'
+        sys.stderr.write('--------------------------\n')
+        sys.stderr.write('Showing app configuration:\n')
+        sys.stderr.write('--------------------------\n')
         for key in self._params:
-            print ('%s=%s' % (key, self._params[key]))
-        print '--------------------------'
+            sys.stderr.write('%s = %s\n' % (key, self._params[key]))
+        sys.stderr.write('--------------------------\n')
             
 # /Configuration
 

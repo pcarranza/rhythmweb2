@@ -8,18 +8,16 @@ class Component(Loggable):
     Represents an abstract html component, has methods to find html file and load it
     '''
     
-    _request = None
     _template = None
     _path = None
 
-    def __init__(self, request, file):
-        '''
-        Constructor, requires that inherithing class sends __file__ as file parameter, 
-        also as the request which will be received from the invoker server object
-        '''
-        self._request = request
+    def __init__(self, file):
         self.set_path(file)
-    
+
+
+    def name(self):
+        raise NotImplementedError
+        
     
     def set_path(self, file):
         '''
@@ -32,8 +30,11 @@ class Component(Loggable):
         '''
         Loads the html file related to the current object and returns the html itself
         '''
+        
         if not self._path:
             raise ComponentPathNotImplemented()
+
+        self.debug("Loading html file %s for component %s" % (self._path, self.name()))
         
         dir = os.path.dirname(self._path)
         file = os.path.basename(self._path)
@@ -43,12 +44,12 @@ class Component(Loggable):
         if not os.path.exists(html_file):
             raise HtmlFileNotFoundException(html_file)
         
-        self.debug('Loading html component %s' % html_file)
+        self.debug('Loading html %s for component %s' % (html_file, self.name()))
         
         return open(html_file, 'r').read()
 
 
-    def render(self):
+    def render(self, environ):
         '''
         Must be implemented in inheritor object 
         '''
@@ -63,6 +64,7 @@ class Component(Loggable):
     
     
     def create_template(self, html):
+        self.debug('Creating template for component %s' % self.name())
         return Template(self.render_template, html)
     
     
@@ -74,28 +76,45 @@ class BasePage(Component):
     Abstract base page, provides the overridable method "name()" 
     which must be implemented in the inheritor object 
     '''
-    def name(self):
-        raise NotImplementedError
+    _environ = None
+    _parameters = None
     
-    
-    def do_headers(self):
-        self.debug('Page %s sending code 200' % self.name())
+    def do_headers(self, headers={}):
+        response_headers = [('Content-type','text/html; charset=UTF-8')]
+        for header in headers:
+            response_headers.append(header)
+            response_headers.append(headers[header])
         
-        self._request.send_response(200)
-        self._request.send_header("Content-type", "text/html")
-        self._request.end_headers()
+        return response_headers
     
     
-    def render(self):
+    def do_get(self, environ, response):
+        self._environ = environ
         template = self.create_template(self.load_html())
-        self.do_headers()
+        self.debug('Getting template %s' % self.name())
+        try:
+            html = template.render()
+            response('200 OK', self.do_headers())
+            self.debug('Template %s rendered ok, sending OK response' % self.name())
+            return html
+        except Exception, e:
+            self.debug('Template %s rendered bad, sending ERROR response' % self.name())
+            response('500 ERROR', self.do_headers())
+            return e
+    
+    
+    def do_post(self, environ, params, response):
+        self._parameters = params
+        self._environ = environ
+        self.debug('Processing post in BasePage for component %s' % self.name())
+        self.post()
+        return self.do_get(environ, response)
         
-        self.debug('Rendering template %s' % self.name())
-        return template.render()
+    
+        
+    def post(self):
+        self.warning('No actual posting... override post in ' + self.name())
 
-
-    def render_page(self):
-        self._request.wfile.write(self.render())
 
     
     
