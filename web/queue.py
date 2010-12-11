@@ -35,7 +35,7 @@ class QueuePanel(BasePanel):
                 album = entry.album
                 title = entry.title
                 track = str(entry.track_number)
-                duration = str(entry.duration)
+                duration = self.readable_time(int(entry.duration))
         
         node.song.atts['value'] = str(entry_id)
         node.artist.content = artist
@@ -44,4 +44,12 @@ class QueuePanel(BasePanel):
         node.duration.content = duration
         node.track.content = track
         
+    def readable_time(self, time):
+        minutes = time / 60
+        seconds = time % 60
+        if minutes > 60:
+            hours = minutes / 60
+            minutes = minutes % 60
+            return "%d:%02d:%02d" % (hours, minutes, seconds)
         
+        return "%d:%02d" % (minutes, seconds)

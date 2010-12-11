@@ -132,7 +132,10 @@ class RBHandler(Loggable):
             rhythmdb.PROP_TITLE, \
             filter)
         
-        query_model = db.query_model_new_empty()
+        query_model = db.query_model_new(db.query_new(), \
+                                         rhythmdb.rhythmdb_query_model_track_sort_func, \
+                                         0, \
+                                         db.query_model_new_empty())
         searchs = (searchArtist, searchAlbum, searchTitle)
         for search in searchs:
             query = db.query_new()
