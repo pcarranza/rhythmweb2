@@ -24,9 +24,9 @@ class RequestHandler(Loggable):
         for param in params:
             self.debug("%s = %s" % (param, params[param]))
         
-        self.debug('POST environment:')    
-        for env in environ:
-            self.debug("%s = %s" % (env, environ[env]))
+#        self.debug('POST environment:')    
+#        for env in environ:
+#            self.debug("%s = %s" % (env, environ[env]))
 
         return self.handle_method('post', environ, response, params)
         

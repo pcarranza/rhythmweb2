@@ -56,6 +56,16 @@ class Component(Loggable):
         raise NotImplementedError
     
     
+    def pre_render_template(self):
+        self.debug('PRE Rendering template %s' % self.name())
+    
+    
+    def _render_template(self, node):
+        self.pre_render_template()
+        self.debug('Rendering template %s' % self.name())
+        return self.render_template(node)
+    
+    
     def render_template(self, node):
         '''
         Must be implemented in inheritor object 
@@ -65,7 +75,7 @@ class Component(Loggable):
     
     def create_template(self, html):
         self.debug('Creating template for component %s' % self.name())
-        return Template(self.render_template, html)
+        return Template(self._render_template, html)
     
     
     
@@ -98,7 +108,7 @@ class BasePage(Component):
             self.debug('Template %s rendered ok, sending OK response' % self.name())
             return html
         except Exception, e:
-            self.debug('Template %s rendered bad, sending ERROR response' % self.name())
+            self.debug('Template %s rendered bad, sending ERROR response: %s' % (self.name(), e))
             response('500 ERROR', self.do_headers())
             return e
     

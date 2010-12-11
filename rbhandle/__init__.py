@@ -2,6 +2,8 @@
 import gconf
 import rhythmdb
 import rb
+import urllib
+from serve.log.loggable import Loggable
 
 TYPE_SONG = 'song'
 TYPE_RADIO = 'iradio'
@@ -18,7 +20,7 @@ ORDER_SHUFFLE_EQUALS = 'random-equal-weights'
 
 PLAY_ORDER_KEY = '/apps/rhythmbox/state/play_order'
 
-class RBHandler():
+class RBHandler(Loggable):
     
     _instance = None
     
@@ -85,31 +87,38 @@ class RBHandler():
     
         
     def play_entry(self, entry_id): # entry id
+        self.debug('Playing entry %s' % entry_id)
         self._player.play_entry(entry_id)
     
         
     def set_rating(self, entry, rating):
+        self.debug('Setting rating %d to entry %s' % (rating, entry))
         self._db.set(entry, rhythmdb.PROP_RATING, rating)
     
         
     def search_song(self, filter):
+        self.debug('Searching for a song with filter %s' % filter)
         return self.search(filter, TYPE_SONG)
     
     
     def search_radio(self, filter):
+        self.debug('Searching for a radio with filter %s' % filter)
         return self.search(filter, TYPE_RADIO)
     
     
     def search_podcast(self, filter):
+        self.debug('Searching for a podcast with filter %s' % filter)
         return self.search(filter, TYPE_PODCAST)
     
     
     def search(self, filter, type):
         mtype = self._media_types[type]
         
+        db = self._db
+        
         searchType = (rhythmdb.QUERY_PROP_EQUALS, \
             rhythmdb.PROP_TYPE, \
-            db.entry_type_get_by_name(mtype))
+            mtype)
         
         searchArtist = (rhythmdb.QUERY_PROP_LIKE, \
             rhythmdb.PROP_ARTIST, \
@@ -159,37 +168,47 @@ class RBHandler():
     
 
     def get_play_queue(self, queue_limit=100):
+        self.debug('Getting play queue')
         entries = []
         self._loop_query_model(limit=queue_limit, func=entries.append)
         return entries
     
+    
+    def enqueue(self, entry_ids):
+        self.debug('Adding entries %s to queue' % entry_ids)
+        for entry_id in entry_ids:
+            entry = self.load_entry(entry_id)
+            location = str(entry.location)
+            self.debug('Enqueuing entry %s' % location)
+            self._shell.add_to_queue(location)
+                
+        self._shell.props.queue_source.queue_draw()
+        
     
     def clear_play_queue(self):
         self._loop_query_model(func=self._shell.remove_from_queue)
 
 
     def load_entry(self, entry_id):
+        self.debug('Loading entry %s' % str(entry_id))
         return RBEntry(self._db, entry_id)
     
     
     def get_time_playing_string(self):
         return self._player.get_playing_time_string()
     
-    
     def next(self):
-        self._player.do_next()
+        if self.get_playing_status():
+            self._player.do_next()
         
         
     def previous(self):
-        self._player.do_previous()
+        if self.get_playing_status():
+            self._player.do_previous()
     
     
     def play_pause(self):
         self._player.playpause()
-        
-    
-    def play_entry(self, entry):
-        self._player.play_entry(entry)
         
     
     def _loop_query_model(self, func, limit=0, query_model=None):
