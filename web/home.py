@@ -59,6 +59,12 @@ class Page(BasePage):
             elif action == ['prev']:
                 handler.previous()
                 
+            elif action == ['seek_back']:
+                handler.seek(-10)
+                
+            elif action == ['seek_forward']:
+                handler.seek(10)
+                
             elif action == ['search']:
                 if 'search' in params:
                     filter = params['search'][0]

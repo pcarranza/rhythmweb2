@@ -200,9 +200,14 @@ class RBHandler(Loggable):
     def get_time_playing_string(self):
         return self._player.get_playing_time_string()
     
+    
     def next(self):
         if self.get_playing_status():
             self._player.do_next()
+        
+        
+    def seek(self, seconds):
+        self._player.seek(seconds)
         
         
     def previous(self):
