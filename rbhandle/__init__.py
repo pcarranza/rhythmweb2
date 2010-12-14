@@ -248,6 +248,7 @@ class RBHandler(Loggable):
         
 class RBEntry():
     
+    id = None
     artist = None
     album = None
     track_number = None
@@ -259,14 +260,16 @@ class RBEntry():
     play_count = None
     location = None
     bitrate = None
+    last_played = None
     
     def __init__(self, db, entry_id):
         entry = db.entry_lookup_by_id(int(entry_id))
         
+        self.id = entry_id
+        self.title = db.entry_get(entry, rhythmdb.PROP_TITLE)
         self.artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
         self.album = db.entry_get(entry, rhythmdb.PROP_ALBUM)
         self.track_number = db.entry_get(entry, rhythmdb.PROP_TRACK_NUMBER)
-        self.title = db.entry_get(entry, rhythmdb.PROP_TITLE)
         self.duration = db.entry_get(entry, rhythmdb.PROP_DURATION)
         self.rating = db.entry_get(entry, rhythmdb.PROP_RATING)
         self.year = db.entry_get(entry, rhythmdb.PROP_YEAR)
@@ -274,3 +277,4 @@ class RBEntry():
         self.play_count = db.entry_get(entry, rhythmdb.PROP_PLAY_COUNT)
         self.location = db.entry_get(entry, rhythmdb.PROP_LOCATION)
         self.bitrate = db.entry_get(entry, rhythmdb.PROP_BITRATE)
+        self.last_played = db.entry_get(entry, rhythmdb.PROP_LAST_PLAYED)

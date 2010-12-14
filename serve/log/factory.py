@@ -27,7 +27,9 @@ class LoggerFactory():
     # TODO: load from configuration
     
     def __init__(self):
-        logfilemane = Configuration.instance().getString('log.file', False, 'rhythmweb.log')
+        logfilemane = Configuration.instance().getString('log.file', 
+                                                         False, 
+                                                         'rhythmweb.log')
         LoggerFactory._default_log_level = Configuration.instance().getInt(\
                                             'log.level', \
                                             False, \

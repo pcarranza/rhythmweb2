@@ -46,11 +46,14 @@ class RequestHandler(Loggable):
         
         path = str(path).replace('/', '.')
         page_path = self._path_pattern % path
-        mod = __import__(page_path, globals(), locals(), ['Page'])
+        mod = None
+        try:
+            mod = __import__(page_path, globals(), locals(), ['Page'])
+        except:
+            pass
         
-        if not mod:
-            return self.send_error(404, 'Could not find page %s' % page_path, response)
-            
+        if mod is None:
+            return self.send_error(404, 'Could not find page %s' % path, response)
             
         klass = getattr(mod, 'Page')
         if not klass:
