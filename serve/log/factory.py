@@ -1,67 +1,58 @@
 
 import logging
-import sys
-from serve.conf.config import Configuration
 
+class LoggerFactory:
 
-class LoggerFactory():
-    
     _instance = None
-    _default_log_level = None
-
+    
     @staticmethod
-    def getFactory():
+    def get_factory():
         if LoggerFactory._instance is None:
-            sys.stdout.write('Creating new logger factory')
             LoggerFactory._instance = LoggerFactory()
+            
         return LoggerFactory._instance
-    
-    
-    @staticmethod
-    def getLogger(clazz):
-        factory = LoggerFactory.getFactory()
-        return factory._getLogger(clazz.__name__)
 
-    _name = 'LoggerFactory'
-    _loggers = {}
-    # TODO: load from configuration
-    
+
     def __init__(self):
-        logfilemane = Configuration.instance().getString('log.file', 
-                                                         False, 
-                                                         'rhythmweb.log')
-        LoggerFactory._default_log_level = Configuration.instance().getInt(\
-                                            'log.level', \
-                                            False, \
-                                            logging.INFO)
-        
-        logging.basicConfig(filename=logfilemane, level=LoggerFactory._default_log_level)
-        log = self._getLogger(self._name)
-        self._loggers[self._name] = log
+        self._loggers = {}
         
     
-    def _getLogger(self, name):
+    def configure(self, config):
+        self._loggers.clear()
+        
+        logfilename = config.getString('log.file', 
+                                         False, 
+                                         'web.log')
+        default_log_level = config.getInt('log.level', \
+                                        False, \
+                                        logging.INFO)
+        log_format = config.getString('log.format', \
+                                      False, \
+                                      logging.BASIC_FORMAT)
+        
+        logging.basicConfig(filename=logfilename, \
+                            level=default_log_level, \
+                            format=log_format)
+        
+        logging.info('Logger factory started with file %s and level %s' % 
+                     (logfilename, 
+                     logging.getLevelName(default_log_level)))    
+        logging.debug('ROOT LOGGER LEVEL: %s' % logging.getLevelName(logging.root.level))
+        
+
+    def getLogger(self, name):
+        
         if self._loggers.has_key(name):
             return self._loggers[name]
         
-        loglevel = Configuration.instance().getString('log.level.%s' % name, \
-                                                      False, \
-                                                      LoggerFactory._default_log_level)
-        
         log = logging.getLogger(name)
-        self.configureLogger(log, loglevel)
-        self._loggers[name] = log
+        log.setLevel(logging.root.level)
+
+        logging.debug('Created logger %s with level %s' % (
+                   name,
+                   logging.getLevelName(log.level)))
         
+        self._loggers[name] = log
+
         return log
     
-    
-    def configureLogger(self, log, level):
-        log.setLevel(level)
-    
-        
-    def __getattr__(self, aAttr):
-        return getattr(self._instance, aAttr)        
-    
-    
-    def __setattr__(self, aAttr, aValue):
-        return setattr(self._instance, aAttr, aValue)    

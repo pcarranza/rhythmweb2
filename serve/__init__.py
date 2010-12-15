@@ -20,9 +20,14 @@ class CGIServer(Loggable):
         self._hostname = hostname
         self._port = port
         self._request_handler = request_handler
+        
     
     
     def start(self):
+        self.debug('STARTING SERVER')
+        self.debug('HOSTNAME   %s' % self._hostname)
+        self.debug('PORT       %d' % self._port)
+
         if self._httpd is None:
             self._httpd = make_server(self._hostname, 
                               self._port, 
@@ -32,14 +37,18 @@ class CGIServer(Loggable):
                                                  gobject.IO_IN,
                                                  self._idle_cb)
         self._running = True
+        self.debug('SERVER STARTED')
+        
 
     def stop(self):
+        self.debug('STOPPING SERVER')
         gobject.source_remove(self._watch_cb_id)
         if self._httpd is None:
             return
         
         self._httpd = None
         self._running = False
+        self.debug('SERVER STOPPED')
     
     
     def _idle_cb(self, source, cb_condition):

@@ -1,39 +1,38 @@
-import os
-import sys
+import os, sys
 
 class Configuration:
     
     _instance = None
     
-    _params = {}
-    _path = None
-    
     @staticmethod
-    def instance(path=None):
+    def get_instance():
         if Configuration._instance is None:
             Configuration._instance = Configuration()
-        
-        if not path is None:
-            Configuration._instance.load_configuration(path)
-        
+            
         return Configuration._instance
     
     
-    def load_configuration(self, path=None):
-        if not path:
-            pass
-        else:
-            self._path = path
+    _params = None
+    
+    def __init__(self):
+        self._params = {}
+        self.debug('New configuration instance')
         
-        if not os.path.exists(self._path):
+        
+    def debug(self, message):
+        sys.stderr.write('%s\n' % message)
+        
+    
+    def load_configuration(self, path):
+        
+        if not os.path.exists(path):
+            self.debug('Path %s does not exists' % path)
             raise ConfigurationFileDoesNotExistsException(path)
         
-        file = open(self._path, 'r')
+        file = open(path, 'r')
         
         if not file:
             raise Exception()
-        
-        self._params = {}
         
         for line in file:
             line = str(line).strip()
@@ -50,13 +49,17 @@ class Configuration:
     def _readConfigurationLine(self, line):
         (key, value) = line.split('=')
         if not key:
+            self.debug('Line \"%s\" has no key' % line)
             raise InvalidConfigurationLineException(line)
         key = str(key).strip()
         
         if not value:
+            self.debug('Key \"%s\" has no value' % key)
             value = ''
+            
         value = str(value).strip()
         
+        self.debug('Setting value \"%s\" for key \"%s\"' % (value, key))
         self._params[key] = value
         
         
@@ -85,6 +88,7 @@ class Configuration:
         
         return str(value)
     
+    
     def getInt(self, key, required=False, defaultValue=0):
         value = self._getParameter(key, required, defaultValue)
         if value is None:
@@ -93,14 +97,15 @@ class Configuration:
         return int(value)
     
     
-    def printConfiguration(self):
-        sys.stderr.write('--------------------------\n')
-        sys.stderr.write('Showing app configuration:\n')
-        sys.stderr.write('--------------------------\n')
+    def printConfiguration(self, logger):
+        logger.info('--------------------------')
+        logger.info('Showing app configuration:')
+        logger.info('--------------------------')
         for key in self._params:
-            sys.stderr.write('%s = %s\n' % (key, self._params[key]))
-        sys.stderr.write('--------------------------\n')
-            
+            logger.info('%s = %s' % (key, self._params[key]))
+        logger.info('--------------------------')
+        
+        
 # /Configuration
 
 class CantOpenConfigurationFileException(Exception):

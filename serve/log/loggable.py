@@ -4,9 +4,7 @@ Created on 31/10/2010
 @author: jim
 '''
 from serve.log.factory import LoggerFactory
-from serve.conf.config import Configuration
 import logging
-import sys
 
 class Loggable(object):
     '''
@@ -29,11 +27,7 @@ class Loggable(object):
         self._print(message, logging.WARNING)
     
     def _print(self, message, level):
-        loggerclazz = self.__class__
-        logname = loggerclazz.__name__
-        if Configuration.instance().getBoolean('debug'):
-            sys.stderr.write('%s - %s\n' % (logname, message))
-            
-        sys.stderr.write('%s - %s\n' % (logname, message))
-        log = LoggerFactory.getLogger(loggerclazz)
+        factory = LoggerFactory.get_factory()
+        logname = self.__class__.__name__
+        log = factory.getLogger(logname)
         log.log(level, message)
