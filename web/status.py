@@ -1,11 +1,11 @@
 
 from serve.page.base import BasePanel
-from RhythmWeb import RhythmWeb
 
 class StatusPanel(BasePanel):
     
-    def __init__(self):
+    def __init__(self, components):
         super(BasePanel, self).__init__(__file__)
+        self._handler = components['RB']
         
         
     def name(self):
@@ -13,7 +13,7 @@ class StatusPanel(BasePanel):
     
     
     def render_template(self, node):
-        handler = RhythmWeb.handler_instance()
+        handler = self._handler
         bstatus = handler.get_playing_status()
         
         status = "Paused"
@@ -32,7 +32,7 @@ class StatusPanel(BasePanel):
             artist = entry.artist
             album = entry.album
             title = entry.title
-            time = handler.get_time_playing_string()
+            time = handler.get_playing_time_string()
         
         node.status.content = status
         node.artist.content = artist

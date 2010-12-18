@@ -1,5 +1,5 @@
 
-from serve.conf.config import Configuration
+import serve.conf
 from serve.log.loggable import Loggable
 import BaseHTTPServer
 import os
@@ -15,8 +15,8 @@ class HttpServer(Loggable, threading.Thread):
         ''' Creates the server object using loaded configuration.
             Mainly it uses 2 configurations parameters: "bind" (127.0.0.1 by default) and "port" 
         '''
-        bind_address = Configuration.instance().getString('bind', False, '127.0.0.1')
-        port = Configuration.instance().getInt('port', False, 8000)
+        bind_address = serve.conf.configuration.getString('bind', False, '127.0.0.1')
+        port = serve.conf.configuration.getInt('port', False, 8000)
         self._port = port
         
         self.info('Starting server in port %d binded to address %s' % (port, bind_address))

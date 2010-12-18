@@ -1,8 +1,8 @@
 
 import gconf
-import rhythmdb
-import rb
 import urllib
+import rb, rhythmdb
+
 from serve.log.loggable import Loggable
 
 TYPE_SONG = 'song'
@@ -24,25 +24,39 @@ class RBHandler(Loggable):
     
     _instance = None
     
-    _shell = None
-    _db = None
-    _player = None
-    _gconf = None
     _media_types = None
     _play_orders = None
     _play_toggle_loop = None
     _play_toggle_shuffle = None
     
+    def __print_state(self, status):
+        self.debug('STATUS FROM %s' % status)
+        self.debug('SHELL object %s' % self._shell)
+        self.debug('DB object %s' % self._db)
+        self.debug('PLAYER object %s' % self._player)
+        self.debug('GCONF object %s' % self._gconf)
+        
+        
     def __init__(self, shell):
+        self.debug('Creating new RBHandler object')
+        
+        if shell is None:
+            self.error('Setting shell object to None')
+            raise Exception('Shell object cannot be null')
+        else:
+            self.debug('Setting shell object')
+        
         self._shell = shell
         self._db = shell.props.db
         self._player = shell.get_player()
         self._gconf = gconf.client_get_default()
-        
         self._media_types = {}
         for type in [TYPE_SONG, TYPE_RADIO, TYPE_PODCAST]:
             rb_type = self._db.entry_type_get_by_name(type)
             self._media_types[type] = rb_type
+        
+        self.__print_state('__init__')
+
         
         LINEAR_LOOP = "%s%s" % (ORDER_LINEAR, PLAY_LOOP)
         SHUFFLE_LOOP = "%s%s" % (ORDER_SHUFFLE, PLAY_LOOP)
@@ -75,10 +89,12 @@ class RBHandler(Loggable):
     
     
     def get_playing_status(self):
+        self.__print_state('get_playing_status')
         return self._player.get_playing() 
     
         
     def get_playing_entry_id(self):
+        self.__print_state('get_playing_entry_id')
         entry = self._player.get_playing_entry()
         if entry is None:
             return None
@@ -87,31 +103,37 @@ class RBHandler(Loggable):
     
         
     def play_entry(self, entry_id): # entry id
+        self.__print_state('play_entry')
         self.debug('Playing entry %s' % entry_id)
         self._player.play_entry(entry_id)
     
         
     def set_rating(self, entry, rating):
+        self.__print_state('set_rating')
         self.debug('Setting rating %d to entry %s' % (rating, entry))
         self._db.set(entry, rhythmdb.PROP_RATING, rating)
     
         
     def search_song(self, filter):
+        self.__print_state('search_song')
         self.debug('Searching for a song with filter %s' % filter)
         return self.search(filter, TYPE_SONG)
     
     
     def search_radio(self, filter):
+        self.__print_state('search_radio')
         self.debug('Searching for a radio with filter %s' % filter)
         return self.search(filter, TYPE_RADIO)
     
     
     def search_podcast(self, filter):
+        self.__print_state('search_podcast')
         self.debug('Searching for a podcast with filter %s' % filter)
         return self.search(filter, TYPE_PODCAST)
     
     
     def search(self, filter, type):
+        self.__print_state('search')
         mtype = self._media_types[type]
         
         db = self._db
@@ -149,20 +171,24 @@ class RBHandler(Loggable):
     
     
     def get_play_order(self):
+        self.__print_state('get_play_order')
         return self._gconf.get_string(PLAY_ORDER_KEY)
     
     
     def set_play_order(self, play_order):
+        self.__print_state('set_play_order')
         self._gconf.set_string(PLAY_ORDER_KEY, play_order)
     
     
     def toggle_shuffle(self):
+        self.__print_state('toggle_shuffle')
         status = self.get_play_order()
         new_status = self._play_toggle_shuffle[status]
         self.set_play_order(new_status)
         
     
     def toggle_loop(self):
+        self.__print_state('toggle_loop')
         order = self.get_play_order()
         new_order = ORDER_LINEAR
         if self._play_toggle_loop.has_key(order):
@@ -171,6 +197,7 @@ class RBHandler(Loggable):
     
 
     def get_play_queue(self, queue_limit=100):
+        self.__print_state('get_play_queue')
         self.debug('Getting play queue')
         entries = []
         self._loop_query_model(limit=queue_limit, func=entries.append)
@@ -178,6 +205,7 @@ class RBHandler(Loggable):
     
     
     def enqueue(self, entry_ids):
+        self.__print_state('enqueue')
         self.debug('Adding entries %s to queue' % entry_ids)
         for entry_id in entry_ids:
             entry = self.load_entry(entry_id)
@@ -189,33 +217,49 @@ class RBHandler(Loggable):
         
     
     def clear_play_queue(self):
+        self.__print_state('clear_play_queue')
         self._loop_query_model(func=self._shell.remove_from_queue)
 
 
     def load_entry(self, entry_id):
+        self.__print_state('load_entry')
         self.debug('Loading entry %s' % str(entry_id))
-        return RBEntry(self._db, entry_id)
+        entry = self._db.entry_lookup_by_id(int(entry_id))
+        if entry is None:
+            self.debug('Entry %s not found' % str(entry_id))
+            return None
+        
+        return RBEntry(self._db, entry)
     
+
+    def get_playing_time(self):
+        self.__print_state('get_time_playing')
+        return self._player.get_playing_time()
     
-    def get_time_playing_string(self):
+    def get_playing_time_string(self):
+        self.__print_state('get_playing_time_string')
         return self._player.get_playing_time_string()
     
     
     def next(self):
+        self.__print_state('next')
         if self.get_playing_status():
             self._player.do_next()
         
         
     def seek(self, seconds):
+        self.__print_state('seek')
         self._player.seek(seconds)
         
         
     def previous(self):
+        self.__print_state('previous')
         if self.get_playing_status():
             self._player.do_previous()
     
     
     def play_pause(self):
+        self.__print_state('play_pause')
         self._player.playpause()
         
     
@@ -262,10 +306,8 @@ class RBEntry():
     bitrate = None
     last_played = None
     
-    def __init__(self, db, entry_id):
-        entry = db.entry_lookup_by_id(int(entry_id))
-        
-        self.id = entry_id
+    def __init__(self, db, entry):
+        self.id = db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
         self.title = db.entry_get(entry, rhythmdb.PROP_TITLE)
         self.artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
         self.album = db.entry_get(entry, rhythmdb.PROP_ALBUM)
@@ -278,3 +320,4 @@ class RBEntry():
         self.location = db.entry_get(entry, rhythmdb.PROP_LOCATION)
         self.bitrate = db.entry_get(entry, rhythmdb.PROP_BITRATE)
         self.last_played = db.entry_get(entry, rhythmdb.PROP_LAST_PLAYED)
+        

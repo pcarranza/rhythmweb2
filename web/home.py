@@ -5,8 +5,6 @@ from status import StatusPanel
 from queue import QueuePanel
 from search import SearchPanel
 
-from RhythmWeb import RhythmWeb
-
 import socket
 
 
@@ -14,10 +12,12 @@ class Page(BasePage):
     
     _search_results = None
     _queue = None
-    _handler = RhythmWeb.handler_instance()
+    _components = None
     
-    def __init__(self):
+    def __init__(self, components):
         super(BasePage, self).__init__(__file__)
+        self._components = components
+        self._handler = components['RB']
         self._queue = self._handler.get_play_queue()
     
     
@@ -30,10 +30,10 @@ class Page(BasePage):
         path = self._environ['PATH_INFO']
         host = socket.gethostname()
         node.title.content = 'Rhythmbox Server - %s - %s' % (host, path)
-        node.status.raw = StatusPanel().render()
-        node.player.raw = PlayerPanel().render()
-        node.queue.raw = QueuePanel(self._queue).render()
-        node.search.raw = SearchPanel().render()
+        node.status.raw = StatusPanel(self._components).render()
+        node.player.raw = PlayerPanel(self._components).render()
+        node.queue.raw = QueuePanel(self._queue, self._components).render()
+        node.search.raw = SearchPanel(self._components).render()
         
         # Render search results
         if not self._search_results is None:

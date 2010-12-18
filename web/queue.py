@@ -1,14 +1,14 @@
 
 from serve.page.base import BasePanel
-from RhythmWeb import RhythmWeb
 
 class QueuePanel(BasePanel):
     
     _entries = None
     
-    def __init__(self, entries):
+    def __init__(self, entries, components):
         super(BasePanel, self).__init__(__file__)
         self._entries = entries
+        self._handler = components['RB']
     
         
     def name(self):
@@ -20,8 +20,7 @@ class QueuePanel(BasePanel):
         
         
     def render_table(self, node, entry_id):
-        handler = RhythmWeb.handler_instance()
-
+        handler = self._handler
         artist = '[N/A]'
         album = '[N/A]'
         title = '[N/A]'

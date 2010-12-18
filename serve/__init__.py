@@ -16,12 +16,28 @@ class CGIServer(Loggable):
     _request_handler = None
     _running = False
     
-    def __init__(self, hostname, port, request_handler):
-        self._hostname = hostname
-        self._port = port
-        self._request_handler = request_handler
-        
+    _components = None
     
+    def __init__(self, request_handler, **components):
+        
+        config = None
+        
+        if components:
+            self._components = {}
+        
+        for component in components:
+            if component == 'config':
+                config = components[component]
+            
+            self._components[component] = components[component]
+            
+        if config is None:
+            raise Exception('Required component \'config\' not found in components')
+        
+        self._request_handler = request_handler
+        self._hostname = config.getString('hostname', False, 'localhost')
+        self._port = config.getInt('port', False, 8000)
+        
     
     def start(self):
         self.debug('STARTING SERVER')
@@ -62,6 +78,9 @@ class CGIServer(Loggable):
         
         method = environ['REQUEST_METHOD']
         
+        for component in self._components:
+            self.debug('%s = %s' % (component, self._components[component]))
+        
         self.debug('Handling method %s' % method)
         
         if method == 'GET':
@@ -86,11 +105,11 @@ class CGIServer(Loggable):
             
             
     def _do_get(self, environ, response):
-        return self._request_handler.do_get(environ, response)
+        return self._request_handler.do_get(environ, response, self._components)
         
         
     def _do_post(self, environ, params, response):
-        return self._request_handler.do_post(environ, params, response)
+        return self._request_handler.do_post(environ, params, response, self._components)
             
             
     def parse_post(self, environ):
@@ -114,6 +133,35 @@ class CGIServer(Loggable):
 
 
 
+class Components:
+    
+    @staticmethod
+    def get_handler():
+        return _components
+
+    
+    _components_dict = None
+    
+    def __init__(self):
+        self._components_dict = {}
+        
+    
+    def get(self, name):
+        if not self._components_dict.has_key(name):
+            sys.stderr.write('Component %s not found\n' % name)
+            return None
+        
+        sys.stderr.write('Returning existing component %s\n' % name)
+        return self._components_dict[name]
+    
+    
+    def put(self, name, instance):
+        sys.stderr.write('Adding component %s to dictionary\n' % name)
+        self._components_dict[name] = instance
+        
+
+sys.stderr.write('Creating new components dictionary\n')
+_components = Components()
     
 class LoggingWSGIRequestHandler(WSGIRequestHandler):
 

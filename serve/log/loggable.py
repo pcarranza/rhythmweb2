@@ -1,10 +1,7 @@
-'''
-Created on 31/10/2010
-
-@author: jim
-'''
-from serve.log.factory import LoggerFactory
 import logging
+import serve.log
+
+import sys
 
 class Loggable(object):
     '''
@@ -27,7 +24,8 @@ class Loggable(object):
         self._print(message, logging.WARNING)
     
     def _print(self, message, level):
-        factory = LoggerFactory.get_factory()
         logname = self.__class__.__name__
-        log = factory.getLogger(logname)
+        log = serve.log.get_logger(logname)
         log.log(level, message)
+        
+        # sys.stderr.write('STDERR - %s\n' % message)
