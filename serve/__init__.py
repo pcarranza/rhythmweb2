@@ -132,36 +132,6 @@ class CGIServer(Loggable):
         return None
 
 
-
-class Components:
-    
-    @staticmethod
-    def get_handler():
-        return _components
-
-    
-    _components_dict = None
-    
-    def __init__(self):
-        self._components_dict = {}
-        
-    
-    def get(self, name):
-        if not self._components_dict.has_key(name):
-            sys.stderr.write('Component %s not found\n' % name)
-            return None
-        
-        sys.stderr.write('Returning existing component %s\n' % name)
-        return self._components_dict[name]
-    
-    
-    def put(self, name, instance):
-        sys.stderr.write('Adding component %s to dictionary\n' % name)
-        self._components_dict[name] = instance
-        
-
-sys.stderr.write('Creating new components dictionary\n')
-_components = Components()
     
 class LoggingWSGIRequestHandler(WSGIRequestHandler):
 

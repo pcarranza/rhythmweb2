@@ -37,7 +37,7 @@ class Page(BasePage):
         
         # Render search results
         if not self._search_results is None:
-            node.search_results.raw = QueuePanel(self._search_results).render()
+            node.search_results.raw = QueuePanel(self._search_results, self._components).render()
         else:
             node.search_results.raw = ''
             
