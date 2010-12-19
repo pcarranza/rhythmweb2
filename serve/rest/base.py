@@ -43,7 +43,7 @@ class BaseRest(Loggable):
             return self._return_ok(self.post(), response)
             
         except ServerException, e:
-            response('%d %s', (e.code, e.message), self.do_headers())
+            response('%d %s' % (e.code, e.message), self.do_headers())
             return e.message
     
     
