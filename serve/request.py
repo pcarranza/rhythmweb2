@@ -29,8 +29,9 @@ class RequestHandler(Loggable):
     def do_post(self, environ, params, response, components={}):
         self.info('Invoking post method')
         self.debug('POST parameters:')
-        for param in params:
-            self.debug("%s = %s" % (param, params[param]))
+        if params:
+            for param in params:
+                self.debug("%s = %s" % (param, params[param]))
             
         self._components = components
         return self.handle_method('post', environ, response, params)
@@ -127,11 +128,9 @@ class RequestHandler(Loggable):
         
         class_path = os.path.splitext(page_path)[0]
         class_path = class_path.replace(self._web_path, '')
-        self.debug('1 - Importing module path %s' % class_path)
         class_path = class_path.replace('/', '.')
-        self.debug('2 - Importing module path %s' % class_path)
         class_path = 'web' + class_path
-        self.debug('3 - Importing module path %s' % class_path)
+        self.debug('Importing module path %s' % class_path)
         
         
         mod = None

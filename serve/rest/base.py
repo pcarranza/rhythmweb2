@@ -49,11 +49,15 @@ class BaseRest(Loggable):
         self._parameters = params
         self._environ = environ
         
-        return_function = self.post()
+        try:
+            return_function = self.post()
+            
+            return return_function(self, environ, response)
+        except ServerException, e:
+            response('%d %s', (e.code, e.message), self.do_headers())
+            return e.message
+    
         
-        return return_function(self, environ, response)
-    
-    
     def parse_path_parameters(self):
         path_params = self._environ['PATH_PARAMS']
         
@@ -73,3 +77,13 @@ class BaseRest(Loggable):
     
     def not_found(self):
         return 'Page not found'
+    
+    
+    def get(self):
+        raise ServerException(501, 'method GET not implemented')
+    
+    
+    def post(self):
+        raise ServerException(501, 'method POST not implemented')
+    
+    
