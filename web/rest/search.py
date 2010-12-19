@@ -15,7 +15,7 @@ class Page(BaseRest, Loggable):
         
         if filter:
             for f in filter:
-                self.debug('Searching for %s: %s' % (f, str(filter[f])))
+                self.debug('Searching for %s: \"%s\"' % (f, str(filter[f])))
         else:
             self.debug('Filter is empty')
         
@@ -73,26 +73,26 @@ class Page(BaseRest, Loggable):
             self.debug('Reading POST parameters')
             
             if not 'type' in filter and 'type' in self._parameters:
-                filter['type'] = self._parameters['type']
+                filter['type'] = self.unpack_value(self._parameters['type'])
             
             if 'all' in self._parameters:
-                all = self._parameters['all']
+                all = self.unpack_value(self._parameters['all'])
                 filter['artist'] = all
                 filter['title'] = all
                 filter['album'] = all
                 return filter
             
             if 'artist' in self._parameters:
-                filter['artist'] = self._parameters['artist']
+                filter['artist'] = self.unpack_value(self._parameters['artist'])
                 
             if 'title' in self._parameters:
-                filter['title'] = self._parameters['title']
+                filter['title'] = self.unpack_value(self._parameters['title'])
                 
             if 'album' in self._parameters:
-                filter['album'] = self._parameters['album']
+                filter['album'] = self.unpack_value(self._parameters['album'])
                 
             if 'rating' in self._parameters:
-                rating = self._parameters['rating']
+                rating = self.unpack_value(self._parameters['rating'])
                 
                 if rating.isdigit():
                     irating = int(rating)
@@ -102,15 +102,31 @@ class Page(BaseRest, Loggable):
                 filter['rating'] = irating
                 
             if 'from' in self._parameters:
-                filter['from'] = self._parameters['from']
+                filter['from'] = self.unpack_value(self._parameters['from'])
                 
             if 'size' in self._parameters:
-                filter['size'] = self._parameters['size']
+                filter['size'] = self.unpack_value(self._parameters['size'])
         
             if 'first' in self._parameters:
-                filter['first'] = self._parameters['first']
+                filter['first'] = self.unpack_value(self._parameters['first'])
         
             if 'limit' in self._parameters:
-                filter['limit'] = self._parameters['limit']
+                filter['limit'] = self.unpack_value(self._parameters['limit'])
         
         return filter
+    
+    
+    def unpack_value(self, value):
+        if type(value) is dict:
+            svalue = ''.join(value)
+            self.debug('Value \"%s\" was packed as dictionary' % svalue)
+        elif type(value) is list:
+            svalue = ''.join(value)
+            self.debug('Value \"%s\" was packed as list' % svalue)
+        else:
+            svalue = str(value)
+            self.debug('Value \"%s\" was packed as plain string' % svalue)
+            
+        return svalue
+        
+            

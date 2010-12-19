@@ -105,7 +105,10 @@ class RBHandler(Loggable):
     def play_entry(self, entry_id): # entry id
         self.__print_state('play_entry')
         self.debug('Playing entry %s' % entry_id)
-        self._player.play_entry(entry_id)
+        
+        entry = self._get_entry(entry_id)
+        if not entry is None:
+            self._player.play_entry(entry)
     
         
     def set_rating(self, entry, rating):
@@ -162,51 +165,51 @@ class RBHandler(Loggable):
             if 'first' in filters:
                 first = str(filters['first'])
                 if not first.isdigit():
-                    raise InvalidQueryException('Parameter first must be a number, it actually is \'%s\'' % first)
+                    raise InvalidQueryException('Parameter first must be a number, it actually is \"%s\"' % first)
                 first = int(first)
                 
             if 'limit' in filters:
                 limit = str(filters['limit'])
                 if not limit.isdigit():
-                    raise InvalidQueryException('Parameter limit must be a number, it actually is \'%s\'' % limit)
+                    raise InvalidQueryException('Parameter limit must be a number, it actually is \"%s\"' % limit)
                 limit = int(limit)
             
             if 'type' in filters:
                 mtype = filters['type']
-                self.debug('Appending query for type %s' % mtype)
+                self.debug('Appending query for type \"%s\"' % mtype)
                 if self._media_types.has_key(mtype):
                     type = (rhythmdb.QUERY_PROP_EQUALS, \
                             rhythmdb.PROP_TYPE, \
                             self._media_types[mtype])
                 else:
-                    raise InvalidQueryException('Unknown media type %s' % filter['type'])
+                    raise InvalidQueryException('Unknown media type \"%s\"' % filter['type'])
                 
             if 'artist' in filters:
-                self.debug('Appending query for artist %s' % filters['artist'])
+                self.debug('Appending query for artist \"%s\"' % filters['artist'])
                 searches.append((rhythmdb.QUERY_PROP_LIKE, \
                     rhythmdb.PROP_ARTIST, \
                     filters['artist']))
                 
             if 'title' in filters:
-                self.debug('Appending query for title %s' % filters['title'])
+                self.debug('Appending query for title \"%s\"' % filters['title'])
                 searches.append((rhythmdb.QUERY_PROP_LIKE, \
                     rhythmdb.PROP_TITLE, \
                     filters['title']))
                 
             if 'album' in filters:
-                self.debug('Appending query for album %s' % filters['album'])
+                self.debug('Appending query for album \"%s\"' % filters['album'])
                 searches.append((rhythmdb.QUERY_PROP_LIKE, \
                     rhythmdb.PROP_ALBUM, \
                     filters['album']))
                 
             if 'genre' in filters:
-                self.debug('Appending query for genre %s' % filters['genre'])
+                self.debug('Appending query for genre \"%s\"' % filters['genre'])
                 searches.append((rhythmdb.QUERY_PROP_LIKE, \
                     rhythmdb.PROP_GENRE, \
                     filters['genre']))
                 
             if 'rating' in filters:
-                self.debug('Appending query for rating %s' % str(filters['rating']))
+                self.debug('Appending query for rating \"%s\"' % str(filters['rating']))
                 searches.append((rhythmdb.QUERY_PROP_GREATER, \
                     rhythmdb.PROP_RATING, \
                     filters['rating']))
@@ -215,7 +218,7 @@ class RBHandler(Loggable):
                     filters['rating']))
                 
             if 'play_count' in filters:
-                self.debug('Appending query for play_count %s' % str(filters['play_count']))
+                self.debug('Appending query for play_count \"%s\"' % str(filters['play_count']))
                 searches.append((rhythmdb.QUERY_PROP_EQUALS, \
                     rhythmdb.PROP_PLAY_COUNT, \
                     filters['play_count']))
@@ -289,9 +292,24 @@ class RBHandler(Loggable):
         self.debug('Adding entries %s to queue' % entry_ids)
         for entry_id in entry_ids:
             entry = self.load_entry(entry_id)
+            if entry is None:
+                continue
             location = str(entry.location)
             self.debug('Enqueuing entry %s' % location)
             self._shell.add_to_queue(location)
+                
+        self._shell.props.queue_source.queue_draw()
+        
+    def dequeue(self, entry_ids):
+        self.__print_state('dequeue')
+        self.debug('Removing entries %s from queue' % entry_ids)
+        for entry_id in entry_ids:
+            entry = self.load_entry(entry_id)
+            if entry is None:
+                continue
+            location = str(entry.location)
+            self.debug('Dequeuing entry %s' % location)
+            self._shell.remove_from_queue(location)
                 
         self._shell.props.queue_source.queue_draw()
         
@@ -300,11 +318,16 @@ class RBHandler(Loggable):
         self.__print_state('clear_play_queue')
         self._loop_query_model(func=self._shell.remove_from_queue, query_model=self._get_play_queue_model())
 
-
+    
+    def _get_entry(self, entry_id):
+        self.__print_state('get_entry')
+        self.debug('Getting entry %s' % str(entry_id))
+        return self._db.entry_lookup_by_id(int(entry_id))
+    
     def load_entry(self, entry_id):
         self.__print_state('load_entry')
         self.debug('Loading entry %s' % str(entry_id))
-        entry = self._db.entry_lookup_by_id(int(entry_id))
+        entry = self._get_entry(entry_id)
         if entry is None:
             self.debug('Entry %s not found' % str(entry_id))
             return None

@@ -28,17 +28,7 @@ class BaseRest(Loggable):
         self.parse_path_parameters()
         
         try:
-            return_value = self.get()
-            
-            if return_value is None:
-                return self._do_page_not_found(response)
-            
-            response('200 OK', self.do_headers())
-            
-            if isinstance(return_value, JSon):
-                return return_value.parse()
-            
-            return str(return_value)
+            return self._return_ok(self.get(), response)
         
         except ServerException, e:
             response('%d %s' % (e.code, e.message), self.do_headers())
@@ -50,13 +40,26 @@ class BaseRest(Loggable):
         self._environ = environ
         
         try:
-            return_function = self.post()
+            return self._return_ok(self.post(), response)
             
-            return return_function(self, environ, response)
         except ServerException, e:
             response('%d %s', (e.code, e.message), self.do_headers())
             return e.message
     
+    
+    
+    
+    def _return_ok(self, value, response):
+        if value is None:
+            return self._do_page_not_found(response)
+        
+        response('200 OK', self.do_headers())
+        
+        if isinstance(value, JSon):
+            return value.parse()
+        
+        return str(value)
+
         
     def parse_path_parameters(self):
         path_params = self._environ['PATH_PARAMS']
@@ -80,10 +83,10 @@ class BaseRest(Loggable):
     
     
     def get(self):
-        raise ServerException(501, 'method GET not implemented')
+        raise ServerException(405, 'method GET not allowed')
     
     
     def post(self):
-        raise ServerException(501, 'method POST not implemented')
+        raise ServerException(405, 'method POST not allowed')
     
     

@@ -85,7 +85,7 @@ class RequestHandler(Loggable):
                         
                     except Exception, e:
                         raise ServerException(500, '%s ERROR - %s' % 
-                                              (request_method.upper(), e.message))
+                                              (request_method, e.message))
                     
                 elif self.is_resource_file(resource_path):
                     self.debug('Handling resource %s' % resource_path)
