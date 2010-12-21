@@ -87,11 +87,16 @@ class RequestHandler(Loggable):
                         raise ServerException(500, '%s ERROR - %s' % 
                                               (request_method, e.message))
                     
+                elif self.is_resource_file(web_path):
+                    self.debug('Handling resource %s' % web_path)
+                    resource = self.get_resource_handler(web_path)
+                    return resource.handle(response)
+
                 elif self.is_resource_file(resource_path):
                     self.debug('Handling resource %s' % resource_path)
                     resource = self.get_resource_handler(resource_path)
                     return resource.handle(response)
-                
+                    
                 else:
                     continue
                         
@@ -113,6 +118,8 @@ class RequestHandler(Loggable):
         
         if not extension:
             extension = '.py'
+        elif not extension == '.py':
+            return False
         
         py_file = os.path.join(basepath, filename + extension)
         
@@ -165,21 +172,22 @@ class RequestHandler(Loggable):
     
     
     
-    def _create_headers(self, headers={}):
-        response_headers = [('Content-type','text/html; charset=UTF-8')]
-        for header in headers:
-            response_headers.append(header)
-            response_headers.append(headers[header])
-        
-        return response_headers
-    
-    
-    
-    def get_resource_handler(self, res):
-        if not self._resources.has_key(res):
-            self._resources[res] = ResourceHandler(res, self._resource_path)
+    def _create_headers(self, headers=[]):
+        if not headers:
+            headers = [('Content-type', 'text/html; charset=UTF-8')]
             
-        return self._resources[res]
+        return headers
+    
+    
+    
+    def get_resource_handler(self, resource):
+        return ResourceHandler(resource) # dont cache
+        
+#        if not self._resources.has_key(resource):
+#            self.debug('Returning existent handler for key \"%s\"' % resource)
+#            self._resources[resource] = ResourceHandler(resource)
+#            
+#        return self._resources[resource]
             
 
 
@@ -192,15 +200,13 @@ class ResourceHandler(Loggable):
     _file = None
     _extension = None
     
-    def __init__(self, res, resource_path, content_type=None, open_as=''):
-        self.debug('Creating ResourceHandler Instance for resource %s' % res)
-        
-        resource = os.path.basename(res)
+    def __init__(self, resource, content_type=None, open_as=''):
+        self.debug('Creating ResourceHandler Instance for resource %s' % resource)
         
         self._content_type = content_type
         self._open_as = open_as
         
-        self._file = os.path.join(resource_path, resource)
+        self._file = resource
         self._extension = str(os.path.splitext(self._file)[1]).lower()
 
         self.debug('Resource %s file is %s' % (resource, self._file))
@@ -233,6 +239,10 @@ class ResourceHandler(Loggable):
     def _content_type_by_ext(self, ext):
         if ext == '.css':
             return ('text/css', 't')
+        if ext == '.htm':
+            return ('text/html', 't')
+        if ext == '.html':
+            return ('text/html', 't')
         if ext == '.gif':
             return ('image/gif', 'b')
         if ext == '.png':
@@ -243,6 +253,8 @@ class ResourceHandler(Loggable):
             return ('image/jpeg', 'b')
         if ext == '.ico':
             return ('image/ico', 'b')
+        if ext == '.svg':
+            return ('image/svg+xml', 't')
         
         return ('text/plain', 't')
 

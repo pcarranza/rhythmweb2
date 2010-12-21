@@ -24,7 +24,7 @@ class Page(BaseRest, Loggable):
         except InvalidQueryException, e:
             raise ServerException(501, 'bad request, %s' % e.message)
         
-        json = JSon('search')
+        json = JSon()
         entries = []
         
         for id in entry_ids:

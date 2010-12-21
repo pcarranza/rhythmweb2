@@ -4,8 +4,7 @@ class JSon():
     name = None
     attributes = None
     
-    def __init__(self, name=None):
-        self.name = name
+    def __init__(self):
         self.attributes = {}
         
     
@@ -24,19 +23,8 @@ class JSon():
         
         return_value = []
         
-        name = self.name
-        
         attributes = self.attributes
-        
-        if not name is None:
-            return_value.append(' { \"')
-            return_value.append(name)
-            return_value.append('\", ')
-        
         return_value.append(self._parse_attributes(attributes))
-        
-        if not name is None:
-            return_value.append(' } ')
         
         return ''.join(return_value)
     

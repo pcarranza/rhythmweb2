@@ -11,7 +11,7 @@ class Song:
         if entry is None:
             return None
         
-        json = JSon('entry')
+        json = JSon()
         json.put('id', entry_id)
         json.put('artist', entry.artist)
         json.put('album', entry.album)

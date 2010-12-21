@@ -13,13 +13,11 @@ class BaseRest(Loggable):
         self._components = components
         
     
-    def do_headers(self, headers={}):
-        response_headers = [('Content-type','text/html; charset=UTF-8')]
-        for header in headers:
-            response_headers.append(header)
-            response_headers.append(headers[header])
+    def do_headers(self, headers=[]):
+        if not headers:
+            headers.append(('Content-type','text/html; charset=UTF-8'))
         
-        return response_headers
+        return headers
     
     
     def do_get(self, environ, response):
@@ -53,11 +51,20 @@ class BaseRest(Loggable):
         if value is None:
             return self._do_page_not_found(response)
         
-        response('200 OK', self.do_headers())
+        # header('Cache-Control: no-cache, must-revalidate');
+        # header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+        # header('Content-type: application/json');
         
         if isinstance(value, JSon):
-            return value.parse()
+            headers = []
+            headers.append(('Content-type','application/json; charset=UTF-8'))
+            headers.append(('Cache-Control: ', 'no-cache; must-revalidate'))
+            response('200 OK', self.do_headers(headers))
+            json = value.parse()
+            self.debug('Returning JSON: %s' % json)
+            return json
         
+        response('200 OK', self.do_headers())
         return str(value)
 
         

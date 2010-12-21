@@ -1,4 +1,111 @@
 body {
-	font: normal normal normal 18px/25px Palatino, 'Palatino Linotype', Georgia, serif;
+	font-family: font-family: Verdana, Helvetica, Sans-Serif;
 }
 
+img {
+	border: 0px;
+}
+
+.link {
+	cursor: pointer;
+}
+
+
+/* ****************************************************** PLAYER */
+#player {
+	float: left;
+	clear: both;
+	width: 100%;
+	line-height: 2em;
+}
+
+
+#player_buttons {
+	float: left;
+}
+
+#title {
+	float: left;
+	margin-left: 1em;
+	font-size: 1.7em;
+	font-weight: bold;
+}
+
+#artist {
+	float: left;
+	margin-left: 0.7em;
+	font-size: 1.1em;
+}
+
+#album {
+	float: left;
+	margin-left: 0.3em;
+	font-size: 1.1em;
+}
+
+#title {
+	float: left;
+	margin-left: 0.7em;
+}
+
+#time {
+	float: right;
+	clear: right;
+	margin-right: 1em;
+}
+
+/* ****************************************************** END PLAYER */
+
+
+/* ****************************************************** PLAYLIST */
+
+
+#playlist {
+	float: left;
+	clear: both;
+	width: 100%;
+	line-height: 2em;
+}
+
+.line {
+	clear: both;
+	width: 100%;
+	display: table;
+}
+
+#track_number {
+	width: 2%;
+	display: table-cell;
+}
+
+#track_title {
+	width: 27%;
+	display: table-cell;
+}
+
+#track_genre {
+	width: 15%;
+	display: table-cell;
+}
+
+#track_artist {
+	width: 20%;
+	display: table-cell;
+}
+
+#track_album {
+	width: 20%;
+	display: table-cell;
+}
+
+#track_duration {
+	width: 5%;
+	display: table-cell;
+}
+
+#track_actions {
+	width: 5%;
+	display: table-cell;
+}
+
+/* ****************************************************** END PLAYLIST */

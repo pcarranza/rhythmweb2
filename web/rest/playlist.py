@@ -15,7 +15,7 @@ class Page(BaseRest, Loggable):
             entry = Song.get_song_as_JSon(handler, entry_id)
             entries.append(entry)
             
-        playlist = JSon('playlist')
+        playlist = JSon()
         playlist.put('entries', entries)
         
         return playlist

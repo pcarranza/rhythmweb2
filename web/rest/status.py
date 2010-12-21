@@ -11,7 +11,7 @@ class Page(BaseRest, Loggable):
         
         is_playing = handler.get_playing_status()
         
-        status = JSon('status')
+        status = JSon()
         status.put('playing', is_playing)
         if is_playing:
             playing_entry_id = handler.get_playing_entry_id()
