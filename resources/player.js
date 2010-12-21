@@ -3,33 +3,33 @@ var timer;
 $(document).ready(function() {
 	update_status();
 	
-	$('#previous').click(function() {
-		$.post("rest/player", { action: "previous" }, function (data) {
-			update_status();
+	$('#play_pause').click(function() {
+		$.post("rest/player", { action: "play_pause" }, function (data) {
+			setTimeout('update_status()', 500);
 		});
 	});
 	
-	$('#play_pause').click(function() {
-		$.post("rest/player", { action: "play_pause" }, function (data) {
-			update_status();
+	$('#previous').click(function() {
+		$.post("rest/player", { action: "previous" }, function (data) {
+			setTimeout('update_status()', 500);
 		});
 	});
 	
 	$('#next').click(function() {
 		$.post("rest/player", { action: "next" }, function (data) {
-			update_status();
+			setTimeout('update_status()', 500);
 		});
 	});
 
 	$('#seek_back').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "-10" }, function (data) {
-			update_status();
+			setTimeout('update_status()', 500);
 		});
 	});
 
 	$('#seek_forward').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "10" }, function (data) {
-			update_status();
+			setTimeout('update_status()', 500);
 		});
 	});
 	
