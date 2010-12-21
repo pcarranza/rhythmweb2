@@ -1,35 +1,35 @@
-var timer;
+var timers = [];
 
 $(document).ready(function() {
 	update_status();
 	
 	$('#play_pause').click(function() {
 		$.post("rest/player", { action: "play_pause" }, function (data) {
-			setTimeout('update_status()', 500);
+			timers.push(setTimeout('update_status()', 500));
 		});
 	});
 	
 	$('#previous').click(function() {
 		$.post("rest/player", { action: "previous" }, function (data) {
-			setTimeout('update_status()', 500);
+			timers.push(setTimeout('update_status()', 500));
 		});
 	});
 	
 	$('#next').click(function() {
 		$.post("rest/player", { action: "next" }, function (data) {
-			setTimeout('update_status()', 500);
+			timers.push(setTimeout('update_status()', 500));
 		});
 	});
 
 	$('#seek_back').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "-10" }, function (data) {
-			setTimeout('update_status()', 500);
+			timers.push(setTimeout('update_status()', 500));
 		});
 	});
 
 	$('#seek_forward').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "10" }, function (data) {
-			setTimeout('update_status()', 500);
+			timers.push(setTimeout('update_status()', 500));
 		});
 	});
 	
@@ -37,9 +37,10 @@ $(document).ready(function() {
 
 
 function update_status() {
-	if (timer !== undefined) {
+	
+	$.each(timers, function(index, timer) {
 		clearTimeout(timer);
-	}
+	});
 
 	$.getJSON('rest/status', function(json) {
 		if (json && json.playing) {
@@ -95,11 +96,11 @@ function update_status() {
 					$('#time').html(str_time);
 					
 					if (actual_time < duration)
-						timer = setTimeout(timer_function, 1000);
+						timers.push(setTimeout(timer_function, 1000));
 					else
 						update_status();
 				};
-				timer = setTimeout(timer_function, 1000);
+				timers.push(setTimeout(timer_function, 1000));
 			}
 			
 			countdown();
