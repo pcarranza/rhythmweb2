@@ -13,6 +13,8 @@
 <body>
 	<script type="text/javascript">
 
+	var library_loaded = false;
+	
 	function clear_tabs() {
 		$('#tab_playlist').removeClass('selected');
 		$('#tab_library').removeClass('selected');
@@ -38,6 +40,12 @@
 			clear_tabs();
 			hide_all();
 			$(this).addClass('selected');
+
+			if (!library_loaded) {
+				load_library(0, 50);
+				library_loaded = true;
+			}
+			
 			$('#library').removeClass('hide');
 		});
 		
@@ -47,8 +55,6 @@
 			$(this).addClass('selected');
 			$('#search').removeClass('hide');
 		});
-
-		setTimeout('load_library(0, 100)', 100);
 	});
 
 	function load_library(first, limit) {
