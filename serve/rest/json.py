@@ -51,7 +51,7 @@ class JSon():
         
         elif type(value) is str:
             return_value.append(" \"")
-            return_value.append(str(value))
+            return_value.append(self._encode_str(value))
             return_value.append("\" ")
         
         elif type(value) is bool:
@@ -64,10 +64,14 @@ class JSon():
             return_value.append(value.parse())
             
         else: # type(value) is int or type(value) is float:
-            return_value.append(str(value))
+            return_value.append(self._encode_str(value))
         
         return ''.join(return_value)    
-            
+    
+    def _encode_str(self, value):
+        value = str(value)
+        value = value.replace('"', '\\"')
+        return value
     
     def _parse_attributes(self, attributes):
         return_value = []

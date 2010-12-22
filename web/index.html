@@ -48,28 +48,68 @@
 			$('#search').removeClass('hide');
 		});
 
-		setTimeout('load_library("0", "50")', 100);
+		setTimeout('load_library(0, 100)', 100);
 	});
 
 	function load_library(first, limit) {
-		if (!first)
-			first = '0';
-		
-		if (!limit)
-			limit = '100';
-		
-		$.getJSON('rest/search/song/first/' + first + '/limit/' + limit, function(json) {
-			$('#library').html('');
+		var url = 'rest/search/song/first/' + first + '/limit/' + limit;
+		$('#library').html('');
+		$.getJSON(url, function(json) {
 			if (json && json.entries) {
+				first = parseInt(first);
+				limit = parseInt(limit);
+				var count = json.entries.length;
+				var prev = first - limit;
+				var next = first + limit;
+
+				if(first > 0) {
+					$('#library').append('<span class="library_previous">' +
+							'<img id="go_previous_top" src="img/go-previous.svg" class="link" />' + 
+							'</span>');
+					$('#go_previous_top').click( function() {
+						load_library(prev, limit);
+					});
+				} else {
+					$('#library').append('<span class="library_previous">' +
+							'&nbsp;' +
+							'</span>');
+				}
+
+				$('#library').append('<span class="library_status">showing ' + count + 
+						' starting at ' + first + 
+						'</span>');
+				
+				if (count == limit) {
+					$('#library').append('<span class="library_next">' + 
+							'<img id="go_next_top" src="img/go-next.svg" class="link" />' +
+							'</span>');
+					$('#go_next_top').click( function() {
+						load_library(next, limit);
+					});
+				} else {
+					$('#library').append('<span class="library_next">' +
+							'&nbsp;' +
+							'</span>');
+				}
+
+				$('#library').append(create_header());
+				
 				$.each(json.entries, function(index, entry) {
 					add_search_entry(index, entry, '#library');
 				});
 				
-				var bottom_buttons = ''
-				if(first !== 0) {
+				if(first > 0) {
+					$('#library').append('<img id="go_previous" src="img/go-previous.svg" class="link">');
+					$('#go_previous').click( function() {
+						load_library(prev, limit);
+					});
 				}
 				
-				if (limit !== json.entries.length) {
+				if (count == limit) {
+					$('#library').append('<img id="go_next" src="img/go-next.svg" class="link">');
+					$('#go_next').click( function() {
+						load_library(next, limit);
+					});
 				}
 			}
 		});

@@ -93,12 +93,12 @@ img {
 }
 
 #track_artist {
-	width: 20%;
+	width: 15%;
 	display: table-cell;
 }
 
 #track_album {
-	width: 20%;
+	width: 25%;
 	display: table-cell;
 }
 
@@ -159,4 +159,32 @@ img {
 	border-color: #f80;
 	position: relative;
 	top: 1px;
+}
+
+
+.library_previous {
+	float: left;
+	clear: left;
+	width: 10%;
+}
+
+.library_status {
+	position: relative;
+	float: left;
+	text-align: center;
+	width: 80%;
+}
+
+.library_next {
+	float: left;
+	clear: right;
+	width: 10%;
+}
+
+#go_next_top {
+	float: right;
+}
+
+#go_next {
+	float: right;
 }

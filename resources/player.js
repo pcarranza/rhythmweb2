@@ -146,13 +146,25 @@ function add_search_entry(index, entry, container) {
 	// add_rate_action(line_id, container_id, entry);
 }
 
+function create_header() {
+	var line = '<div class="line">';
+	line += '<span id="track_number">#</span>';
+	line += '<span id="track_title">Title</span>';
+	line += '<span id="track_genre">Genre</span>';
+	line += '<span id="track_artist">Artist</span>';
+	line += '<span id="track_album">Album</span>';
+	line += '<span id="track_duration">Duration</span>';
+	line += '<span id="track_actions">&nbsp;</span></span>';
+	line += '</div>';
+	return line;
+}
 
 function create_entry_line(line_id, container_id, entry) {
 	var line = '<div id="' + line_id + '" class="line">';
 	line += '<span id="track_number">' + entry.track_number + '</span>';
 	line += '<span id="track_title">' + entry.title + '</span>';
 	line += '<span id="track_genre">' + entry.genre + '</span>';
-	line += '<span id="track_artist">' + entry.album + '</span>';
+	line += '<span id="track_artist">' + entry.artist + '</span>';
 	line += '<span id="track_album">' + entry.album + '</span>';
 	line += '<span id="track_duration">' + human_time(entry.duration) + '</span>';
 	line += '<span id="track_actions"><span id="' + container_id + '"></span></span>';
