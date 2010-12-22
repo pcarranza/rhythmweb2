@@ -31,10 +31,10 @@ class RBHandler(Loggable):
     
     def __print_state(self, status):
         self.debug('STATUS FROM %s' % status)
-        self.debug('SHELL object %s' % self._shell)
-        self.debug('DB object %s' % self._db)
-        self.debug('PLAYER object %s' % self._player)
-        self.debug('GCONF object %s' % self._gconf)
+#        self.debug('SHELL object %s' % self._shell)
+#        self.debug('DB object %s' % self._db)
+#        self.debug('PLAYER object %s' % self._player)
+#        self.debug('GCONF object %s' % self._gconf)
         
         
     def __init__(self, shell):
@@ -111,10 +111,12 @@ class RBHandler(Loggable):
             self._player.play_entry(entry)
     
         
-    def set_rating(self, entry, rating):
+    def set_rating(self, entry_id, rating):
         self.__print_state('set_rating')
-        self.debug('Setting rating %d to entry %s' % (rating, entry))
-        self._db.set(entry, rhythmdb.PROP_RATING, rating)
+        self.debug('Setting rating %d to entry %s' % (rating, entry_id))
+        entry = self._get_entry(entry_id)
+        if not entry is None:
+            self._db.set(entry, rhythmdb.PROP_RATING, rating)
     
         
     def search_song(self, filter):

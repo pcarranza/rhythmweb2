@@ -67,32 +67,6 @@ class Page(BaseRest, Loggable):
             
         return 'OK'
     
-    def unpack_value(self, value):
-        if type(value) is dict:
-            svalue = ''.join(value)
-            self.debug('Value \"%s\" was packed as dictionary' % svalue)
-        elif type(value) is list:
-            if len(value) == 1:
-                self.debug('Value \"%s\" was packed as 1 element list' % value[0])
-                return value[0]
-            
-            svalue = ''.join(value)
-            self.debug('Value \"%s\" was packed as list' % svalue)
-        else:
-            svalue = str(value)
-            self.debug('Value \"%s\" was packed as plain string' % svalue)
-            
-        return svalue.strip()
     
     
-    def pack_as_list(self, value):
-        if type(value) is list:
-            return value
-        elif type(value) is dict:
-            return_value = []
-            for v in value:
-                return_value.append(value[v])
-            return return_value
-        else:
-            return [value]
             

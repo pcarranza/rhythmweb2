@@ -40,7 +40,7 @@ class Page(BaseRest, Loggable):
         
     def post(self):
         self.debug('POST search')
-        return self.get()    
+        return self.get()
         
         
     def get_filter(self):
@@ -116,17 +116,3 @@ class Page(BaseRest, Loggable):
         return filter
     
     
-    def unpack_value(self, value):
-        if type(value) is dict:
-            svalue = ''.join(value)
-            self.debug('Value \"%s\" was packed as dictionary' % svalue)
-        elif type(value) is list:
-            svalue = ''.join(value)
-            self.debug('Value \"%s\" was packed as list' % svalue)
-        else:
-            svalue = str(value)
-            self.debug('Value \"%s\" was packed as plain string' % svalue)
-            
-        return svalue
-        
-            

@@ -12,50 +12,69 @@
 </head>
 <body>
 	<script type="text/javascript">
-	
-	$(document).ready(function() {
-		$.getJSON('rest/playlist', function(json) {
-			$('#playlist').html('');
-			if (json && json.entries) {
-				$.each(json.entries, function(index, entry) {
-					var line_id = 'track_line_' + index;
-					var container_id = 'actions_' + index;
 
-					
-					var playlist = '';
-					playlist += '<div id="' + line_id + '" class="line">';
-					playlist += '<span id="track_number">' + entry.track_number + '</span>';
-					playlist += '<span id="track_title">' + entry.title + '</span>';
-					playlist += '<span id="track_genre">' + entry.genre + '</span>';
-					playlist += '<span id="track_artist">' + entry.album + '</span>';
-					playlist += '<span id="track_album">' + entry.album + '</span>';
-					playlist += '<span id="track_duration">' + human_time(entry.duration) + '</span>';
-					playlist += '<span id="track_actions"><span id="' + container_id + '"></span></span>';
-					playlist += '</div>';
-					$('#playlist').append(playlist);
+	function clear_tabs() {
+		$('#tab_playlist').removeClass('selected');
+		$('#tab_library').removeClass('selected');
+		$('#tab_search').removeClass('selected');
+	}
 
-					entry_id = entry.id;
-					
-					add_dequeue_action(line_id, container_id, entry_id);
-					// add
-					// remove
-					// rate
-				});
-			}
-		});
-	});
-
-	function add_dequeue_action(line_id, container_id, entry_id) {
-		var action_id = container_id + '_dequeue';
-		var dequeue = '<img id="' + action_id + '" class="link" src="img/remove.svg" />';
-		$('#' + container_id).append(dequeue);
-		$('#' + action_id).click(function() {
-			$.post("rest/player", { action: "dequeue", "entry_id" : entry_id }, function(data) {
-				$('#' + line_id).fadeOut('slow');
-			});
-		});
+	function hide_all() {
+		$('#playlist').addClass('hide');
+		$('#library').addClass('hide');
+		$('#search').addClass('hide');
 	}
 	
+	$(document).ready(function() {
+		$('#tab_playlist').click(function () {
+			clear_tabs();
+			hide_all();
+			$(this).addClass('selected');
+			load_playlist();
+			$('#playlist').removeClass('hide');
+		});
+		
+		$('#tab_library').click(function () {
+			clear_tabs();
+			hide_all();
+			$(this).addClass('selected');
+			$('#library').removeClass('hide');
+		});
+		
+		$('#tab_search').click(function () {
+			clear_tabs();
+			hide_all();
+			$(this).addClass('selected');
+			$('#search').removeClass('hide');
+		});
+
+		setTimeout('load_library("0", "50")', 100);
+	});
+
+	function load_library(first, limit) {
+		if (!first)
+			first = '0';
+		
+		if (!limit)
+			limit = '100';
+		
+		$.getJSON('rest/search/song/first/' + first + '/limit/' + limit, function(json) {
+			$('#library').html('');
+			if (json && json.entries) {
+				$.each(json.entries, function(index, entry) {
+					add_search_entry(index, entry, '#library');
+				});
+				
+				var bottom_buttons = ''
+				if(first !== 0) {
+				}
+				
+				if (limit !== json.entries.length) {
+				}
+			}
+		});
+	}
+		
 	</script>
 	<div id="player">
 		<span id="player_buttons">
@@ -73,7 +92,27 @@
 		<span id="album"></span>
 		<span id='time'></span>
 	</div>
-	<div id="playlist">
+	<div id="tabs">
+		<ul>
+			<li>
+				<span id="tab_playlist" class="selected">playlist</span>
+			</li>
+			<li>
+				<span id="tab_library">library</span>
+			</li>
+			<li>
+				<span id="tab_search">search</span>
+			</li>
+		</ul>
+		<div id="content">
+			<div id="playlist">
+			</div>
+			<div id="library" class="hide">
+			</div>
+			<div id="search" class="hide">
+				this is the search
+			</div>
+		</div>
 	</div>
 </body>
 </html>
