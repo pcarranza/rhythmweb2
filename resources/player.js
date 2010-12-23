@@ -104,8 +104,8 @@ function update_status() {
 			
 			countdown();
 		}
-		timers.push(setTimeout('update_status()', 10000));
 	});
+	timers.push(setTimeout('update_status()', 10000));
 }
 
 function load_playlist() {
