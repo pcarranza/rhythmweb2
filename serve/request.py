@@ -44,7 +44,7 @@ class RequestHandler(Loggable):
         
         request_path = environ['PATH_INFO']
         if request_path == '/' or not request_path:
-            request_path = '/home'
+            request_path = '/index.html'
             
         self.info('%s method - %s' % (request_method.upper(), request_path))
  
