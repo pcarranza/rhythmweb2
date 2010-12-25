@@ -153,8 +153,6 @@ class RBHandler(Loggable):
             self.debug('No filters, returning empty result')
             return []
         
-        db = self._db
-        
         type = None
         rating = 0
         play_count = 0
@@ -188,12 +186,19 @@ class RBHandler(Loggable):
                     raise InvalidQueryException('Unknown media type \"%s\"' % filter['type'])
             
             if 'rating' in filters:
-                self.debug('Appending query for rating \"%s\"' % str(filters['rating']))
-                rating = filter['rating']
+                rating = str(filters['rating'])
+                self.debug('Appending query for rating \"%s\"' % rating)
+                if not rating.isdigit():
+                    raise InvalidQueryException('Parameter rating must be a float, it actually is \"%s\"' % rating)
+                rating = float(rating)
                 
             if 'play_count' in filters:
-                self.debug('Appending query for play_count \"%s\"' % str(filters['play_count']))
-                play_count = filters['play_count']
+                play_count = str(filters['play_count'])
+                self.debug('Appending query for play_count \"%s\"' % play_count)
+                if not play_count.isdigit():
+                    raise InvalidQueryException('Parameter play_count must be an int, it actually is \"%s\"' % play_count)
+                play_count = int(play_count)
+                
                 
             if 'all' in filters:
                 all = []
@@ -207,6 +212,7 @@ class RBHandler(Loggable):
                 all.append((rhythmdb.QUERY_PROP_LIKE, \
                     rhythmdb.PROP_ALBUM, \
                     all_filter))
+                
             else:
                 searches = []
                 if 'artist' in filters:
@@ -232,17 +238,18 @@ class RBHandler(Loggable):
                     searches.append((rhythmdb.QUERY_PROP_LIKE, \
                         rhythmdb.PROP_GENRE, \
                         filters['genre']))
+                
                     
-        
-          
         if not all is None:
             self.debug('Querying for all with diffuse filters')
-            query_model = self._query_all(type, play_count, rating, all, True)  
+            query_model = self._query_all(type, play_count, rating, all, True)
+              
         else:
             self.debug('Querying for all with diffuse filters')
             if searches is None:
                 self.debug('No searches defined, creating empty search array')
                 searches = []
+                
             query_model = self._query_all(type, play_count, rating, searches)
         
         entries = []
@@ -251,6 +258,7 @@ class RBHandler(Loggable):
     
     
     def _query_all(self, type, min_play_count, min_rating, parameters, query_for_all=False):
+        self.debug('Querying...')
         db = self._db
         query_model = db.query_model_new(\
                      db.query_new(), \
@@ -264,8 +272,8 @@ class RBHandler(Loggable):
                 query = db.query_new()
                 if not type is None:
                     db.query_append(query, type)
+                self._append_rating(query, min_rating)
                 self._append_play_count(query, min_play_count)
-                self._append_play_count(query, min_rating)
                 db.query_append(query, parameter)
                 db.do_full_query_parsed(query_model, query)
         else:
@@ -273,8 +281,8 @@ class RBHandler(Loggable):
             query = db.query_new()
             if not type is None:
                 db.query_append(query, type)
+            self._append_rating(query, min_rating)
             self._append_play_count(query, min_play_count)
-            self._append_play_count(query, min_rating)
             for parameter in parameters:
                 db.query_append(query, parameter)
             db.do_full_query_parsed(query_model, query)
@@ -286,24 +294,20 @@ class RBHandler(Loggable):
         if play_count > 0:
             self.debug('Appending min play count %d' % play_count)
             db = self._db
-            db.query_append(query, (rhythmdb.QUERY_PROP_EQUALS, \
+            play_count_query = (rhythmdb.QUERY_PROP_GREATER, \
                 rhythmdb.PROP_PLAY_COUNT, \
-                play_count))
-            db.query_append(query, (rhythmdb.QUERY_PROP_GREATER, \
-                rhythmdb.PROP_PLAY_COUNT, \
-                play_count))
+                play_count)
+            db.query_append(query, play_count_query)
 
 
     def _append_rating(self, query, rating):
         if rating > 0:
             self.debug('Appending min rating %d' % rating)
             db = self._db
-            db.query_append(query, (rhythmdb.QUERY_PROP_EQUALS, \
+            rating_query = (rhythmdb.QUERY_PROP_GREATER, \
                 rhythmdb.PROP_RATING, \
-                rating))
-            db.query_append(query, (rhythmdb.QUERY_PROP_GREATER, \
-                rhythmdb.PROP_RATING, \
-                rating))
+                rating)
+            db.query_append(query, rating_query)
     
     
     def get_play_order(self):

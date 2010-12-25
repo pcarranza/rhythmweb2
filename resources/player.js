@@ -72,7 +72,7 @@ $(document).ready(function() {
 		$.post(url, parameters, function(json) {
 			$('#search_result').append(create_header());
 			$.each(json.entries, function(index, entry) {
-				add_search_entry(index, entry, '#search_result');
+				add_search_entry(index, entry, 'search_result');
 			});
 		});
 	});
@@ -179,23 +179,20 @@ function add_playlist_entry(index, entry) {
 	
 	$('#' + line_id).
 
-	// remove
+	add_rate_action(line_id, container_id, entry);
 	add_dequeue_action(line_id, container_id, entry);
-	// rate
-	// add_rate_action(line_id, container_id, entry);
 }
 
 
 function add_search_entry(index, entry, container) {
-	var line_id = 'search_line_' + entry.id;
-	var container_id = 'search_actions_' + entry.id;
+	var line_id = container + '_line_' + entry.id;
+	var container_id = line_id + '_actions';
 	var line = create_entry_line(line_id, container_id, entry);
 	
-	$(container).append(line);
+	$('#' + container).append(line);
 	
+	add_rate_action(line_id, container_id, entry);
 	add_enqueue_action(line_id, container_id, entry);
-	// rate
-	// add_rate_action(line_id, container_id, entry);
 }
 
 
@@ -250,6 +247,39 @@ function add_enqueue_action(line_id, container_id, entry) {
 				$('#' + line_id).fadeOut('slow');
 			});
 		});
+	});
+}
+
+
+function add_rate_action(line_id, container_id, entry) {
+	var entry_id = entry.id;
+	var rating = entry.rating;
+	var action_scheme = container_id + '_rate_';
+	for(var index = 1; index < 6; index++) {
+		var action_id = action_scheme + index;
+		if (index > rating) {
+			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star-grey.svg" />');
+		} else {
+			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star.svg" />');
+		}
+		$('#' + action_id).bind('click', { id : entry_id, rating : index, scheme : action_scheme }, set_rating);
+	}
+}
+
+function set_rating(event) {
+	var data = event.data;
+	var action_scheme = data.scheme;
+	var url = "rest/song/" + data.id;
+	$.post(url, { rating : data.rating }, function(json) {
+		var rating = json.rating;
+		var index;
+		for (index = 1; index <= 6; index++) {
+			if (index <= rating) {
+				$('#' + action_scheme + index).attr('src', 'img/star.svg');
+			} else {
+				$('#' + action_scheme + index).attr('src', 'img/star-grey.svg');
+			}
+		}
 	});
 }
 
@@ -339,7 +369,7 @@ function load_library(first, limit) {
 			$('#library').append(create_header());
 			
 			$.each(json.entries, function(index, entry) {
-				add_search_entry(index, entry, '#library');
+				add_search_entry(index, entry, 'library');
 			});
 			
 			if(first > 0) {
