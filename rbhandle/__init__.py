@@ -141,9 +141,7 @@ class RBHandler(Loggable):
         self.__print_state('search')
         filters = {}
         filters['type'] = type
-        filters['artist'] = filter
-        filters['album'] = filter
-        filters['title'] = filter
+        filters['all'] = filter
         
         return self.query(filters)
     
@@ -158,9 +156,12 @@ class RBHandler(Loggable):
         db = self._db
         
         type = None
+        rating = 0
+        play_count = 0
         first = 0
         limit = 100
-        searches = []
+        all = None
+        searches = None
         
         if filters:
             
@@ -185,75 +186,125 @@ class RBHandler(Loggable):
                             self._media_types[mtype])
                 else:
                     raise InvalidQueryException('Unknown media type \"%s\"' % filter['type'])
-                
-            if 'artist' in filters:
-                self.debug('Appending query for artist \"%s\"' % filters['artist'])
-                searches.append((rhythmdb.QUERY_PROP_LIKE, \
-                    rhythmdb.PROP_ARTIST, \
-                    filters['artist']))
-                
-            if 'title' in filters:
-                self.debug('Appending query for title \"%s\"' % filters['title'])
-                searches.append((rhythmdb.QUERY_PROP_LIKE, \
-                    rhythmdb.PROP_TITLE, \
-                    filters['title']))
-                
-            if 'album' in filters:
-                self.debug('Appending query for album \"%s\"' % filters['album'])
-                searches.append((rhythmdb.QUERY_PROP_LIKE, \
-                    rhythmdb.PROP_ALBUM, \
-                    filters['album']))
-                
-            if 'genre' in filters:
-                self.debug('Appending query for genre \"%s\"' % filters['genre'])
-                searches.append((rhythmdb.QUERY_PROP_LIKE, \
-                    rhythmdb.PROP_GENRE, \
-                    filters['genre']))
-                
+            
             if 'rating' in filters:
                 self.debug('Appending query for rating \"%s\"' % str(filters['rating']))
-                searches.append((rhythmdb.QUERY_PROP_GREATER, \
-                    rhythmdb.PROP_RATING, \
-                    filters['rating']))
-                searches.append((rhythmdb.QUERY_PROP_EQUALS, \
-                    rhythmdb.PROP_RATING, \
-                    filters['rating']))
+                rating = filter['rating']
                 
             if 'play_count' in filters:
                 self.debug('Appending query for play_count \"%s\"' % str(filters['play_count']))
-                searches.append((rhythmdb.QUERY_PROP_EQUALS, \
-                    rhythmdb.PROP_PLAY_COUNT, \
-                    filters['play_count']))
-                searches.append((rhythmdb.QUERY_PROP_GREATER, \
-                    rhythmdb.PROP_PLAY_COUNT, \
-                    filters['play_count']))
-        
-            
-        query_model = db.query_model_new(\
-                                         db.query_new(), \
-                                         rhythmdb.rhythmdb_query_model_track_sort_func, \
-                                         0, \
-                                         db.query_model_new_empty())
-        if searches:
-            self.debug('Querying for filters')
-            for search in searches:
-                query = db.query_new()
-                if not type is None:
-                    db.query_append(query, type)
-                db.query_append(query, search)
-                db.do_full_query_parsed(query_model, query)
+                play_count = filters['play_count']
                 
-        elif not type is None:
-            self.debug('Querying for type only')
-            query = db.query_new()
-            db.query_append(query, type)
-            db.do_full_query_parsed(query_model, query)
-            
+            if 'all' in filters:
+                all = []
+                all_filter = filters['all']
+                all.append((rhythmdb.QUERY_PROP_LIKE, \
+                    rhythmdb.PROP_ARTIST, \
+                    all_filter))
+                all.append((rhythmdb.QUERY_PROP_LIKE, \
+                    rhythmdb.PROP_TITLE, \
+                    all_filter))
+                all.append((rhythmdb.QUERY_PROP_LIKE, \
+                    rhythmdb.PROP_ALBUM, \
+                    all_filter))
+            else:
+                searches = []
+                if 'artist' in filters:
+                    self.debug('Appending query for artist \"%s\"' % filters['artist'])
+                    searches.append((rhythmdb.QUERY_PROP_LIKE, \
+                        rhythmdb.PROP_ARTIST, \
+                        filters['artist']))
+                    
+                if 'title' in filters:
+                    self.debug('Appending query for title \"%s\"' % filters['title'])
+                    searches.append((rhythmdb.QUERY_PROP_LIKE, \
+                        rhythmdb.PROP_TITLE, \
+                        filters['title']))
+                    
+                if 'album' in filters:
+                    self.debug('Appending query for album \"%s\"' % filters['album'])
+                    searches.append((rhythmdb.QUERY_PROP_LIKE, \
+                        rhythmdb.PROP_ALBUM, \
+                        filters['album']))
+                    
+                if 'genre' in filters:
+                    self.debug('Appending query for genre \"%s\"' % filters['genre'])
+                    searches.append((rhythmdb.QUERY_PROP_LIKE, \
+                        rhythmdb.PROP_GENRE, \
+                        filters['genre']))
+                    
+        
+          
+        if not all is None:
+            self.debug('Querying for all with diffuse filters')
+            query_model = self._query_all(type, play_count, rating, all, True)  
+        else:
+            self.debug('Querying for all with diffuse filters')
+            if searches is None:
+                self.debug('No searches defined, creating empty search array')
+                searches = []
+            query_model = self._query_all(type, play_count, rating, searches)
         
         entries = []
         self._loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
         return entries
+    
+    
+    def _query_all(self, type, min_play_count, min_rating, parameters, query_for_all=False):
+        db = self._db
+        query_model = db.query_model_new(\
+                     db.query_new(), \
+                     rhythmdb.rhythmdb_query_model_track_sort_func, \
+                     0, \
+                     db.query_model_new_empty())
         
+        if query_for_all: # equivalent to use an OR (many queries)
+            self.debug('Query for all parameters separatedly')
+            for parameter in parameters:
+                query = db.query_new()
+                if not type is None:
+                    db.query_append(query, type)
+                self._append_play_count(query, min_play_count)
+                self._append_play_count(query, min_rating)
+                db.query_append(query, parameter)
+                db.do_full_query_parsed(query_model, query)
+        else:
+            self.debug('Query for all parameters in one only full search')
+            query = db.query_new()
+            if not type is None:
+                db.query_append(query, type)
+            self._append_play_count(query, min_play_count)
+            self._append_play_count(query, min_rating)
+            for parameter in parameters:
+                db.query_append(query, parameter)
+            db.do_full_query_parsed(query_model, query)
+            
+        return query_model
+    
+    
+    def _append_play_count(self, query, play_count):
+        if play_count > 0:
+            self.debug('Appending min play count %d' % play_count)
+            db = self._db
+            db.query_append(query, (rhythmdb.QUERY_PROP_EQUALS, \
+                rhythmdb.PROP_PLAY_COUNT, \
+                play_count))
+            db.query_append(query, (rhythmdb.QUERY_PROP_GREATER, \
+                rhythmdb.PROP_PLAY_COUNT, \
+                play_count))
+
+
+    def _append_rating(self, query, rating):
+        if rating > 0:
+            self.debug('Appending min rating %d' % rating)
+            db = self._db
+            db.query_append(query, (rhythmdb.QUERY_PROP_EQUALS, \
+                rhythmdb.PROP_RATING, \
+                rating))
+            db.query_append(query, (rhythmdb.QUERY_PROP_GREATER, \
+                rhythmdb.PROP_RATING, \
+                rating))
+    
     
     def get_play_order(self):
         self.__print_state('get_play_order')

@@ -10,7 +10,6 @@ img {
 	cursor: pointer;
 }
 
-
 .hide {
 	display: none;
 }
@@ -64,7 +63,7 @@ img {
 /* ****************************************************** PLAYLIST */
 
 
-#playlist {
+#playlist, #library {
 	float: left;
 	clear: both;
 	width: 100%;
@@ -75,6 +74,12 @@ img {
 	clear: both;
 	width: 100%;
 	display: table;
+	background: white;
+	font-style: normal;
+}
+.line:focus, .line:hover { 
+	font-style: italic;
+	color: #f80; 
 }
 
 #track_number {
@@ -113,6 +118,8 @@ img {
 }
 
 /* ****************************************************** END PLAYLIST */
+
+/* ****************************************************** TABS */
 
 #tabs ul {
 	list-style: none;
@@ -161,6 +168,10 @@ img {
 	top: 1px;
 }
 
+/* ****************************************************** END TABS */
+
+
+/* ****************************************************** LIBRARY BROWSING */
 
 .library_previous {
 	float: left;
@@ -187,4 +198,25 @@ img {
 
 #go_next {
 	float: right;
+}
+
+/* ****************************************************** END LIBRARY BROWSING */
+
+/* ****************************************************** SEARCH */
+
+#search {
+	float: left;
+	clear: both;
+	width: 100%;
+	line-height: 2em;
+}
+
+#search_filter {
+	border: 1px solid grey;
+	width: 70%;
+}
+
+#do_search {
+	vertical-align: middle;
+	cursor: pointer;
 }

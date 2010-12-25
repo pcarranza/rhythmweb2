@@ -75,13 +75,6 @@ class Page(BaseRest, Loggable):
             if not 'type' in filter and 'type' in self._parameters:
                 filter['type'] = self.unpack_value(self._parameters['type'])
             
-            if 'all' in self._parameters:
-                all = self.unpack_value(self._parameters['all'])
-                filter['artist'] = all
-                filter['title'] = all
-                filter['album'] = all
-                return filter
-            
             if 'artist' in self._parameters:
                 filter['artist'] = self.unpack_value(self._parameters['artist'])
                 
@@ -112,6 +105,12 @@ class Page(BaseRest, Loggable):
         
             if 'limit' in self._parameters:
                 filter['limit'] = self.unpack_value(self._parameters['limit'])
+                
+            if 'all' in self._parameters:
+                all = self.unpack_value(self._parameters['all'])
+                filter['all'] = all
+                return filter
+            
         
         return filter
     

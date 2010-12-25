@@ -1,8 +1,9 @@
 var timers = [];
+var library_loaded = false;
+
 
 $(document).ready(function() {
 	update_status();
-	load_playlist();
 	
 	$('#play_pause').click(function() {
 		$.post("rest/player", { action: "play_pause" }, function (data) {
@@ -35,6 +36,55 @@ $(document).ready(function() {
 			timers.push(setTimeout('update_status()', 100));
 		});
 	});
+	
+	$('#tab_playlist').click(function () {
+		clear_tabs();
+		hide_all();
+		$(this).addClass('selected');
+		load_playlist();
+		$('#playlist').removeClass('hide');
+	});
+	
+	$('#tab_library').click(function () {
+		clear_tabs();
+		hide_all();
+		$(this).addClass('selected');
+
+		if (!library_loaded) {
+			load_library(0, 50);
+			library_loaded = true;
+		}
+		
+		$('#library').removeClass('hide');
+	});
+	
+	$('#tab_search').click(function () {
+		clear_tabs();
+		hide_all();
+		$(this).addClass('selected');
+		$('#search').removeClass('hide');
+	});
+
+	$('#do_search').click(function() {
+		parameters = parse_search_parameters();
+		var url = 'rest/search';
+		$('#search_result').html('');
+		$.post(url, parameters, function(json) {
+			$('#search_result').append(create_header());
+			$.each(json.entries, function(index, entry) {
+				add_search_entry(index, entry, '#search_result');
+			});
+		});
+	});
+
+	$('#search_filter').keypress(function(event) {
+		  if (event.keyCode == '13') {
+			  $('#do_search').click();
+		  }
+	});
+
+	$('#search_filter').focus();
+
 	
 });
 
@@ -126,6 +176,8 @@ function add_playlist_entry(index, entry) {
 	var line = create_entry_line(line_id, container_id, entry);
 	
 	$('#playlist').append(line);
+	
+	$('#' + line_id).
 
 	// remove
 	add_dequeue_action(line_id, container_id, entry);
@@ -145,6 +197,7 @@ function add_search_entry(index, entry, container) {
 	// rate
 	// add_rate_action(line_id, container_id, entry);
 }
+
 
 function create_header() {
 	var line = '<div class="line">';
@@ -194,7 +247,6 @@ function add_enqueue_action(line_id, container_id, entry) {
 	$('#' + action_id).click(function() {
 		$.post("rest/player", { action: "enqueue", "entry_id" : entry_id }, function(data) {
 			$.getJSON('rest/song/' + entry_id, function(entry) {
-				// add_playlist_entry(0, entry);
 				$('#' + line_id).fadeOut('slow');
 			});
 		});
@@ -219,3 +271,173 @@ function add_rate_action(line_id, container_id, entry) {
 	}
 }
 */
+
+
+
+
+
+
+
+
+
+
+
+function clear_tabs() {
+	$('#tab_playlist').removeClass('selected');
+	$('#tab_library').removeClass('selected');
+	$('#tab_search').removeClass('selected');
+}
+
+function hide_all() {
+	$('#playlist').addClass('hide');
+	$('#library').addClass('hide');
+	$('#search').addClass('hide');
+}
+
+
+function load_library(first, limit) {
+	var url = 'rest/search/song/first/' + first + '/limit/' + limit;
+	$('#library').html('');
+	$.getJSON(url, function(json) {
+		if (json && json.entries) {
+			first = parseInt(first);
+			limit = parseInt(limit);
+			var count = json.entries.length;
+			var prev = first - limit;
+			var next = first + limit;
+
+			if(first > 0) {
+				$('#library').append('<span class="library_previous">' +
+						'<img id="go_previous_top" src="img/go-previous.svg" class="link" />' + 
+						'</span>');
+				$('#go_previous_top').click( function() {
+					load_library(prev, limit);
+				});
+			} else {
+				$('#library').append('<span class="library_previous">' +
+						'&nbsp;' +
+						'</span>');
+			}
+
+			$('#library').append('<span class="library_status">showing ' + count + 
+					' starting at ' + first + 
+					'</span>');
+			
+			if (count == limit) {
+				$('#library').append('<span class="library_next">' + 
+						'<img id="go_next_top" src="img/go-next.svg" class="link" />' +
+						'</span>');
+				$('#go_next_top').click( function() {
+					load_library(next, limit);
+				});
+			} else {
+				$('#library').append('<span class="library_next">' +
+						'&nbsp;' +
+						'</span>');
+			}
+
+			$('#library').append(create_header());
+			
+			$.each(json.entries, function(index, entry) {
+				add_search_entry(index, entry, '#library');
+			});
+			
+			if(first > 0) {
+				$('#library').append('<img id="go_previous" src="img/go-previous.svg" class="link">');
+				$('#go_previous').click( function() {
+					load_library(prev, limit);
+				});
+			}
+			
+			if (count == limit) {
+				$('#library').append('<img id="go_next" src="img/go-next.svg" class="link">');
+				$('#go_next').click( function() {
+					load_library(next, limit);
+				});
+			}
+		}
+	});
+}
+
+
+function parse_search_parameters() {
+	var filter = $('#search_filter').val();
+	var filter_tags = /[^\[\*\s]+\:[^\]\*]+/g;
+	var rating_tag = /\*{1,5}/g;
+	var rating = 0;
+	var filters = [];
+	var clean_filter = filter;
+	
+	while(tag = filter_tags.exec(filter)) {
+		tag = String(tag);
+		tag = trim(tag);
+		filters.push(tag);
+		clean_filter = clean_filter.replace(tag, '');
+	}
+
+	while(rate = rating_tag.exec(filter)) {
+		rate = String(rate);
+		irate = rate.length;
+		if (irate > rating)
+			rating = irate;
+		clean_filter = clean_filter.replace(rate, '');
+	}
+	
+	while(quote = /\[\]/.exec(clean_filter)) {
+		clean_filter = clean_filter.replace(quote, '');
+	}
+	clean_filter = trim(clean_filter);
+	
+	var is_type_song = /type\:song/;
+	var is_type_podcast = /type\:podcast/;
+	var is_type_radio = /type\:radio/;
+	var is_artist = /artist:.+/;
+	var is_album = /album:.+/;
+	var is_title = /title:.+/;
+	var is_genre = /genre:.+/;
+	var is_limit = /limit:.+/;
+	var is_first = /first:.+/;
+	
+	var query_parameters = {};
+	
+	if (rating > 0)
+		query_parameters.rating = rating;
+
+	if (filters.length > 0) {
+		$.each(filters, function(index, value) {
+			if (is_type_song.test(value)) {
+				query_parameters.type = 'song';
+			} else if (is_type_podcast.test(value)) {
+				query_parameters.type = 'podcast';
+			} else if (is_type_radio.test(value)) {
+				query_parameters.type = 'iradio';
+			} else if (is_artist.test(value)) {
+				query_parameters.artist = value.replace(/artist:/, '');
+			} else if (is_album.test(value)) {
+				query_parameters.album = value.replace(/album:/, '');
+			} else if (is_title.test(value)) {
+				query_parameters.title = value.replace(/title:/, '');
+			} else if (is_genre.test(value)) {
+				query_parameters.genre = value.replace(/genre:/, '');
+			} else if (is_limit.test(value)) {
+				query_parameters.limit = value.replace(/.*limit:/, '');
+			} else if (is_first.test(value)) {
+				query_parameters.first = value.replace(/.*first:/, '');
+			}
+		});
+		
+	} 
+
+	if (!query_parameters.hasOwnProperty('artist') && 
+			!query_parameters.hasOwnProperty('album') &&
+			!query_parameters.hasOwnProperty('title') &&
+			!query_parameters.hasOwnProperty('genre') &&
+			clean_filter)
+		query_parameters.all = clean_filter;
+
+	if (!query_parameters.type)
+		query_parameters.type = 'song';
+
+	return query_parameters;
+	
+}
