@@ -216,6 +216,10 @@ img {
 	width: 70%;
 }
 
+#search_filter:hover {
+	border: 1px solid blue;
+}
+
 #do_search {
 	vertical-align: middle;
 	cursor: pointer;

@@ -7,33 +7,33 @@ $(document).ready(function() {
 	
 	$('#play_pause').click(function() {
 		$.post("rest/player", { action: "play_pause" }, function (data) {
-			timers.push(setTimeout('update_status()', 100));
+			timers.push(setTimeout('update_status()', 200));
 		});
 	});
 	
 	$('#previous').click(function() {
 		$.post("rest/player", { action: "previous" }, function (data) {
-			timers.push(setTimeout('load_playlist()', 100));
-			timers.push(setTimeout('update_status()', 200));
+			timers.push(setTimeout('load_playlist()', 200));
+			timers.push(setTimeout('update_status()', 500));
 		});
 	});
 	
 	$('#next').click(function() {
 		$.post("rest/player", { action: "next" }, function (data) {
-			timers.push(setTimeout('load_playlist()', 100));
-			timers.push(setTimeout('update_status()', 200));
+			timers.push(setTimeout('load_playlist()', 200));
+			timers.push(setTimeout('update_status()', 500));
 		});
 	});
 
 	$('#seek_back').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "-10" }, function (data) {
-			timers.push(setTimeout('update_status()', 100));
+			timers.push(setTimeout('update_status()', 200));
 		});
 	});
 
 	$('#seek_forward').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "10" }, function (data) {
-			timers.push(setTimeout('update_status()', 100));
+			timers.push(setTimeout('update_status()', 200));
 		});
 	});
 	
