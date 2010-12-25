@@ -161,6 +161,7 @@ function update_status() {
 function load_playlist() {
 	$.getJSON('rest/playlist', function(json) {
 		$('#playlist').html('');
+		$('#playlist').append(create_header());
 		if (json && json.entries) {
 			$.each(json.entries, function(index, entry) {
 				add_playlist_entry(index, entry);
@@ -280,35 +281,6 @@ function set_rating(event) {
 		}
 	});
 }
-
-/*
-function add_rate_action(line_id, container_id, entry) {
-	var action_id = container_id + '_rate_';
-	var rating;
-	for(rating = 0; rating < 6; rating++) {
-		var enqueue = '<img id="' + action_id + '" class="link" src="img/add.svg" />';
-		var entry_id = entry.id;
-		$('#' + container_id).append(enqueue);
-		$('#' + action_id).click(function() {
-			$.post("rest/player", { action: "enqueue", "entry_id" : entry_id }, function(data) {
-				$.getJSON('rest/song/' + entry_id, function(entry) {
-					add_playlist_entry(0, entry);
-				});
-			});
-		});
-	}
-}
-*/
-
-
-
-
-
-
-
-
-
-
 
 function clear_tabs() {
 	$('#tab_playlist').removeClass('selected');
