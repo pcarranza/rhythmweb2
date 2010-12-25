@@ -176,8 +176,6 @@ function add_playlist_entry(index, entry) {
 	var line = create_entry_line(line_id, container_id, entry);
 	
 	$('#playlist').append(line);
-	
-	$('#' + line_id).
 
 	add_rate_action(line_id, container_id, entry);
 	add_dequeue_action(line_id, container_id, entry);
