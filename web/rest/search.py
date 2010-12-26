@@ -107,12 +107,9 @@ class Page(BaseRest, Loggable):
                     
                 filter['rating'] = irating
                 
-            if 'from' in self._parameters:
-                filter['from'] = self.unpack_value(self._parameters['from'])
+            if 'genre' in self._parameters:
+                filter['genre'] = self.unpack_value(self._parameters['genre'])
                 
-            if 'size' in self._parameters:
-                filter['size'] = self.unpack_value(self._parameters['size'])
-        
             if 'first' in self._parameters:
                 filter['first'] = self.unpack_value(self._parameters['first'])
         
