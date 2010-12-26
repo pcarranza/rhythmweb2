@@ -1,19 +1,33 @@
+/*
+# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
+# Copyright (C) 2010  Pablo Carranza
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 body {
 	font-family: font-family: Verdana, Helvetica, Sans-Serif;
 }
-
 img {
 	border: 0px;
 }
-
 .link {
 	cursor: pointer;
 }
-
 .hide {
 	display: none;
 }
-
 /* ****************************************************** PLAYER */
 #player {
 	float: left;
@@ -21,55 +35,42 @@ img {
 	width: 100%;
 	line-height: 2em;
 }
-
-
 #player_buttons {
 	float: left;
 }
-
 #title {
 	float: left;
 	margin-left: 1em;
 	font-size: 1.7em;
 	font-weight: bold;
 }
-
 #artist {
 	float: left;
 	margin-left: 0.7em;
 	font-size: 1.1em;
 }
-
 #album {
 	float: left;
 	margin-left: 0.3em;
 	font-size: 1.1em;
 }
-
 #title {
 	float: left;
 	margin-left: 0.7em;
 }
-
 #time {
 	float: right;
 	clear: right;
 	margin-right: 1em;
 }
-
 /* ****************************************************** END PLAYER */
-
-
 /* ****************************************************** PLAYLIST */
-
-
 #playlist, #library {
 	float: left;
 	clear: both;
 	width: 100%;
 	line-height: 2em;
 }
-
 .line {
 	clear: both;
 	width: 100%;
@@ -81,51 +82,40 @@ img {
 	font-style: italic;
 	color: #f80; 
 }
-
 #track_number {
 	width: 2%;
 	display: table-cell;
 }
-
 #track_title {
 	width: 27%;
 	display: table-cell;
 }
-
 #track_genre {
 	width: 5%;
 	display: table-cell;
 }
-
 #track_artist {
 	width: 15%;
 	display: table-cell;
 }
-
 #track_album {
 	width: 25%;
 	display: table-cell;
 }
-
 #track_duration {
 	width: 5%;
 	display: table-cell;
 }
-
 #track_actions {
 	width: 15%;
 	display: table-cell;
 }
-
 #clear_queue {
 	float: right;
 	clear: right;
 }
-
 /* ****************************************************** END PLAYLIST */
-
 /* ****************************************************** TABS */
-
 #tabs ul {
 	list-style: none;
 	padding: 0;
@@ -134,12 +124,10 @@ img {
 	float: left;
 	width: 100%;
 }
-
 #tabs li {
 	float: left;
 	margin: 0 1em 0 0;	
 }
-
 #tabs li span {
 	text-decoration: none;
 	display: block;
@@ -151,107 +139,81 @@ img {
 	color: #fc6;
 	cursor: pointer;
 }
-
-
 #tabs li span:hover {
 	color: #fa3;
 	border-color: #fa3;
 }
-
-
 #content {
 	border-top: 1px solid  #fc6;
 	clear: both;
 	padding: 0.7em;
 }
-
-
 #tabs .selected {
 	color: #f80;
 	border-color: #f80;
 	position: relative;
 	top: 1px;
 }
-
 /* ****************************************************** END TABS */
-
-
 /* ****************************************************** LIBRARY BROWSING */
-
 .library_previous {
 	float: left;
 	clear: left;
 	width: 10%;
 }
-
 .library_status {
 	position: relative;
 	float: left;
 	text-align: center;
 	width: 80%;
 }
-
 .library_next {
 	float: left;
 	clear: right;
 	width: 10%;
 }
-
 #go_next_top {
 	float: right;
 }
-
 #go_next {
 	float: right;
 }
-
 /* ****************************************************** END LIBRARY BROWSING */
-
 /* ****************************************************** SEARCH */
-
 #search {
 	float: left;
 	clear: both;
 	width: 100%;
 	line-height: 2em;
 }
-
 #search_filter {
 	border: 1px solid grey;
 	width: 70%;
 }
-
 #search_filter:hover {
 	border: 1px solid blue;
 }
-
 #do_search {
 	vertical-align: middle;
 	cursor: pointer;
 }
-
 #search_add_all {
 	float: right;
 }
-
 .searchfor {
 	float: left;
 	font-weight: bolder;
 }
-
 .cell {
 	float: left;
 	margin-left: 1em;
 }
-
 .prop {
 	float: left;
 	font-weight: bold;
 }
-
 .value {
 	float: left;
 	font-style: italic;
 }
-
 /* ****************************************************** END SEARCH */
