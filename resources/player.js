@@ -224,7 +224,7 @@ function create_entry_line(line_id, container_id, entry) {
 
 function add_dequeue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_dequeue';
-	var dequeue = '<img id="' + action_id + '" class="link" src="img/remove.svg" />';
+	var dequeue = '<img id="' + action_id + '" class="link" src="img/remove.png" width="24" height="24" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(dequeue);
 	$('#' + action_id).click(function() {
@@ -237,7 +237,7 @@ function add_dequeue_action(line_id, container_id, entry) {
 
 function add_enqueue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_enqueue';
-	var enqueue = '<img id="' + action_id + '" class="link" src="img/add.svg" />';
+	var enqueue = '<img id="' + action_id + '" class="link" src="img/add.png" width="24" height="24" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(enqueue);
 	$('#' + action_id).click(function() {
@@ -257,9 +257,9 @@ function add_rate_action(line_id, container_id, entry) {
 	for(var index = 1; index < 6; index++) {
 		var action_id = action_scheme + index;
 		if (index > rating) {
-			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star-grey.svg" />');
+			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star-grey.png" width="24" height="24" />');
 		} else {
-			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star.svg" />');
+			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star.png" width="24" height="24" />');
 		}
 		$('#' + action_id).bind('click', { id : entry_id, rating : index, scheme : action_scheme }, set_rating);
 	}
@@ -274,9 +274,9 @@ function set_rating(event) {
 		var index;
 		for (index = 1; index <= 6; index++) {
 			if (index <= rating) {
-				$('#' + action_scheme + index).attr('src', 'img/star.svg');
+				$('#' + action_scheme + index).attr('src', 'img/star.png');
 			} else {
-				$('#' + action_scheme + index).attr('src', 'img/star-grey.svg');
+				$('#' + action_scheme + index).attr('src', 'img/star-grey.png');
 			}
 		}
 	});
@@ -308,7 +308,7 @@ function load_library(first, limit) {
 
 			if(first > 0) {
 				$('#library').append('<span class="library_previous">' +
-						'<img id="go_previous_top" src="img/go-previous.svg" class="link" />' + 
+						'<img id="go_previous_top" src="img/go-previous.png" class="link" width="24" height="24" />' + 
 						'</span>');
 				$('#go_previous_top').click( function() {
 					load_library(prev, limit);
@@ -325,7 +325,7 @@ function load_library(first, limit) {
 			
 			if (count == limit) {
 				$('#library').append('<span class="library_next">' + 
-						'<img id="go_next_top" src="img/go-next.svg" class="link" />' +
+						'<img id="go_next_top" src="img/go-next.png" class="link" width="24" height="24" />' +
 						'</span>');
 				$('#go_next_top').click( function() {
 					load_library(next, limit);
@@ -343,14 +343,14 @@ function load_library(first, limit) {
 			});
 			
 			if(first > 0) {
-				$('#library').append('<img id="go_previous" src="img/go-previous.svg" class="link">');
+				$('#library').append('<img id="go_previous" src="img/go-previous.png" class="link" width="24" height="24" />');
 				$('#go_previous').click( function() {
 					load_library(prev, limit);
 				});
 			}
 			
 			if (count == limit) {
-				$('#library').append('<img id="go_next" src="img/go-next.svg" class="link">');
+				$('#library').append('<img id="go_next" src="img/go-next.png" class="link" width="24" height="24" />');
 				$('#go_next').click( function() {
 					load_library(next, limit);
 				});

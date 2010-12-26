@@ -1,14 +1,14 @@
 
 import os
+import StringIO
 from serve.log.loggable import Loggable
-
+from datetime import timedelta, datetime
+from gzip import GzipFile
 
 class RequestHandler(Loggable):
     
-    _resources = {}
     _resource_path = None
     _web_path = None
-    
     _components = None
     
     
@@ -39,12 +39,16 @@ class RequestHandler(Loggable):
         
     
     def handle_method(self, request_method, environ, response, params=None):
-        #for e in environ:
-        #    self.debug('ENV %s = %s' % (e, environ[e]))
+        for e in environ:
+            self.debug('ENV %s = %s' % (e, environ[e]))
         
         request_path = environ['PATH_INFO']
-        if request_path == '/' or not request_path:
+        
+        if not request_path or request_path == '/':
             request_path = '/index.html'
+            
+        if not request_path.startswith('/'):
+            request_path = '/' + request_path
             
         self.info('%s method - %s' % (request_method.upper(), request_path))
  
@@ -90,12 +94,12 @@ class RequestHandler(Loggable):
                 elif self.is_resource_file(web_path):
                     self.debug('Handling resource %s' % web_path)
                     resource = self.get_resource_handler(web_path)
-                    return resource.handle(response)
+                    return resource.handle(response, self.is_accept_gzip(environ))
 
                 elif self.is_resource_file(resource_path):
                     self.debug('Handling resource %s' % resource_path)
                     resource = self.get_resource_handler(resource_path)
-                    return resource.handle(response)
+                    return resource.handle(response, self.is_accept_gzip(environ))
                     
                 else:
                     continue
@@ -109,6 +113,16 @@ class RequestHandler(Loggable):
         except Exception, e:
             return self.send_error(500, e.message, response)
             # UNKNOWN ERROR
+
+    
+    def is_accept_gzip(self, env):
+        if 'HTTP_ACCEPT_ENCODING' in env:
+            accept = env['HTTP_ACCEPT_ENCODING']
+            accept = str(accept).split(',')
+            if 'gzip' in accept:
+                return True
+            
+        return False
     
     
     def is_python_file(self, file):
@@ -163,13 +177,11 @@ class RequestHandler(Loggable):
         return klass(self._components)
 
         
-    
     def send_error(self, code, message, response):
         self.error('Sending error \'%s\' %s' % (code, message))
         error_message = '%d %s' % (code, message)
         response(error_message, self._create_headers())
         return 'ERROR: %s ' % message
-    
     
     
     def _create_headers(self, headers=[]):
@@ -179,18 +191,9 @@ class RequestHandler(Loggable):
         return headers
     
     
-    
     def get_resource_handler(self, resource):
         return ResourceHandler(resource) # dont cache
-        
-#        if not self._resources.has_key(resource):
-#            self.debug('Returning existent handler for key \"%s\"' % resource)
-#            self._resources[resource] = ResourceHandler(resource)
-#            
-#        return self._resources[resource]
-            
-
-
+    
 
             
 class ResourceHandler(Loggable):
@@ -212,27 +215,50 @@ class ResourceHandler(Loggable):
         self.debug('Resource %s file is %s' % (resource, self._file))
         
         
-    def handle(self, response):
+    def handle(self, response, accept_gzip=False):
         self.debug('Handling resource %s' % self._file)
         
         (content_type, open_as) = self._get_content_type()
         if not content_type:
             raise UnknownContentTypeException(self._extension)
         
-        headers = [("Content-type", content_type)]
+#        size = os.path.getsize(self._file)
+        mtime = os.path.getmtime(self._file)
+        mtime = datetime.fromtimestamp(mtime)
+        expiration = datetime.now() + timedelta(days=365)
+
+#     ('Content-Length', str(size)), \
+        
+        headers = [("Content-type", content_type), \
+                   ('Cache-Control', 'public'), \
+                   ('Last-Modified', mtime.ctime()), \
+                   ('Expires', expiration.ctime())]
+        
+        if accept_gzip:
+            headers.append(("Content-Encoding", "gzip"))
+            headers.append(("Vary", "Accept-Encoding"))
+        
+        for header in headers:
+            self.debug('%s=%s' % (header[0], header[1]))
+        
         response("200 OK", headers)
 
         open_mode = 'r%s' % open_as
         
         file = open(self._file, open_mode)
         
-        return file.readlines()
+        if accept_gzip:
+            data = "".join(file.readlines())
+            return [self.gzip_string(data, 8)]
+        else:
+            return file.readlines()
     
 
     def _get_content_type(self):
         if not self._content_type:
             (self._content_type, self._open_as) = self._content_type_by_ext(self._extension)
         
+        self.debug('Returning content type %s' % self._content_type)
         return (self._content_type, self._open_as)
     
     
@@ -246,7 +272,7 @@ class ResourceHandler(Loggable):
         if ext == '.gif':
             return ('image/gif', 'b')
         if ext == '.png':
-            return ('image/x-png', 'b')
+            return ('image/png', 'b')
         if ext == '.jpg':
             return ('image/jpeg', 'b')
         if ext == '.jpeg':
@@ -255,17 +281,28 @@ class ResourceHandler(Loggable):
             return ('image/ico', 'b')
         if ext == '.svg':
             return ('image/svg+xml', 't')
+        if ext == '.js':
+            return ('application/x-javascript', 't')
         
         return ('text/plain', 't')
-
-
     
+    
+    def gzip_string(self, string, compression_level):
+        """ The `gzip` module didn't provide a way to gzip just a string.
+            Had to hack together this. I know, it isn't pretty.
+        """
+        fake_file = StringIO.StringIO()
+        gz_file = GzipFile(None, 'wb', compression_level, fileobj=fake_file)
+        gz_file.write(string)
+        gz_file.close()
+        return fake_file.getvalue()
+
+
 class UnknownContentTypeException(Exception):
     
     def __init__(self, ext):
         Exception.__init__(self)
         self.message = 'Unknown content type %s' % ext
-
 
 
 class ServerException(Exception):
