@@ -37,6 +37,7 @@ $(document).ready(function() {
 		});
 	});
 	
+	
 	$('#tab_playlist').click(function () {
 		clear_tabs();
 		hide_all();
@@ -44,6 +45,7 @@ $(document).ready(function() {
 		load_playlist();
 		$('#playlist').removeClass('hide');
 	});
+	
 	
 	$('#tab_library').click(function () {
 		clear_tabs();
@@ -58,12 +60,14 @@ $(document).ready(function() {
 		$('#library').removeClass('hide');
 	});
 	
+	
 	$('#tab_search').click(function () {
 		clear_tabs();
 		hide_all();
 		$(this).addClass('selected');
 		$('#search').removeClass('hide');
 	});
+	
 
 	$('#do_search').click(function() {
 		parameters = parse_search_parameters();
@@ -71,10 +75,24 @@ $(document).ready(function() {
 		$('#search_result').html('');
 		$('#search_result').append(search_parameters_to_html(parameters));
 		$.post(url, parameters, function(json) {
+			$('#search_parameters').append(create_add_all('search_add_all'))
 			$('#search_result').append(create_header());
+			var ids = '';
 			$.each(json.entries, function(index, entry) {
 				add_search_entry(index, entry, 'search_result');
+				ids += entry.id + ',';
 			});
+			if (ids.length > 0)
+				ids = ids.slice(0, ids.length - 1);
+			
+			$('#search_add_all').click(function() {
+				$.post("rest/player", { action: "enqueue", "entry_id" : ids }, function(data) {
+					var numbers = /\d+/g; 
+					while(id = numbers.exec(ids)) {
+						$('#search_result_line_' + id).fadeOut('fast');
+					}
+				});
+			}); 
 		});
 	});
 
@@ -87,8 +105,17 @@ $(document).ready(function() {
 	$('#search_filter').focus();
 });
 
+
+function create_add_all(id) {
+	return '<img id="' + id + '" src="img/apply.png" width="24" height="24" class="link" alt="Add All"/>'
+}
+
+function create_remove_all(id) {
+	return '<img id="' + id + '" src="img/clean.png" width="24" height="24" class="link" alt="Clear playlist"/>'
+}
+
 function search_parameters_to_html(parameters) {
-	var component = '<div class="line"><span class="searchfor">Searching for: </span>';
+	var component = '<div id="search_parameters" class="line"><span class="searchfor">Searching for: </span>';
 	for(var property in parameters) {
 		var value = parameters[property];
 		component += '<span class="cell">' +
@@ -170,15 +197,22 @@ function update_status() {
 	timers.push(setTimeout('update_status()', 10000));
 }
 
+
 function load_playlist() {
 	$.getJSON('rest/playlist', function(json) {
 		$('#playlist').html('');
+		$('#playlist').append(create_remove_all('clear_queue'));
 		$('#playlist').append(create_header());
 		if (json && json.entries) {
 			$.each(json.entries, function(index, entry) {
 				add_playlist_entry(index, entry);
 			});
 		}
+		$('#clear_queue').click(function() {
+			$.post("rest/player", {action : "clear_queue"}, function(data) {
+				$('#playlist').html('');
+			});
+		});
 	});
 }
 
@@ -220,6 +254,7 @@ function create_header() {
 	return line;
 }
 
+
 function create_entry_line(line_id, container_id, entry) {
 	var line = '<div id="' + line_id + '" class="line">';
 	line += '<span id="track_number">' + entry.track_number + '</span>';
@@ -236,12 +271,12 @@ function create_entry_line(line_id, container_id, entry) {
 
 function add_dequeue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_dequeue';
-	var dequeue = '<img id="' + action_id + '" class="link" src="img/remove.png" width="24" height="24" />';
+	var dequeue = '<img id="' + action_id + '" class="link" src="img/remove.png" width="24" height="24" alt="Remove" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(dequeue);
 	$('#' + action_id).click(function() {
 		$.post("rest/player", { action: "dequeue", "entry_id" : entry_id }, function(data) {
-			$('#' + line_id).fadeOut('slow');
+			$('#' + line_id).fadeOut('fast');
 		});
 	});
 }
@@ -249,13 +284,13 @@ function add_dequeue_action(line_id, container_id, entry) {
 
 function add_enqueue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_enqueue';
-	var enqueue = '<img id="' + action_id + '" class="link" src="img/add.png" width="24" height="24" />';
+	var enqueue = '<img id="' + action_id + '" class="link" src="img/add.png" width="24" height="24" alt="Add"/>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(enqueue);
 	$('#' + action_id).click(function() {
 		$.post("rest/player", { action: "enqueue", "entry_id" : entry_id }, function(data) {
 			$.getJSON('rest/song/' + entry_id, function(entry) {
-				$('#' + line_id).fadeOut('slow');
+				$('#' + line_id).fadeOut('fast');
 			});
 		});
 	});
@@ -269,9 +304,9 @@ function add_rate_action(line_id, container_id, entry) {
 	for(var index = 1; index < 6; index++) {
 		var action_id = action_scheme + index;
 		if (index > rating) {
-			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star-grey.png" width="24" height="24" />');
+			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star-grey.png" width="24" height="24" alt="Rate" />');
 		} else {
-			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star.png" width="24" height="24" />');
+			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star.png" width="24" height="24" alt="Rate" />');
 		}
 		$('#' + action_id).bind('click', { id : entry_id, rating : index, scheme : action_scheme }, set_rating);
 	}
@@ -320,7 +355,7 @@ function load_library(first, limit) {
 
 			if(first > 0) {
 				$('#library').append('<span class="library_previous">' +
-						'<img id="go_previous_top" src="img/go-previous.png" class="link" width="24" height="24" />' + 
+						'<img id="go_previous_top" src="img/go-previous.png" class="link" width="24" height="24"  alt="Previous" />' + 
 						'</span>');
 				$('#go_previous_top').click( function() {
 					load_library(prev, limit);
@@ -337,7 +372,7 @@ function load_library(first, limit) {
 			
 			if (count == limit) {
 				$('#library').append('<span class="library_next">' + 
-						'<img id="go_next_top" src="img/go-next.png" class="link" width="24" height="24" />' +
+						'<img id="go_next_top" src="img/go-next.png" class="link" width="24" height="24" alt="Next"/>' +
 						'</span>');
 				$('#go_next_top').click( function() {
 					load_library(next, limit);
@@ -355,14 +390,14 @@ function load_library(first, limit) {
 			});
 			
 			if(first > 0) {
-				$('#library').append('<img id="go_previous" src="img/go-previous.png" class="link" width="24" height="24" />');
+				$('#library').append('<img id="go_previous" src="img/go-previous.png" class="link" width="24" height="24" alt="Previous" />');
 				$('#go_previous').click( function() {
 					load_library(prev, limit);
 				});
 			}
 			
 			if (count == limit) {
-				$('#library').append('<img id="go_next" src="img/go-next.png" class="link" width="24" height="24" />');
+				$('#library').append('<img id="go_next" src="img/go-next.png" class="link" width="24" height="24" alt="Next" />');
 				$('#go_next').click( function() {
 					load_library(next, limit);
 				});

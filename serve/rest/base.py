@@ -125,5 +125,7 @@ class BaseRest(Loggable):
             for v in value:
                 return_value.append(value[v])
             return return_value
+        elif type(value) is str and ',' in value:
+            return value.split(',')
         else:
             return [value]

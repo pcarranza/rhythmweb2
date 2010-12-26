@@ -42,16 +42,19 @@ class Page(BaseRest, Loggable):
         elif action == 'enqueue':
             if not 'entry_id' in params:
                 raise ServerException(400, 'Bad request, no entry_id parameter')
-            
-            entry_ids = self.pack_as_list(params['entry_id'])
+            self.debug('Enqueue Entry id %s' % params['entry_id'][0])
+            entry_ids = self.pack_as_list(params['entry_id'][0])
             handler.enqueue(entry_ids)
             
         elif action == 'dequeue':
             if not 'entry_id' in params:
                 raise ServerException(400, 'Bad request, no entry_id parameter')
             
-            entry_ids = self.pack_as_list(params['entry_id'])
+            entry_ids = self.pack_as_list(params['entry_id'][0])
             handler.dequeue(entry_ids)
+            
+        elif action == 'clear_queue':
+            handler.clear_play_queue()
         
         elif action == 'play_entry':
             if not 'entry_id' in params:

@@ -117,6 +117,11 @@ img {
 	display: table-cell;
 }
 
+#clear_queue {
+	float: right;
+	clear: right;
+}
+
 /* ****************************************************** END PLAYLIST */
 
 /* ****************************************************** TABS */
@@ -223,6 +228,10 @@ img {
 #do_search {
 	vertical-align: middle;
 	cursor: pointer;
+}
+
+#search_add_all {
+	float: right;
 }
 
 .searchfor {

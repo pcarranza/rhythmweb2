@@ -370,21 +370,29 @@ class RBHandler(Loggable):
         
     def dequeue(self, entry_ids):
         self.__print_state('dequeue')
-        self.info('Removing entries %s from queue' % entry_ids)
-        for entry_id in entry_ids:
-            entry = self.load_entry(entry_id)
-            if entry is None:
-                continue
-            location = str(entry.location)
-            self.debug('Dequeuing entry %s' % location)
-            self._shell.remove_from_queue(location)
+        if type(entry_ids) is list:
+            self.info('Removing entries %s from queue' % entry_ids)
+            for entry_id in entry_ids:
+                entry = self.load_entry(entry_id)
+                if entry is None:
+                    continue
+                location = str(entry.location)
+                self.debug('Dequeuing entry %s' % location)
+                self._shell.remove_from_queue(location)
+        elif type(entry_ids) is int:
+            self.info('Removing entry %d from queue' % entry_ids)
+            entry = self.load_entry(entry_ids)
+            if not entry is None:
+                location = str(entry.location)
+                self.debug('Dequeuing entry %s' % location)
+                self._shell.remove_from_queue(location)
                 
         self._shell.props.queue_source.queue_draw()
         
     
     def clear_play_queue(self):
         self.__print_state('clear_play_queue')
-        self._loop_query_model(func=self._shell.remove_from_queue, query_model=self._get_play_queue_model())
+        self._loop_query_model(func=self.dequeue, query_model=self._get_play_queue_model())
 
     
     def _get_entry(self, entry_id):
