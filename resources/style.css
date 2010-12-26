@@ -225,4 +225,24 @@ img {
 	cursor: pointer;
 }
 
+.searchfor {
+	float: left;
+	font-weight: bolder;
+}
+
+.cell {
+	float: left;
+	margin-left: 1em;
+}
+
+.prop {
+	float: left;
+	font-weight: bold;
+}
+
+.value {
+	float: left;
+	font-style: italic;
+}
+
 /* ****************************************************** END SEARCH */

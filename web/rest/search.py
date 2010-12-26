@@ -52,14 +52,7 @@ class Page(BaseRest, Loggable):
 
         if not self._path_params is None:
             self.debug('Getting type from path_params')
-            if 'song' in self._path_params:
-                filter['type'] = 'song'
-            elif 'iradio' in self._path_params:
-                filter['type'] = 'iradio'
-            elif 'podcast' in self._path_params:
-                filter['type'] = 'podcast-post'
-            else:
-                self.debug('No valid type in path_params')
+            filter['type'] = self._unpack_type(self._path_params)
                 
             if 'first' in self._path_params:
                 pos = self._path_params.index('first')
@@ -76,7 +69,8 @@ class Page(BaseRest, Loggable):
             self.debug('Reading POST parameters')
             
             if not 'type' in filter and 'type' in self._parameters:
-                filter['type'] = self.unpack_value(self._parameters['type'])
+                filter['type'] = self.unpack_value(\
+                                self._unpack_type(self._parameters['type']))
             
             if 'artist' in self._parameters:
                 filter['artist'] = self.unpack_value(self._parameters['artist'])
@@ -118,3 +112,20 @@ class Page(BaseRest, Loggable):
         return filter
     
     
+    def _unpack_type(self, value):
+        if type(value) is list:
+            if 'song' in value:
+                return 'song'
+            elif 'iradio' in value or 'radio' in value:
+                return 'iradio'
+            elif 'podcast' in value:
+                return 'podcast-post'
+        else:
+            if 'song' == value:
+                return 'song'
+            elif 'iradio' == value or 'radio' == value:
+                return 'iradio'
+            elif 'podcast' == value or 'podcast-post' == value:
+                return 'podcast-post'
+        return None;
+            

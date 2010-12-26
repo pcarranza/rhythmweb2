@@ -69,6 +69,7 @@ $(document).ready(function() {
 		parameters = parse_search_parameters();
 		var url = 'rest/search';
 		$('#search_result').html('');
+		$('#search_result').append(search_parameters_to_html(parameters));
 		$.post(url, parameters, function(json) {
 			$('#search_result').append(create_header());
 			$.each(json.entries, function(index, entry) {
@@ -84,9 +85,20 @@ $(document).ready(function() {
 	});
 
 	$('#search_filter').focus();
-
-	
 });
+
+function search_parameters_to_html(parameters) {
+	var component = '<div class="line"><span class="searchfor">Searching for: </span>';
+	for(var property in parameters) {
+		var value = parameters[property];
+		component += '<span class="cell">' +
+					'<span class="prop">' + property + '=</span>' + 
+					'<span class="val">' + value + '</span>' + 
+				'</span>';
+	}
+	component += '</div>';
+	return component;
+}
 
 
 function update_status() {
