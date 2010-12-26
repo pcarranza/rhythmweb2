@@ -104,7 +104,7 @@ class RBHandler(Loggable):
         
     def play_entry(self, entry_id): # entry id
         self.__print_state('play_entry')
-        self.debug('Playing entry %s' % entry_id)
+        self.info('Playing entry %s' % entry_id)
         
         entry = self._get_entry(entry_id)
         if not entry is None:
@@ -113,7 +113,7 @@ class RBHandler(Loggable):
         
     def set_rating(self, entry_id, rating):
         self.__print_state('set_rating')
-        self.debug('Setting rating %d to entry %s' % (rating, entry_id))
+        self.info('Setting rating %d to entry %s' % (rating, entry_id))
         entry = self._get_entry(entry_id)
         if not entry is None:
             self._db.set(entry, rhythmdb.PROP_RATING, rating)
@@ -121,19 +121,19 @@ class RBHandler(Loggable):
         
     def search_song(self, filter):
         self.__print_state('search_song')
-        self.debug('Searching for a song with filter %s' % filter)
+        self.info('Searching for a song with filter %s' % filter)
         return self.search(filter, TYPE_SONG)
     
     
     def search_radio(self, filter):
         self.__print_state('search_radio')
-        self.debug('Searching for a radio with filter %s' % filter)
+        self.info('Searching for a radio with filter %s' % filter)
         return self.search(filter, TYPE_RADIO)
     
     
     def search_podcast(self, filter):
         self.__print_state('search_podcast')
-        self.debug('Searching for a podcast with filter %s' % filter)
+        self.info('Searching for a podcast with filter %s' % filter)
         return self.search(filter, TYPE_PODCAST)
     
     
@@ -150,7 +150,7 @@ class RBHandler(Loggable):
         self.__print_state('query')
         
         if filters is None:
-            self.debug('No filters, returning empty result')
+            self.info('No filters, returning empty result')
             return []
         
         type = None
@@ -212,6 +212,9 @@ class RBHandler(Loggable):
                 all.append((rhythmdb.QUERY_PROP_LIKE, \
                     rhythmdb.PROP_ALBUM, \
                     all_filter))
+                all.append((rhythmdb.QUERY_PROP_LIKE, \
+                    rhythmdb.PROP_GENRE, \
+                    all_filter))
                 
             else:
                 searches = []
@@ -241,16 +244,24 @@ class RBHandler(Loggable):
                 
                     
         if not all is None:
-            self.debug('Querying for all with diffuse filters')
+            self.info('Querying for all...')
             query_model = self._query_all(type, play_count, rating, all, True)
               
-        else:
-            self.debug('Querying for all with diffuse filters')
-            if searches is None:
-                self.debug('No searches defined, creating empty search array')
-                searches = []
-                
+        elif searches:
+            self.info('Querying for each...')
             query_model = self._query_all(type, play_count, rating, searches)
+        
+        elif type is None:
+            self.info('No search filter defined, querying for everything')
+            for mtype in self._media_types:
+                type = (rhythmdb.QUERY_PROP_EQUALS, \
+                        rhythmdb.PROP_TYPE, \
+                        self._media_types[mtype])
+                query_model = self._query_all(type, play_count, rating, searches)
+        else:
+            self.info('Search for type only, querying for type')
+            query_model = self._query_all(type, play_count, rating, searches)
+
         
         entries = []
         self._loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
@@ -258,7 +269,7 @@ class RBHandler(Loggable):
     
     
     def _query_all(self, type, min_play_count, min_rating, parameters, query_for_all=False):
-        self.debug('Querying...')
+        self.info('Querying...')
         db = self._db
         query_model = db.query_model_new(\
                      db.query_new(), \
@@ -267,7 +278,7 @@ class RBHandler(Loggable):
                      db.query_model_new_empty())
         
         if query_for_all: # equivalent to use an OR (many queries)
-            self.debug('Query for all parameters separatedly')
+            self.info('Query for all parameters separatedly')
             for parameter in parameters:
                 query = db.query_new()
                 if not type is None:
@@ -277,7 +288,7 @@ class RBHandler(Loggable):
                 db.query_append(query, parameter)
                 db.do_full_query_parsed(query_model, query)
         else:
-            self.debug('Query for all parameters in one only full search')
+            self.info('Query for all parameters in one only full search')
             query = db.query_new()
             if not type is None:
                 db.query_append(query, type)
@@ -292,7 +303,7 @@ class RBHandler(Loggable):
     
     def _append_play_count(self, query, play_count):
         if play_count > 0:
-            self.debug('Appending min play count %d' % play_count)
+            self.info('Appending min play count %d' % play_count)
             db = self._db
             play_count_query = (rhythmdb.QUERY_PROP_GREATER, \
                 rhythmdb.PROP_PLAY_COUNT, \
@@ -302,7 +313,7 @@ class RBHandler(Loggable):
 
     def _append_rating(self, query, rating):
         if rating > 0:
-            self.debug('Appending min rating %d' % rating)
+            self.info('Appending min rating %d' % rating)
             db = self._db
             rating_query = (rhythmdb.QUERY_PROP_GREATER, \
                 rhythmdb.PROP_RATING, \
@@ -338,7 +349,7 @@ class RBHandler(Loggable):
 
     def get_play_queue(self, queue_limit=100):
         self.__print_state('get_play_queue')
-        self.debug('Getting play queue')
+        self.info('Getting play queue')
         entries = []
         self._loop_query_model(func=entries.append, query_model=self._get_play_queue_model(), limit=queue_limit)
         return entries
@@ -346,7 +357,7 @@ class RBHandler(Loggable):
     
     def enqueue(self, entry_ids):
         self.__print_state('enqueue')
-        self.debug('Adding entries %s to queue' % entry_ids)
+        self.info('Adding entries %s to queue' % entry_ids)
         for entry_id in entry_ids:
             entry = self.load_entry(entry_id)
             if entry is None:
@@ -359,7 +370,7 @@ class RBHandler(Loggable):
         
     def dequeue(self, entry_ids):
         self.__print_state('dequeue')
-        self.debug('Removing entries %s from queue' % entry_ids)
+        self.info('Removing entries %s from queue' % entry_ids)
         for entry_id in entry_ids:
             entry = self.load_entry(entry_id)
             if entry is None:

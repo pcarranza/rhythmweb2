@@ -87,7 +87,7 @@ class JSon():
             return_value.append(self._parse_value(value))
             return_value.append(', ')
             
-        if len(return_value) > 0:
+        if return_value[-1] == ', ':
             return_value = return_value[0:len(return_value)-1]
             
         return_value.append(' } ')

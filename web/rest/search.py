@@ -9,7 +9,7 @@ from serve.request import ServerException
 class Page(BaseRest, Loggable):
     
     def get(self):
-        self.debug('GET search')
+        self.info('GET search')
         handler = self._components['RB']
         filter = self.get_filter()
         
@@ -26,6 +26,9 @@ class Page(BaseRest, Loggable):
         
         json = JSon()
         entries = []
+        
+        if not entry_ids:
+            self.info('Search returned none')
         
         for id in entry_ids:
             entry = Song.get_song_as_JSon(handler, id)

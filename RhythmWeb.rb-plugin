@@ -4,7 +4,7 @@ Module=RhythmWeb
 IAge=1
 Name=RhythmWeb
 Description=Rhythmbox Web Page controller
-Authors=Yo
-Copyright=None
-Website=http://kasbah.homeip.net
+Authors=Pablo Carranza <pcarranza@gmail.com>
+Copyright=Pablo Carranza <pcarranza@gmail.com>, but it's copyleft actually
+Website=https://bitbucket.org/jimcerberus/rhythmweb
 
