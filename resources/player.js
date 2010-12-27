@@ -125,11 +125,11 @@ $(document).ready(function() {
 
 
 function create_add_all(id) {
-	return '<img id="' + id + '" src="img/apply.png" width="24" height="24" class="link" alt="Add All"/>'
+	return '<img id="' + id + '" src="img/apply.png" width="24" height="24" class="link" alt="Add All" title="Add all to playlist"/>'
 }
 
 function create_remove_all(id) {
-	return '<img id="' + id + '" src="img/clean.png" width="24" height="24" class="link" alt="Clear playlist"/>'
+	return '<img id="' + id + '" src="img/clean.png" width="24" height="24" class="link" alt="Clear playlist" title="Remove all from playlist"/>'
 }
 
 function search_parameters_to_html(parameters) {
@@ -289,7 +289,7 @@ function create_entry_line(line_id, container_id, entry) {
 
 function add_dequeue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_dequeue';
-	var dequeue = '<img id="' + action_id + '" class="link" src="img/remove.png" width="24" height="24" alt="Remove" />';
+	var dequeue = '<img id="' + action_id + '" class="link" src="img/remove.png" width="24" height="24" alt="Remove" title="Remove from playlist" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(dequeue);
 	$('#' + action_id).click(function() {
@@ -302,7 +302,7 @@ function add_dequeue_action(line_id, container_id, entry) {
 
 function add_enqueue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_enqueue';
-	var enqueue = '<img id="' + action_id + '" class="link" src="img/add.png" width="24" height="24" alt="Add"/>';
+	var enqueue = '<img id="' + action_id + '" class="link" src="img/add.png" width="24" height="24" alt="Add" title="Add to playlist"/>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(enqueue);
 	$('#' + action_id).click(function() {
@@ -322,9 +322,9 @@ function add_rate_action(line_id, container_id, entry) {
 	for(var index = 1; index < 6; index++) {
 		var action_id = action_scheme + index;
 		if (index > rating) {
-			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star-grey.png" width="24" height="24" alt="Rate" />');
+			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star-grey.png" width="24" height="24" alt="Rate" title="Rate" />');
 		} else {
-			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star.png" width="24" height="24" alt="Rate" />');
+			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star.png" width="24" height="24" alt="Rate" title="Rate" />');
 		}
 		$('#' + action_id).bind('click', { id : entry_id, rating : index, scheme : action_scheme }, set_rating);
 	}
@@ -373,7 +373,7 @@ function load_library(first, limit) {
 
 			if(first > 0) {
 				$('#library').append('<span class="library_previous">' +
-						'<img id="go_previous_top" src="img/go-previous.png" class="link" width="24" height="24"  alt="Previous" />' + 
+						'<img id="go_previous_top" src="img/go-previous.png" class="link" width="24" height="24"  alt="Previous" title="Previous" />' + 
 						'</span>');
 				$('#go_previous_top').click( function() {
 					load_library(prev, limit);
@@ -390,7 +390,7 @@ function load_library(first, limit) {
 			
 			if (count == limit) {
 				$('#library').append('<span class="library_next">' + 
-						'<img id="go_next_top" src="img/go-next.png" class="link" width="24" height="24" alt="Next"/>' +
+						'<img id="go_next_top" src="img/go-next.png" class="link" width="24" height="24" alt="Next" title="Next"/>' +
 						'</span>');
 				$('#go_next_top').click( function() {
 					load_library(next, limit);
@@ -408,14 +408,14 @@ function load_library(first, limit) {
 			});
 			
 			if(first > 0) {
-				$('#library').append('<img id="go_previous" src="img/go-previous.png" class="link" width="24" height="24" alt="Previous" />');
+				$('#library').append('<img id="go_previous" src="img/go-previous.png" class="link" width="24" height="24" alt="Previous" title="Previous" />');
 				$('#go_previous').click( function() {
 					load_library(prev, limit);
 				});
 			}
 			
 			if (count == limit) {
-				$('#library').append('<img id="go_next" src="img/go-next.png" class="link" width="24" height="24" alt="Next" />');
+				$('#library').append('<img id="go_next" src="img/go-next.png" class="link" width="24" height="24" alt="Next" title="Next" />');
 				$('#go_next').click( function() {
 					load_library(next, limit);
 				});
