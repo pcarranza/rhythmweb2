@@ -192,12 +192,8 @@ class RBHandler(Loggable):
             
             if 'type' in filters:
                 mtype = filters['type']
-                self.debug('Appending query for type \"%s\"' % mtype)
-                if self._media_types.has_key(mtype):
-                    type = (rhythmdb.QUERY_PROP_EQUALS, \
-                            rhythmdb.PROP_TYPE, \
-                            self._media_types[mtype])
-                else:
+                #self.debug('Appending query for type \"%s\"' % mtype)
+                if not self._media_types.has_key(mtype):
                     raise InvalidQueryException('Unknown media type \"%s\"' % filter['type'])
             
             if 'rating' in filters:
@@ -260,22 +256,19 @@ class RBHandler(Loggable):
                     
         if not all is None:
             self.info('Querying for all...')
-            query_model = self._query_all(type, play_count, rating, all, True)
+            query_model = self._query_all(mtype, play_count, rating, all, True)
               
         elif searches:
             self.info('Querying for each...')
-            query_model = self._query_all(type, play_count, rating, searches)
+            query_model = self._query_all(mtype, play_count, rating, searches)
         
-        elif type is None:
-            self.info('No search filter defined, querying for everything')
-            for mtype in self._media_types:
-                type = (rhythmdb.QUERY_PROP_EQUALS, \
-                        rhythmdb.PROP_TYPE, \
-                        self._media_types[mtype])
-                query_model = self._query_all(type, play_count, rating, searches)
+        elif mtype is None:
+            self.info('No search filter defined, querying for default')
+            query_model = self._query_all(TYPE_SONG, play_count, rating, searches)
+            
         else:
             self.info('Search for type only, querying for type')
-            query_model = self._query_all(type, play_count, rating, searches)
+            query_model = self._query_all(mtype, play_count, rating, searches)
 
         
         entries = []
@@ -283,20 +276,34 @@ class RBHandler(Loggable):
         return entries
     
     
-    def _query_all(self, type, min_play_count, min_rating, parameters, query_for_all=False):
+    def _query_all(self, mtype, min_play_count, min_rating, parameters, query_for_all=False):
         self.info('Querying...')
         db = self._db
-        query_model = db.query_model_new(\
+        if mtype == TYPE_SONG:
+            query_model = db.query_model_new(\
                      db.query_new(), \
                      rhythmdb.rhythmdb_query_model_track_sort_func, \
                      0, \
                      db.query_model_new_empty())
+        else:
+            query_model = db.query_model_new_empty()
+            
+        
+        #if not mtype is None:
+        type = (rhythmdb.QUERY_PROP_EQUALS, \
+            rhythmdb.PROP_TYPE, \
+            self._db.entry_type_get_by_name(mtype))
+        #else:
+        #    type = None
+        
         
         if query_for_all: # equivalent to use an OR (many queries)
             self.info('Query for all parameters separatedly')
             for parameter in parameters:
+                self.info('Appending Query for parameter...')
                 query = db.query_new()
                 if not type is None:
+                    self.info('Appending Query for type \"%s\"...' % mtype)
                     db.query_append(query, type)
                 self._append_rating(query, min_rating)
                 self._append_play_count(query, min_play_count)
@@ -306,10 +313,12 @@ class RBHandler(Loggable):
             self.info('Query for all parameters in one only full search')
             query = db.query_new()
             if not type is None:
+                self.info('Appending Query for type \"%s\"...' % mtype)
                 db.query_append(query, type)
             self._append_rating(query, min_rating)
             self._append_play_count(query, min_play_count)
             for parameter in parameters:
+                self.info('Appending Query for parameter...')
                 db.query_append(query, parameter)
             db.do_full_query_parsed(query_model, query)
             
@@ -458,18 +467,18 @@ class RBHandler(Loggable):
         
     
     def _loop_query_model(self, func, query_model, first=0, limit=0):
-        
-        if query_model.get_size() == 0:
-            return
+        self.debug('Loop query_model...')
         
         if first != 0:
             limit = limit + first
         
         index = 0
         for row in query_model:
-            
+            self.debug('Reading Row...')
+
             if index < first:
                 index = index + 1
+                self.debug('Skipping row ')
                 continue
             
             entry = self._get_entry_id(row)
