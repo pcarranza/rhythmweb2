@@ -213,18 +213,18 @@ class RBHandler(Loggable):
                 
             if 'all' in filters:
                 all = []
-                all_filter = filters['all']
+                all_filter = filters['all'].lower()
                 all.append((rhythmdb.QUERY_PROP_LIKE, \
-                    rhythmdb.PROP_ARTIST, \
+                    rhythmdb.PROP_ARTIST_FOLDED, \
                     all_filter))
                 all.append((rhythmdb.QUERY_PROP_LIKE, \
-                    rhythmdb.PROP_TITLE, \
+                    rhythmdb.PROP_TITLE_FOLDED, \
                     all_filter))
                 all.append((rhythmdb.QUERY_PROP_LIKE, \
-                    rhythmdb.PROP_ALBUM, \
+                    rhythmdb.PROP_ALBUM_FOLDED, \
                     all_filter))
                 all.append((rhythmdb.QUERY_PROP_LIKE, \
-                    rhythmdb.PROP_GENRE, \
+                    rhythmdb.PROP_GENRE_FOLDED, \
                     all_filter))
                 
             else:
@@ -232,26 +232,26 @@ class RBHandler(Loggable):
                 if 'artist' in filters:
                     self.debug('Appending query for artist \"%s\"' % filters['artist'])
                     searches.append((rhythmdb.QUERY_PROP_LIKE, \
-                        rhythmdb.PROP_ARTIST, \
-                        filters['artist']))
+                        rhythmdb.PROP_ARTIST_FOLDED, \
+                        filters['artist'].lower()))
                     
                 if 'title' in filters:
                     self.debug('Appending query for title \"%s\"' % filters['title'])
                     searches.append((rhythmdb.QUERY_PROP_LIKE, \
-                        rhythmdb.PROP_TITLE, \
-                        filters['title']))
+                        rhythmdb.PROP_TITLE_FOLDED, \
+                        filters['title'].lower()))
                     
                 if 'album' in filters:
                     self.debug('Appending query for album \"%s\"' % filters['album'])
                     searches.append((rhythmdb.QUERY_PROP_LIKE, \
-                        rhythmdb.PROP_ALBUM, \
-                        filters['album']))
+                        rhythmdb.PROP_ALBUM_FOLDED, \
+                        filters['album'].lower()))
                     
                 if 'genre' in filters:
                     self.debug('Appending query for genre \"%s\"' % filters['genre'])
                     searches.append((rhythmdb.QUERY_PROP_LIKE, \
-                        rhythmdb.PROP_GENRE, \
-                        filters['genre']))
+                        rhythmdb.PROP_GENRE_FOLDED, \
+                        filters['genre'].lower()))
                 
                     
         if not all is None:
