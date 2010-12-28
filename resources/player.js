@@ -18,14 +18,17 @@
 
 var timers = [];
 var library_loaded = false;
+var clear_status = null;
 
 
 $(document).ready(function() {
 	update_status();
+	clear_info();
 	
 	$('#play_pause').click(function() {
 		$.post("rest/player", { action: "play_pause" }, function (data) {
 			timers.push(setTimeout('update_status()', 200));
+			info('<i>play/pause</i>');
 		});
 	});
 	
@@ -33,6 +36,7 @@ $(document).ready(function() {
 		$.post("rest/player", { action: "previous" }, function (data) {
 			timers.push(setTimeout('load_playlist()', 200));
 			timers.push(setTimeout('update_status()', 500));
+			info('<i>previous...</i>');
 		});
 	});
 	
@@ -40,18 +44,21 @@ $(document).ready(function() {
 		$.post("rest/player", { action: "next" }, function (data) {
 			timers.push(setTimeout('load_playlist()', 200));
 			timers.push(setTimeout('update_status()', 500));
+			info('<i>next...</i>');
 		});
 	});
 
 	$('#seek_back').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "-10" }, function (data) {
 			timers.push(setTimeout('update_status()', 200));
+			info('<i>back 10 seconds</i>');
 		});
 	});
 
 	$('#seek_forward').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "10" }, function (data) {
 			timers.push(setTimeout('update_status()', 200));
+			info('<i>ahead 10 seconds</i>');
 		});
 	});
 	
@@ -89,6 +96,7 @@ $(document).ready(function() {
 
 	$('#do_search').click(function() {
 		parameters = parse_search_parameters();
+		info('<i>searching...</i>');
 		var url = 'rest/search';
 		$('#search_result').html('');
 		$('#search_result').append(search_parameters_to_html(parameters));
@@ -109,6 +117,7 @@ $(document).ready(function() {
 					while(id = numbers.exec(ids)) {
 						$('#search_result_line_' + id).fadeOut('fast');
 					}
+					info('<i>search result added to playlist</i>');
 				});
 			}); 
 		});
@@ -129,8 +138,9 @@ function create_add_all(id) {
 }
 
 function create_remove_all(id) {
-	return '<img id="' + id + '" src="img/clean.png" width="24" height="24" class="link" alt="Clear playlist" title="Remove all from playlist"/>'
+	return '<img id="' + id + '" src="img/clear.png" width="24" height="24" class="link" alt="Clear playlist" title="Remove all from playlist"/>'
 }
+
 
 function search_parameters_to_html(parameters) {
 	var component = '<div id="search_parameters" class="line"><span class="searchfor">Searching for: </span>';
@@ -216,6 +226,29 @@ function update_status() {
 }
 
 
+function info(message) {
+	if (clear_status) {
+		clearTimeout(clear_status);
+		clear_info('fast', message);
+		clear_status = null;
+	} else {
+		$('#status_feedback').html(message);
+		$('#status_feedback').fadeIn('slow');
+	}
+	clear_status = setTimeout('clear_info("slow")', 2000);
+}
+
+
+function clear_info(speed, message) {
+	$('#status_feedback').fadeOut(speed, function() {
+		if (message) {
+			$('#status_feedback').html(message);
+			$('#status_feedback').fadeIn('slow');
+		}
+	});
+}
+
+
 function load_playlist() {
 	$.getJSON('rest/playlist', function(json) {
 		$('#playlist').html('');
@@ -228,6 +261,7 @@ function load_playlist() {
 		}
 		$('#clear_queue').click(function() {
 			$.post("rest/player", {action : "clear_queue"}, function(data) {
+				info('<i>playlist cleared</i>');
 				$('#playlist').html('');
 			});
 		});
@@ -238,11 +272,12 @@ function load_playlist() {
 function add_playlist_entry(index, entry) {
 	var line_id = 'track_line_' + entry.id;
 	var container_id = 'track_actions_' + entry.id;
-	var line = create_entry_line(line_id, container_id, entry);
+	var rating_id = 'track_rating_' + entry.id;
+	var line = create_entry_line(line_id, container_id, rating_id, entry);
 	
 	$('#playlist').append(line);
 
-	add_rate_action(line_id, container_id, entry);
+	add_rate_action(line_id, rating_id, entry);
 	add_dequeue_action(line_id, container_id, entry);
 }
 
@@ -250,38 +285,43 @@ function add_playlist_entry(index, entry) {
 function add_search_entry(index, entry, container) {
 	var line_id = container + '_line_' + entry.id;
 	var container_id = line_id + '_actions';
-	var line = create_entry_line(line_id, container_id, entry);
+	var rating_id = line_id + '_rating';
+	var line = create_entry_line(line_id, container_id, rating_id, entry);
 	
 	$('#' + container).append(line);
 	
-	add_rate_action(line_id, container_id, entry);
 	add_enqueue_action(line_id, container_id, entry);
+	add_play_entry_action(line_id, container_id, entry);
+	
+	add_rate_action(line_id, rating_id, entry);
 }
 
 
 function create_header() {
 	var line = '<div class="line">';
+	line += '<span id="track_actions"></span>';
 	line += '<span id="track_number">#</span>';
 	line += '<span id="track_title">Title</span>';
 	line += '<span id="track_genre">Genre</span>';
 	line += '<span id="track_artist">Artist</span>';
 	line += '<span id="track_album">Album</span>';
 	line += '<span id="track_duration">Duration</span>';
-	line += '<span id="track_actions">&nbsp;</span></span>';
+	line += '<span id="track_rating">&nbsp;</span>';
 	line += '</div>';
 	return line;
 }
 
 
-function create_entry_line(line_id, container_id, entry) {
+function create_entry_line(line_id, container_id, rating_id, entry) {
 	var line = '<div id="' + line_id + '" class="line">';
+	line += '<span id="track_actions"><span id="' + container_id + '"></span></span>';
 	line += '<span id="track_number">' + entry.track_number + '</span>';
 	line += '<span id="track_title">' + entry.title + '</span>';
 	line += '<span id="track_genre">' + entry.genre + '</span>';
 	line += '<span id="track_artist">' + entry.artist + '</span>';
 	line += '<span id="track_album">' + entry.album + '</span>';
 	line += '<span id="track_duration">' + human_time(entry.duration) + '</span>';
-	line += '<span id="track_actions"><span id="' + container_id + '"></span></span>';
+	line += '<span id="track_rating"><span id="' + rating_id + '"></span></span>';
 	line += '</div>';
 	return line;
 }
@@ -289,12 +329,13 @@ function create_entry_line(line_id, container_id, entry) {
 
 function add_dequeue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_dequeue';
-	var dequeue = '<img id="' + action_id + '" class="link" src="img/remove.png" width="24" height="24" alt="Remove" title="Remove from playlist" />';
+	var dequeue = '<img id="' + action_id + '" class="link sep" src="img/remove.png" width="24" height="24" alt="Remove" title="Remove from playlist" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(dequeue);
 	$('#' + action_id).click(function() {
 		$.post("rest/player", { action: "dequeue", "entry_id" : entry_id }, function(data) {
 			$('#' + line_id).fadeOut('fast');
+			info('\"' + entry.title + '\" <i>removed from playlist</i>');
 		});
 	});
 }
@@ -302,14 +343,25 @@ function add_dequeue_action(line_id, container_id, entry) {
 
 function add_enqueue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_enqueue';
-	var enqueue = '<img id="' + action_id + '" class="link" src="img/add.png" width="24" height="24" alt="Add" title="Add to playlist"/>';
+	var enqueue = '<img id="' + action_id + '" class="link enqueue" src="img/add.png" width="24" height="24" alt="Add" title="Add to playlist"/>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(enqueue);
 	$('#' + action_id).click(function() {
 		$.post("rest/player", { action: "enqueue", "entry_id" : entry_id }, function(data) {
-			$.getJSON('rest/song/' + entry_id, function(entry) {
-				$('#' + line_id).fadeOut('fast');
-			});
+			info('\"' + entry.title + '\" <i>added to playlist</i>');
+		});
+	});
+}
+
+function add_play_entry_action(line_id, container_id, entry) {
+	var action_id = container_id + '_play';
+	var play_entry = '<div id="' + action_id + '" class="link play" alt="Play entry" title="Play directly">&nbsp;</div>';
+	var entry_id = entry.id;
+	$('#' + container_id).append(play_entry);
+	$('#' + action_id).click(function() {
+		$.post("rest/player", { action: "play_entry", "entry_id" : entry_id }, function(data) {
+			info('\"' + entry.title + '\" <i>started playing</i>');
+			timers.push(setTimeout('update_status()', 500));
 		});
 	});
 }
@@ -475,7 +527,7 @@ function parse_search_parameters() {
 			} else if (is_type_podcast.test(value)) {
 				query_parameters.type = 'podcast';
 			} else if (is_type_radio.test(value)) {
-				query_parameters.type = 'iradio';
+				query_parameters.type = 'radio';
 			} else if (is_artist.test(value)) {
 				query_parameters.artist = value.replace(/artist:/, '');
 			} else if (is_album.test(value)) {

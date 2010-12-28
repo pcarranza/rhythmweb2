@@ -123,6 +123,9 @@ class RBHandler(Loggable):
         
         entry = self._get_entry(entry_id)
         if not entry is None:
+            if self.get_playing_status():
+                self.play_pause()
+            
             self._player.play_entry(entry)
     
         

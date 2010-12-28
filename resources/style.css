@@ -70,6 +70,7 @@ img {
 	clear: both;
 	width: 100%;
 	line-height: 2em;
+	vertical-align: middle;
 }
 .line {
 	clear: both;
@@ -82,12 +83,19 @@ img {
 	font-style: italic;
 	color: #f80; 
 }
+#track_actions {
+	width: 5%;
+	display: table-cell;
+	padding-right: 10px;
+	text-align: right;
+	vertical-align: middle;
+}
 #track_number {
 	width: 2%;
 	display: table-cell;
 }
 #track_title {
-	width: 27%;
+	width: 20%;
 	display: table-cell;
 }
 #track_genre {
@@ -106,24 +114,57 @@ img {
 	width: 5%;
 	display: table-cell;
 }
-#track_actions {
-	width: 15%;
+#track_rating {
+	width: 12%;
 	display: table-cell;
 }
 #clear_queue {
 	float: right;
 	clear: right;
 }
+
+.enqueue {
+	display:block;
+	float: left;
+}
+
+.play {
+	background:url(img/play_grey.png) no-repeat center center;
+	height: 24px; 
+	width: 24px;
+	border: none;
+	display:block;
+	float: left;
+}
+
+.play span {
+	display: none;
+}
+
+.play:hover {
+	background:url(img/play.png) no-repeat center center;
+	border: none;
+}
+
 /* ****************************************************** END PLAYLIST */
 /* ****************************************************** TABS */
+#tabs_header {
+	width: 100%;
+	clear: both;
+}
+
+#status_feedback {
+	color: #f80;
+}
+
 #tabs ul {
 	list-style: none;
 	padding: 0;
 	margin: 0;
 	background: white;
 	float: left;
-	width: 100%;
 }
+
 #tabs li {
 	float: left;
 	margin: 0 1em 0 0;	

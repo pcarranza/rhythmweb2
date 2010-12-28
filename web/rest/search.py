@@ -129,14 +129,14 @@ class Page(BaseRest, Loggable):
         if type(value) is list:
             if 'song' in value:
                 return 'song'
-            elif 'iradio' in value or 'radio' in value:
+            elif 'radio' in value:
                 return 'iradio'
             elif 'podcast' in value:
                 return 'podcast-post'
         else:
             if 'song' == value:
                 return 'song'
-            elif 'iradio' == value or 'radio' == value:
+            elif 'radio' == value:
                 return 'iradio'
             elif 'podcast' == value or 'podcast-post' == value:
                 return 'podcast-post'
