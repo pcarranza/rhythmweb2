@@ -549,8 +549,22 @@ function parse_search_parameters() {
 			!query_parameters.hasOwnProperty('album') &&
 			!query_parameters.hasOwnProperty('title') &&
 			!query_parameters.hasOwnProperty('genre') &&
-			clean_filter)
+			clean_filter) {
+		
 		query_parameters.all = clean_filter;
+		
+	} else if (clean_filter) {
+		
+		if (!query_parameters.hasOwnProperty('artist'))
+			query_parameters.artist = clean_filter;
+		
+		else if (!query_parameters.hasOwnProperty('album'))
+			query_parameters.album = clean_filter;
+		
+		else if (!query_parameters.hasOwnProperty('title'))
+			query_parameters.title = clean_filter;
+		
+	}
 
 	if (!query_parameters.type)
 		query_parameters.type = 'song';
