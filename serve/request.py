@@ -21,24 +21,26 @@ from datetime import timedelta, datetime
 from gzip import GzipFile
 
 class RequestHandler(Loggable):
+
     
     _resource_path = None
     _web_path = None
     _components = None
-    
+
     
     def __init__(self, path):
         self.info('Request Handler started')
         self._resource_path = os.path.join(path, 'resources')
         self._web_path = os.path.join(path, 'web')
-    
-    
+        
     
     def do_get(self, environ, response, components={}):
         self.info('Invoking get method')
         self._components = components
-        return self.handle_method('get', environ, response)
-    
+        
+        wrapper = ResponseWrapper(environ, response)
+        return_value = self.handle_method('get', environ, wrapper.response)
+        return wrapper.wrap(return_value)
     
     
     def do_post(self, environ, params, response, components={}):
@@ -47,15 +49,19 @@ class RequestHandler(Loggable):
         if params:
             for param in params:
                 self.debug("%s = %s" % (param, params[param]))
-            
+        
         self._components = components
+        
+        # gzipping POST does not works, for some reason... 
+        # wrapper = ResponseWrapper(environ, response)
         return self.handle_method('post', environ, response, params)
+        # return wrapper.wrap(return_value)
     
         
-    
     def handle_method(self, request_method, environ, response, params=None):
-        for e in environ:
-            self.debug('ENV %s = %s' % (e, environ[e]))
+#        ONLY ENABLE IF EXTREME REQUEST DATA DEBUGGING IS NEEDED
+#        for e in environ:
+#            self.debug('ENV %s = %s' % (e, environ[e]))
         
         request_path = environ['PATH_INFO']
         
@@ -105,16 +111,16 @@ class RequestHandler(Loggable):
                     except Exception, e:
                         raise ServerException(500, '%s ERROR - %s' % 
                                               (request_method, e.message))
-                    
+                
                 elif self.is_resource_file(web_path):
                     self.debug('Handling resource %s' % web_path)
                     resource = self.get_resource_handler(web_path)
-                    return resource.handle(response, self.is_accept_gzip(environ))
+                    return resource.handle(response, environ)
 
                 elif self.is_resource_file(resource_path):
                     self.debug('Handling resource %s' % resource_path)
                     resource = self.get_resource_handler(resource_path)
-                    return resource.handle(response, self.is_accept_gzip(environ))
+                    return resource.handle(response, environ)
                     
                 else:
                     continue
@@ -129,16 +135,6 @@ class RequestHandler(Loggable):
             return self.send_error(500, e.message, response)
             # UNKNOWN ERROR
 
-    
-    def is_accept_gzip(self, env):
-        if 'HTTP_ACCEPT_ENCODING' in env:
-            accept = env['HTTP_ACCEPT_ENCODING']
-            accept = str(accept).split(',')
-            if 'gzip' in accept:
-                return True
-            
-        return False
-    
     
     def is_python_file(self, file):
         basename = os.path.basename(file)
@@ -168,7 +164,6 @@ class RequestHandler(Loggable):
         class_path = 'web' + class_path
         self.debug('Importing module path %s' % class_path)
         
-        
         mod = None
         try:
             mod = __import__(class_path, globals(), locals(), ['Page'])
@@ -195,11 +190,11 @@ class RequestHandler(Loggable):
     def send_error(self, code, message, response):
         self.error('Sending error \'%s\' %s' % (code, message))
         error_message = '%d %s' % (code, message)
-        response(error_message, self._create_headers())
+        response(error_message, self._default_headers())
         return 'ERROR: %s ' % message
     
     
-    def _create_headers(self, headers=[]):
+    def _default_headers(self, headers=[]):
         if not headers:
             headers = [('Content-type', 'text/html; charset=UTF-8')]
             
@@ -209,8 +204,63 @@ class RequestHandler(Loggable):
     def get_resource_handler(self, resource):
         return ResourceHandler(resource) # dont cache
     
+    
+    
+class ResponseWrapper(Loggable):
+    
+    
+    def __init__(self, environment, response, compression_level=8):
+        self._response = response
+        self._env = environment
+        self._accept_gzip = self.is_accept_gzip()
+        self._compression_level = compression_level
+        
+        
+    def response(self, status, headers):
+        self.debug('Responding with wrapper')
+        if not headers:
+            self.debug('No headers, creating new')
+            headers = [('Content-type', 'text/html; charset=UTF-8'), \
+                       ('Cache-Control', 'public')]
+        
+        if self._accept_gzip:
+            self.debug('Client accepts gzip encoding, appendig to headers')
+            headers.append(("Content-Encoding", "gzip"))
+            headers.append(("Vary", "Accept-Encoding"))
+        
+        self._response(status, headers)
+    
+    
+    def wrap(self, return_value):
+        if self._accept_gzip:
+            self.debug('GZipping response')        
+            return self.gzip_string(return_value, self._compression_level)
+        
+        self.debug('Plain response, no gzipping requested')        
+        return return_value
+        
 
-            
+    def is_accept_gzip(self):
+        if 'HTTP_ACCEPT_ENCODING' in self._env:
+            accept = self._env['HTTP_ACCEPT_ENCODING']
+            accept = str(accept).split(',')
+            if 'gzip' in accept:
+                self.debug('Client accepts gzip encoding')        
+                return True
+        return False
+    
+    
+    def gzip_string(self, string, compression_level):
+        """ The `gzip` module didn't provide a way to gzip just a string.
+            Had to hack together this. I know, it isn't pretty.
+        """
+        fake_file = StringIO.StringIO()
+        gz_file = GzipFile(None, 'wb', compression_level, fileobj=fake_file)
+        gz_file.write(string)
+        gz_file.close()
+        return fake_file.getvalue()
+        
+        
 class ResourceHandler(Loggable):
     
     _content_type = None
@@ -237,24 +287,14 @@ class ResourceHandler(Loggable):
         if not content_type:
             raise UnknownContentTypeException(self._extension)
         
-#        size = os.path.getsize(self._file)
         mtime = os.path.getmtime(self._file)
         mtime = datetime.fromtimestamp(mtime)
         expiration = datetime.now() + timedelta(days=365)
 
-#     ('Content-Length', str(size)), \
-        
         headers = [("Content-type", content_type), \
                    ('Cache-Control', 'public'), \
                    ('Last-Modified', mtime.ctime()), \
                    ('Expires', expiration.ctime())]
-        
-        if accept_gzip:
-            headers.append(("Content-Encoding", "gzip"))
-            headers.append(("Vary", "Accept-Encoding"))
-        
-        for header in headers:
-            self.debug('%s=%s' % (header[0], header[1]))
         
         response("200 OK", headers)
 
@@ -262,11 +302,7 @@ class ResourceHandler(Loggable):
         
         file = open(self._file, open_mode)
         
-        if accept_gzip:
-            data = "".join(file.readlines())
-            return [self.gzip_string(data, 8)]
-        else:
-            return file.readlines()
+        return "".join(file.readlines())
     
 
     def _get_content_type(self):
@@ -302,18 +338,8 @@ class ResourceHandler(Loggable):
         return ('text/plain', 't')
     
     
-    def gzip_string(self, string, compression_level):
-        """ The `gzip` module didn't provide a way to gzip just a string.
-            Had to hack together this. I know, it isn't pretty.
-        """
-        fake_file = StringIO.StringIO()
-        gz_file = GzipFile(None, 'wb', compression_level, fileobj=fake_file)
-        gz_file.write(string)
-        gz_file.close()
-        return fake_file.getvalue()
-
-
 class UnknownContentTypeException(Exception):
+    
     
     def __init__(self, ext):
         Exception.__init__(self)
@@ -322,7 +348,9 @@ class UnknownContentTypeException(Exception):
 
 class ServerException(Exception):
     
+    
     def __init__(self, code, message):
         Exception.__init__(self)
         self.code = int(code)
         self.message = message
+

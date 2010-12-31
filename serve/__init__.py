@@ -110,7 +110,6 @@ class CGIServer(Loggable):
             for p in params:
                 self.debug('POST %s = %s' % (p, str(params[p])))
                 
-            #if 'action' in params:
             return self._do_post(environ, params, response)
         
         return self._request_handler.send_error(
@@ -145,8 +144,8 @@ class CGIServer(Loggable):
                 return cgi.parse_qs(environ['wsgi.input'].read(length))
             
         return None
-
-
+    
+    
     
 class LoggingWSGIRequestHandler(WSGIRequestHandler):
 
