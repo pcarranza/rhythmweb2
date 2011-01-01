@@ -386,13 +386,22 @@ class RBHandler(Loggable):
     def enqueue(self, entry_ids):
         self.__print_state('enqueue')
         self.info('Adding entries %s to queue' % entry_ids)
-        for entry_id in entry_ids:
-            entry = self.load_entry(entry_id)
-            if entry is None:
-                continue
-            location = str(entry.location)
-            self.debug('Enqueuing entry %s' % location)
-            self._shell.add_to_queue(location)
+        if type(entry_ids) is list:
+            for entry_id in entry_ids:
+                if not type(entry_id) is int:
+                    raise Exception('entry_id parameter must be an int')
+                entry = self.load_entry(entry_id)
+                if entry is None:
+                    continue
+                location = str(entry.location)
+                self.debug('Enqueuing entry %s' % location)
+                self._shell.add_to_queue(location)
+        elif type(entry_ids) is int:
+            entry = self.load_entry(entry_ids)
+            if not entry is None:
+                location = str(entry.location)
+                self.debug('Enqueuing entry %s' % location)
+                self._shell.add_to_queue(location)
                 
         self._shell.props.queue_source.queue_draw()
         
@@ -401,6 +410,8 @@ class RBHandler(Loggable):
         if type(entry_ids) is list:
             self.info('Removing entries %s from queue' % entry_ids)
             for entry_id in entry_ids:
+                if not type(entry_id) is int:
+                    raise Exception('entry_id parameter must be an int')
                 entry = self.load_entry(entry_id)
                 if entry is None:
                     continue
@@ -425,11 +436,15 @@ class RBHandler(Loggable):
     
     def _get_entry(self, entry_id):
         self.__print_state('get_entry')
-        self.debug('Getting entry %s' % str(entry_id))
-        return self._db.entry_lookup_by_id(int(entry_id))
+        if not type(entry_id) is int:
+            raise Exception('entry_id parameter must be an int')
+        
+        self.debug('Getting entry %d' % entry_id)
+        return self._db.entry_lookup_by_id(entry_id)
     
     def load_entry(self, entry_id):
         self.__print_state('load_entry')
+        
         self.debug('Loading entry %s' % str(entry_id))
         entry = self._get_entry(entry_id)
         if entry is None:
@@ -473,32 +488,44 @@ class RBHandler(Loggable):
     
     def _loop_query_model(self, func, query_model, first=0, limit=0):
         self.debug('Loop query_model...')
+
+        if func is None:
+            raise Exception('Func cannot be None')
+        if query_model is None:
+            raise Exception('Query Model cannot be None')
+
         
         if first != 0:
             limit = limit + first
         
         index = 0
+        count = 0
         for row in query_model:
             self.debug('Reading Row...')
 
             if index < first:
-                index = index + 1
+                index += + 1
                 self.debug('Skipping row ')
                 continue
             
             entry = self._get_entry_id(row)
             func(entry)
+            count += 1
             
-            index = index + 1
+            index += 1
             if limit != 0 and index >= limit:
                 break
-            
+        
+        return count
     
     def _get_play_queue_model(self):
         return self._shell.props.queue_source.props.query_model
     
     
     def _get_entry_id(self, row):
+        if row is None:
+            raise Exception('Row cannot be None')
+        
         entry = row[0]
         return self._db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
     
@@ -513,6 +540,53 @@ class RBHandler(Loggable):
             index+= 1
         return playlists
     
+    
+    def enqueue_playlist(self, playlist_index):
+        self.__print_state('enqueue_playlist')
+        self.info('Enqueuing playlist')
+        
+        if not type(playlist_index) is int:
+            raise Exception('playlist_index parameter must be an int')
+        
+        playlist = self.get_playlist(playlist_index)
+        if playlist is None:
+            return 0
+
+        return self._loop_query_model(func=self.enqueue, query_model=playlist.source.props.query_model)
+        
+    
+    def get_playlist(self, playlist_index):
+        self.__print_state('get_playlist')
+        self.info('Getting playlist')
+        
+        if not type(playlist_index) is int:
+            raise Exception('playlist_index parameter must be an int')
+        
+        index = 0
+        for playlist in self._shell.props.sourcelist_model[1].iterchildren():
+            if playlist_index == index:
+                return PlaylistSource(index, playlist)
+            index += 1
+            
+        return None
+
+    
+    def get_playlist_entries(self, playlist_index, limit=100):
+        self.__print_state('get_playlist_entries')
+        self.info('Getting playlist entries')
+
+        if not type(playlist_index) is int:
+            raise Exception('playlist_index parameter must be an int')
+        
+        entries = []
+        playlist = self.get_playlist(playlist_index)
+        if not playlist is None:
+            self._loop_query_model(func=entries.append, \
+                                   query_model=playlist.source.props.query_model, \
+                                   limit=limit)
+        return entries
+
+        
         
 class RBEntry():
     
@@ -571,10 +645,7 @@ class PlaylistSource():
         self.is_group = entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]
         self.group_category = entry[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
     
-    
-    def get_query_model(self):
-        return self.source.props.query_model
-    
+
         
 class InvalidQueryException(Exception):
     

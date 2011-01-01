@@ -46,12 +46,13 @@ class Song:
 class Playlist:
     
     @staticmethod
-    def get_playlist_as_JSon(playlist):
+    def get_playlist_as_JSon(playlist, entries):
         json = JSon()
         json.put('id', playlist.index)
         json.put('name', playlist.name)
         json.put('visibility', playlist.visibility)
         json.put('is_group', playlist.is_group)
         json.put('is_playing', playlist.is_playing)
+        json.put('entries', entries)
         return json
     
