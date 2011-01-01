@@ -35,6 +35,7 @@ ORDER_SHUFFLE_EQUALS = 'random-equal-weights'
 
 PLAY_ORDER_KEY = '/apps/rhythmbox/state/play_order'
 
+
 class RBHandler(Loggable):
     
     _instance = None
@@ -442,6 +443,7 @@ class RBHandler(Loggable):
         self.__print_state('get_time_playing')
         return self._player.get_playing_time()
     
+    
     def get_playing_time_string(self):
         self.__print_state('get_playing_time_string')
         return self._player.get_playing_time_string()
@@ -499,7 +501,18 @@ class RBHandler(Loggable):
     def _get_entry_id(self, row):
         entry = row[0]
         return self._db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
-
+    
+    
+    def get_playlists(self):
+        playlists = []
+        # Sourcelistmodel: 0 is for Queue, Music, Radios, Podcasts and else, 1 is for playlists
+        index = 0
+        for playlist in self._shell.props.sourcelist_model[1].iterchildren():
+            playlistsource = PlaylistSource(index, playlist)
+            playlists.append(playlistsource)
+            index+= 1
+        return playlists
+    
         
 class RBEntry():
     
@@ -531,6 +544,37 @@ class RBEntry():
         self.location = db.entry_get(entry, rhythmdb.PROP_LOCATION)
         self.bitrate = db.entry_get(entry, rhythmdb.PROP_BITRATE)
         self.last_played = db.entry_get(entry, rhythmdb.PROP_LAST_PLAYED)
+        
+        
+
+RB_SOURCELIST_MODEL_COLUMN_PLAYING = 0
+RB_SOURCELIST_MODEL_COLUMN_PIXBUF = 1
+RB_SOURCELIST_MODEL_COLUMN_NAME = 2
+RB_SOURCELIST_MODEL_COLUMN_SOURCE = 3
+RB_SOURCELIST_MODEL_COLUMN_ATTRIBUTES = 4
+RB_SOURCELIST_MODEL_COLUMN_VISIBILITY = 5
+RB_SOURCELIST_MODEL_COLUMN_IS_GROUP = 6
+RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY = 7
+
+
+class PlaylistSource():
+    
+    
+    def __init__(self, index, entry):
+        self.index = index
+        self.is_playing = entry[RB_SOURCELIST_MODEL_COLUMN_PLAYING]
+        self.pixbuf = entry[RB_SOURCELIST_MODEL_COLUMN_PIXBUF]
+        self.name = entry[RB_SOURCELIST_MODEL_COLUMN_NAME]
+        self.source = entry[RB_SOURCELIST_MODEL_COLUMN_SOURCE]
+        self.attributes = entry[RB_SOURCELIST_MODEL_COLUMN_ATTRIBUTES]
+        self.visibility = entry[RB_SOURCELIST_MODEL_COLUMN_VISIBILITY]
+        self.is_group = entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]
+        self.group_category = entry[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
+    
+    
+    def get_query_model(self):
+        return self.source.props.query_model
+    
         
 class InvalidQueryException(Exception):
     
