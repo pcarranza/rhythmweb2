@@ -202,16 +202,20 @@ class RBHandler(Loggable):
             self.info('No filters, returning empty result')
             return []
         
-        type = None
+        mtype = None
         rating = 0
         play_count = 0
         first = 0
         limit = 100
         all = None
         searches = None
+        prop_match = rhythmdb.QUERY_PROP_LIKE
         
         if filters:
             
+            if 'exact-match' in filters:
+                prop_match = rhythmdb.QUERY_PROP_EQUALS
+                
             if 'first' in filters:
                 first = str(filters['first'])
                 if not first.isdigit():
@@ -244,20 +248,19 @@ class RBHandler(Loggable):
                     raise InvalidQueryException('Parameter play_count must be an int, it actually is \"%s\"' % play_count)
                 play_count = int(play_count)
                 
-                
             if 'all' in filters:
                 all = []
                 all_filter = filters['all'].lower()
-                all.append((rhythmdb.QUERY_PROP_LIKE, \
+                all.append((prop_match, \
                     rhythmdb.PROP_ARTIST_FOLDED, \
                     all_filter))
-                all.append((rhythmdb.QUERY_PROP_LIKE, \
+                all.append((prop_match, \
                     rhythmdb.PROP_TITLE_FOLDED, \
                     all_filter))
-                all.append((rhythmdb.QUERY_PROP_LIKE, \
+                all.append((prop_match, \
                     rhythmdb.PROP_ALBUM_FOLDED, \
                     all_filter))
-                all.append((rhythmdb.QUERY_PROP_LIKE, \
+                all.append((prop_match, \
                     rhythmdb.PROP_GENRE_FOLDED, \
                     all_filter))
                 
@@ -265,25 +268,25 @@ class RBHandler(Loggable):
                 searches = []
                 if 'artist' in filters:
                     self.debug('Appending query for artist \"%s\"' % filters['artist'])
-                    searches.append((rhythmdb.QUERY_PROP_LIKE, \
+                    searches.append((prop_match, \
                         rhythmdb.PROP_ARTIST_FOLDED, \
                         filters['artist'].lower()))
                     
                 if 'title' in filters:
                     self.debug('Appending query for title \"%s\"' % filters['title'])
-                    searches.append((rhythmdb.QUERY_PROP_LIKE, \
+                    searches.append((prop_match, \
                         rhythmdb.PROP_TITLE_FOLDED, \
                         filters['title'].lower()))
                     
                 if 'album' in filters:
                     self.debug('Appending query for album \"%s\"' % filters['album'])
-                    searches.append((rhythmdb.QUERY_PROP_LIKE, \
+                    searches.append((prop_match, \
                         rhythmdb.PROP_ALBUM_FOLDED, \
                         filters['album'].lower()))
                     
                 if 'genre' in filters:
                     self.debug('Appending query for genre \"%s\"' % filters['genre'])
-                    searches.append((rhythmdb.QUERY_PROP_LIKE, \
+                    searches.append((prop_match, \
                         rhythmdb.PROP_GENRE_FOLDED, \
                         filters['genre'].lower()))
                 
@@ -612,6 +615,9 @@ class RBHandler(Loggable):
                                    query_model=playlist.source.props.query_model, \
                                    limit=limit)
         return entries
+    
+    
+        
 
         
         
