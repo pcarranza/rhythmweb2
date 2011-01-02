@@ -34,7 +34,7 @@ $(document).ready(function() {
 	
 	$('#previous').click(function() {
 		$.post("rest/player", { action: "previous" }, function (data) {
-			timers.push(setTimeout('load_playlist()', 200));
+			timers.push(setTimeout('load_queue()', 200));
 			timers.push(setTimeout('update_status()', 500));
 			info('<i>previous...</i>');
 		});
@@ -42,7 +42,7 @@ $(document).ready(function() {
 	
 	$('#next').click(function() {
 		$.post("rest/player", { action: "next" }, function (data) {
-			timers.push(setTimeout('load_playlist()', 200));
+			timers.push(setTimeout('load_queue()', 200));
 			timers.push(setTimeout('update_status()', 500));
 			info('<i>next...</i>');
 		});
@@ -63,12 +63,12 @@ $(document).ready(function() {
 	});
 	
 	
-	$('#tab_playlist').click(function () {
+	$('#tab_queue').click(function () {
 		clear_tabs();
 		hide_all();
 		$(this).addClass('selected');
-		load_playlist();
-		$('#playlist').removeClass('hide');
+		load_queue();
+		$('#queue').removeClass('hide');
 	});
 	
 	
@@ -117,7 +117,7 @@ $(document).ready(function() {
 					while(id = numbers.exec(ids)) {
 						$('#search_result_line_' + id).fadeOut('fast');
 					}
-					info('<i>search result added to playlist</i>');
+					info('<i>search result added to queue</i>');
 				});
 			}); 
 		});
@@ -134,11 +134,11 @@ $(document).ready(function() {
 
 
 function create_add_all(id) {
-	return '<img id="' + id + '" src="img/apply.png" width="24" height="24" class="link" alt="Add All" title="Add all to playlist"/>'
+	return '<img id="' + id + '" src="img/apply.png" width="24" height="24" class="link" alt="Add All" title="Add all to queue"/>'
 }
 
 function create_remove_all(id) {
-	return '<img id="' + id + '" src="img/clear.png" width="24" height="24" class="link" alt="Clear playlist" title="Remove all from playlist"/>'
+	return '<img id="' + id + '" src="img/clear.png" width="24" height="24" class="link" alt="Clear queue" title="Remove all from queue"/>'
 }
 
 
@@ -213,7 +213,7 @@ function update_status() {
 						timers.push(setTimeout(timer_function, 1000));
 					else {
 						update_status();
-						timers.push(setTimeout('load_playlist()', 100));
+						timers.push(setTimeout('load_queue()', 100));
 					}
 				};
 				timers.push(setTimeout(timer_function, 1000));
@@ -249,33 +249,33 @@ function clear_info(speed, message) {
 }
 
 
-function load_playlist() {
-	$.getJSON('rest/playlist', function(json) {
-		$('#playlist').html('');
-		$('#playlist').append(create_remove_all('clear_queue'));
-		$('#playlist').append(create_header());
+function load_queue() {
+	$.getJSON('rest/queue', function(json) {
+		$('#queue').html('');
+		$('#queue').append(create_remove_all('clear_queue'));
+		$('#queue').append(create_header());
 		if (json && json.entries) {
 			$.each(json.entries, function(index, entry) {
-				add_playlist_entry(index, entry);
+				add_queue_entry(index, entry);
 			});
 		}
 		$('#clear_queue').click(function() {
 			$.post("rest/player", {action : "clear_queue"}, function(data) {
-				info('<i>playlist cleared</i>');
-				$('#playlist').html('');
+				info('<i>play queue cleared</i>');
+				$('#queue').html('');
 			});
 		});
 	});
 }
 
 
-function add_playlist_entry(index, entry) {
+function add_queue_entry(index, entry) {
 	var line_id = 'track_line_' + entry.id;
 	var container_id = 'track_actions_' + entry.id;
 	var rating_id = 'track_rating_' + entry.id;
 	var line = create_entry_line(line_id, container_id, rating_id, entry);
 	
-	$('#playlist').append(line);
+	$('#queue').append(line);
 
 	add_rate_action(line_id, rating_id, entry);
 	add_dequeue_action(line_id, container_id, entry);
@@ -329,13 +329,13 @@ function create_entry_line(line_id, container_id, rating_id, entry) {
 
 function add_dequeue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_dequeue';
-	var dequeue = '<img id="' + action_id + '" class="link sep" src="img/remove.png" width="24" height="24" alt="Remove" title="Remove from playlist" />';
+	var dequeue = '<img id="' + action_id + '" class="link sep" src="img/remove.png" width="24" height="24" alt="Remove" title="Remove from queue" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(dequeue);
 	$('#' + action_id).click(function() {
 		$.post("rest/player", { action: "dequeue", "entry_id" : entry_id }, function(data) {
 			$('#' + line_id).fadeOut('fast');
-			info('\"' + entry.title + '\" <i>removed from playlist</i>');
+			info('\"' + entry.title + '\" <i>removed from queue</i>');
 		});
 	});
 }
@@ -343,12 +343,12 @@ function add_dequeue_action(line_id, container_id, entry) {
 
 function add_enqueue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_enqueue';
-	var enqueue = '<img id="' + action_id + '" class="link enqueue" src="img/add.png" width="24" height="24" alt="Add" title="Add to playlist"/>';
+	var enqueue = '<img id="' + action_id + '" class="link enqueue" src="img/add.png" width="24" height="24" alt="Add" title="Add to queue"/>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(enqueue);
 	$('#' + action_id).click(function() {
 		$.post("rest/player", { action: "enqueue", "entry_id" : entry_id }, function(data) {
-			info('\"' + entry.title + '\" <i>added to playlist</i>');
+			info('\"' + entry.title + '\" <i>added to queue</i>');
 		});
 	});
 }
@@ -400,13 +400,13 @@ function set_rating(event) {
 }
 
 function clear_tabs() {
-	$('#tab_playlist').removeClass('selected');
+	$('#tab_queue').removeClass('selected');
 	$('#tab_library').removeClass('selected');
 	$('#tab_search').removeClass('selected');
 }
 
 function hide_all() {
-	$('#playlist').addClass('hide');
+	$('#queue').addClass('hide');
 	$('#library').addClass('hide');
 	$('#search').addClass('hide');
 }
