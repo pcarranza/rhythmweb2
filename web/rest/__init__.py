@@ -16,6 +16,7 @@
 
 from serve.rest.json import JSon
 
+
 class Song:
     
     @staticmethod
@@ -46,13 +47,34 @@ class Song:
 class Playlist:
     
     @staticmethod
-    def get_playlist_as_JSon(playlist, entries):
+    def get_playlist_as_JSon(playlist, entries = None):
         json = JSon()
         json.put('id', playlist.index)
         json.put('name', playlist.name)
         json.put('visibility', playlist.visibility)
         json.put('is_group', playlist.is_group)
         json.put('is_playing', playlist.is_playing)
-        json.put('entries', entries)
+        if not entries is None:
+            json.put('entries', entries)
         return json
+
     
+class Status:
+    
+    @staticmethod
+    def get_status_as_JSon(handler):
+        is_playing = handler.get_playing_status()
+        
+        status = JSon()
+        status.put('playing', is_playing)
+        if is_playing:
+            playing_entry_id = handler.get_playing_entry_id()
+            if playing_entry_id:
+                status.put('playing_entry', Song.get_song_as_JSon(handler, playing_entry_id))
+                status.put('playing_time', handler.get_playing_time())
+            
+        status.put('playing_order', handler.get_play_order())
+        status.put('muted', handler.get_mute())
+        status.put('volume', handler.get_volume())
+        
+        return status

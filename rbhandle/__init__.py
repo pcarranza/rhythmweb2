@@ -108,6 +108,36 @@ class RBHandler(Loggable):
         self.__print_state('get_playing_status')
         return self._player.get_playing() 
     
+    
+    def get_mute(self):
+        self.__print_state('get_mute')
+        return self._player.get_mute()
+    
+    
+    def toggle_mute(self):
+        self.__print_state('toggle_mute')
+        if self.get_mute():
+            self._player.set_mute(False)
+        else:
+            self._player.set_mute(True)
+        
+        
+    def get_volume(self):
+        self.__print_state('get_volume')
+        return self._player.get_volume()
+    
+        
+    def set_volume(self, volume):
+        self.__print_state('set_volume')
+        
+        if not type(volume) is float:
+            raise Exception('Volume must be a float')
+        
+        if volume > 1:
+            self.warning('Volume cannot be set over 1')
+            
+        self._player.set_volume(volume)
+        
         
     def get_playing_entry_id(self):
         self.__print_state('get_playing_entry_id')

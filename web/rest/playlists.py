@@ -29,7 +29,7 @@ class Page(BaseRest, Loggable):
             rbplaylists = handler.get_playlists()
             sources = []
             for source in rbplaylists:
-                jsource = Playlist.get_playlist_as_JSon(source, self.get_playlist_entries(source.index))
+                jsource = Playlist.get_playlist_as_JSon(source)
                 sources.append(jsource)
                 
             playlists = JSon()

@@ -17,6 +17,7 @@
 from serve.rest.base import BaseRest
 from serve.log.loggable import Loggable
 from serve.request import ServerException
+from web.rest import Status
 
 
 class Page(BaseRest, Loggable):
@@ -80,11 +81,28 @@ class Page(BaseRest, Loggable):
             if type(entry_id) is list:
                 raise ServerException(400, 'Bad request, only one entry_id parameter accepted')
             handler.play_entry(entry_id)
-        
+            
+        elif action == 'mute':
+            handler.toggle_mute()
+            
+        elif action == 'set_volume':
+            if not 'volume' in params:
+                raise ServerException(400, 'Bad request, no volume parameter')
+            
+            volume = self.unpack_value(params['volume'])
+            try:
+                volume = float(volume)
+            except:
+                raise ServerException(400, 'Bad request, volume parameter must be float type')
+            handler.set_volume(volume)
+            
         else:
             raise ServerException(400, 'Bad request, action %s is not supported' % action)
             
-        return 'OK'
+        status = Status.get_status_as_JSon(handler)
+        status.put('last_action', action)
+        
+        return status
     
     
     
