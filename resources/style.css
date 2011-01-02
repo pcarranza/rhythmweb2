@@ -84,7 +84,7 @@ img {
 	color: #f80; 
 }
 #track_actions {
-	width: 5%;
+	width: 8%;
 	display: table-cell;
 	padding-right: 10px;
 	text-align: right;
@@ -93,30 +93,37 @@ img {
 #track_number {
 	width: 2%;
 	display: table-cell;
+	vertical-align: middle;
 }
 #track_title {
 	width: 20%;
 	display: table-cell;
+	vertical-align: middle;
 }
 #track_genre {
-	width: 5%;
+	width: 10%;
 	display: table-cell;
+	vertical-align: middle;
 }
 #track_artist {
 	width: 15%;
 	display: table-cell;
+	vertical-align: middle;
 }
 #track_album {
 	width: 25%;
 	display: table-cell;
+	vertical-align: middle;
 }
 #track_duration {
 	width: 5%;
 	display: table-cell;
+	vertical-align: middle;
 }
 #track_rating {
-	width: 12%;
+	width: 15%;
 	display: table-cell;
+	vertical-align: middle;
 }
 #clear_queue {
 	float: right;

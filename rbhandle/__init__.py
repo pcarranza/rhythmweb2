@@ -418,8 +418,6 @@ class RBHandler(Loggable):
         self.info('Adding entries %s to queue' % entry_ids)
         if type(entry_ids) is list:
             for entry_id in entry_ids:
-                if not type(entry_id) is int:
-                    raise Exception('entry_id parameter must be an int')
                 entry = self.load_entry(entry_id)
                 if entry is None:
                     continue
@@ -440,8 +438,6 @@ class RBHandler(Loggable):
         if type(entry_ids) is list:
             self.info('Removing entries %s from queue' % entry_ids)
             for entry_id in entry_ids:
-                if not type(entry_id) is int:
-                    raise Exception('entry_id parameter must be an int')
                 entry = self.load_entry(entry_id)
                 if entry is None:
                     continue
@@ -466,15 +462,16 @@ class RBHandler(Loggable):
     
     def _get_entry(self, entry_id):
         self.__print_state('get_entry')
-        if not type(entry_id) is int:
+        if not str(entry_id).isdigit():
             raise Exception('entry_id parameter must be an int')
+        
+        entry_id = int(entry_id)
         
         self.debug('Getting entry %d' % entry_id)
         return self._db.entry_lookup_by_id(entry_id)
     
     def load_entry(self, entry_id):
         self.__print_state('load_entry')
-        
         self.debug('Loading entry %s' % str(entry_id))
         entry = self._get_entry(entry_id)
         if entry is None:
