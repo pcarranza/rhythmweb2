@@ -36,6 +36,16 @@ ORDER_SHUFFLE_EQUALS = 'random-equal-weights'
 PLAY_ORDER_KEY = '/apps/rhythmbox/state/play_order'
 
 
+RB_SOURCELIST_MODEL_COLUMN_PLAYING = 0
+RB_SOURCELIST_MODEL_COLUMN_PIXBUF = 1
+RB_SOURCELIST_MODEL_COLUMN_NAME = 2
+RB_SOURCELIST_MODEL_COLUMN_SOURCE = 3
+RB_SOURCELIST_MODEL_COLUMN_ATTRIBUTES = 4
+RB_SOURCELIST_MODEL_COLUMN_VISIBILITY = 5
+RB_SOURCELIST_MODEL_COLUMN_IS_GROUP = 6
+RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY = 7
+
+
 class RBHandler(Loggable):
     
     _instance = None
@@ -560,14 +570,25 @@ class RBHandler(Loggable):
         return self._db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
     
     
+    def _get_playlist_sources(self):
+        playlists = []
+        for sourcelist in self._shell.props.sourcelist_model:
+            if sourcelist[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY] == rb.SOURCE_GROUP_CATEGORY_PERSISTENT:
+                for playlist in sourcelist.iterchildren():
+                    playlists.append(playlist)
+        return playlists
+    
+    
     def get_playlists(self):
         playlists = []
-        # Sourcelistmodel: 0 is for Queue, Music, Radios, Podcasts and else, 1 is for playlists
         index = 0
-        for playlist in self._shell.props.sourcelist_model[1].iterchildren():
+        sources = self._get_playlist_sources()
+        for playlist in sources:
             playlistsource = PlaylistSource(index, playlist)
             playlists.append(playlistsource)
             index+= 1
+        
+        
         return playlists
     
     
@@ -593,7 +614,8 @@ class RBHandler(Loggable):
             raise Exception('playlist_index parameter must be an int')
         
         index = 0
-        for playlist in self._shell.props.sourcelist_model[1].iterchildren():
+        sources = self._get_playlist_sources()
+        for playlist in sources:
             if playlist_index == index:
                 return PlaylistSource(index, playlist)
             index += 1
@@ -653,16 +675,6 @@ class RBEntry():
         self.last_played = db.entry_get(entry, rhythmdb.PROP_LAST_PLAYED)
         
         
-
-RB_SOURCELIST_MODEL_COLUMN_PLAYING = 0
-RB_SOURCELIST_MODEL_COLUMN_PIXBUF = 1
-RB_SOURCELIST_MODEL_COLUMN_NAME = 2
-RB_SOURCELIST_MODEL_COLUMN_SOURCE = 3
-RB_SOURCELIST_MODEL_COLUMN_ATTRIBUTES = 4
-RB_SOURCELIST_MODEL_COLUMN_VISIBILITY = 5
-RB_SOURCELIST_MODEL_COLUMN_IS_GROUP = 6
-RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY = 7
-
 
 class PlaylistSource():
     
