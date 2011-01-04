@@ -33,28 +33,45 @@ class Page(BaseRest, Loggable):
         if not SEARCH_TYPES.has_key(search_by):
             raise ServerException(400, 'Bad request, %s path parameter not supported' % search_by)
         
-        if len(self._path_params) < 2:
-            raise ServerException(400, 'Bad request, %s path parameter requires a filter parameter, plain query not supported yet' % search_by)
-        
-        value = self.unpack_value(self._path_params[1])
-        value = str(value).replace('+', ' ')
-        
-        filter = {}
-        filter['type'] = 'song'
-        filter[SEARCH_TYPES[search_by]] = value
-        filter['exact-match'] = True
-        filter['limit'] = 0
-        
-        handler = self._components['RB']
-        
-        entry_ids = handler.query(filter)
-        entries = []
-        for entry_id in entry_ids:
-            entry = Song.get_song_as_JSon(handler, entry_id)
-            entries.append(entry)
+        if len(self._path_params) == 1:
+            #raise ServerException(400, 'Bad request, %s path parameter requires a filter parameter, plain query not supported yet' % search_by)
+            library = JSon()
+            handler = self._components['RB']
             
-        library = JSon()
-        library.put(search_by, value)
-        library.put('entries', entries)
+            if 'artists' == search_by:
+                library.put('artists', handler.get_artists())
+                self.info('Library loaded artists dictionary')
+                
+            elif 'genres' == search_by:
+                library.put('genres', handler.get_genres())
+                self.info('Library loaded genres dictionary')
+                
+            else:
+                library.put('albums', handler.get_albums())
+                self.info('Library loaded albums dictionary')
+                
+            return library
         
-        return library
+        else:
+            value = self.unpack_value(self._path_params[1])
+            value = str(value).replace('+', ' ')
+            
+            filter = {}
+            filter['type'] = 'song'
+            filter[SEARCH_TYPES[search_by]] = value
+            filter['exact-match'] = True
+            filter['limit'] = 0
+            
+            handler = self._components['RB']
+            
+            entry_ids = handler.query(filter)
+            entries = []
+            for entry_id in entry_ids:
+                entry = Song.get_song_as_JSon(handler, entry_id)
+                entries.append(entry)
+                
+            library = JSon()
+            library.put(search_by, value)
+            library.put('entries', entries)
+            
+            return library

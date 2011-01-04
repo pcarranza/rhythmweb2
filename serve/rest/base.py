@@ -47,6 +47,11 @@ class BaseRest(Loggable):
             response('%d %s' % (e.code, e.message), self.do_headers())
             return e.message
     
+        except Exception, e:
+            self.error(e)
+            response('%d %s' % (500, e), self.do_headers())
+            return '%d %s' % (500, e)
+        
     
     def do_post(self, environ, params, response):
         self._parameters = params
@@ -60,6 +65,10 @@ class BaseRest(Loggable):
             response('%d %s' % (e.code, e.message), self.do_headers())
             return e.message
     
+        except Exception, e:
+            self.error(e)
+            response('%d %s' % (500, e), self.do_headers())
+            return '%d %s' % (500, e)
     
     
     
@@ -75,8 +84,8 @@ class BaseRest(Loggable):
             headers = []
             headers.append(('Content-type','application/json; charset=UTF-8'))
             headers.append(('Cache-Control: ', 'no-cache; must-revalidate'))
-            response('200 OK', self.do_headers(headers))
             json = value.parse()
+            response('200 OK', self.do_headers(headers))
             self.debug('Returning JSON: %s' % json)
             return json
         

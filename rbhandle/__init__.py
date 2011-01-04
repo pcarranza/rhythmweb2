@@ -19,6 +19,7 @@ import urllib
 import rb, rhythmdb
 
 from serve.log.loggable import Loggable
+import sys
 
 TYPE_SONG = 'song'
 TYPE_RADIO = 'iradio'
@@ -55,14 +56,7 @@ class RBHandler(Loggable):
     _play_toggle_loop = None
     _play_toggle_shuffle = None
     
-    def __print_state(self, status):
-        self.debug('STATUS FROM %s' % status)
-#        self.debug('SHELL object %s' % self._shell)
-#        self.debug('DB object %s' % self._db)
-#        self.debug('PLAYER object %s' % self._player)
-#        self.debug('GCONF object %s' % self._gconf)
-        
-        
+    
     def __init__(self, shell):
         self.debug('Creating new RBHandler object')
         
@@ -80,9 +74,6 @@ class RBHandler(Loggable):
         for type in [TYPE_SONG, TYPE_RADIO, TYPE_PODCAST]:
             rb_type = self._db.entry_type_get_by_name(type)
             self._media_types[type] = rb_type
-        
-        self.__print_state('__init__')
-
         
         LINEAR_LOOP = "%s%s" % (ORDER_LINEAR, PLAY_LOOP)
         SHUFFLE_LOOP = "%s%s" % (ORDER_SHUFFLE, PLAY_LOOP)
@@ -112,20 +103,77 @@ class RBHandler(Loggable):
             ORDER_SHUFFLE_BY_AGE : ORDER_LINEAR,
             ORDER_SHUFFLE_BY_RATING : ORDER_LINEAR,
             ORDER_SHUFFLE_BY_AGE_AND_RATING : ORDER_LINEAR}
+        
+        self._db_cache = None
+    
+    def load_db_cache(self):
+        db_cache = {}
+        artists_cache = {}
+        genres_cache = {}
+        albums_cache = {}
+        
+        model = self._shell.props.library_source.props.query_model
+        for row in model:
+            entry = row[0]
+            artist = self._db.entry_get(entry, rhythmdb.PROP_ARTIST)
+            album = self._db.entry_get(entry, rhythmdb.PROP_ALBUM)
+            genre = self._db.entry_get(entry, rhythmdb.PROP_GENRE)
+            
+            if artists_cache.has_key(artist):
+                artists_cache[artist] += 1
+            else:
+                artists_cache[artist] = 1
+                
+            if albums_cache.has_key(album):
+                albums_cache[album] += 1
+            else:
+                albums_cache[album] = 1
+        
+            if genres_cache.has_key(genre):
+                genres_cache[genre] += 1
+            else:
+                genres_cache[genre] = 1
+        
+        db_cache['artists'] = artists_cache
+        db_cache['albums'] = albums_cache
+        db_cache['genres'] = genres_cache
+        
+        self._db_cache = db_cache
+        
+        self.info('Size of db cache %d' % sys.getsizeof(db_cache))
+        self.info('Size of artists_cache %d' % sys.getsizeof(artists_cache))
+        self.info('Size of albums_cache %d' % sys.getsizeof(albums_cache))
+        self.info('Size of genres_cache %d' % sys.getsizeof(genres_cache))        
+
+        
+        
+    def get_artists(self):
+        if self._db_cache is None:
+            self.load_db_cache()
+        return self._db_cache['artists']
     
     
+    def get_albums(self):
+        if self._db_cache is None:
+            self.load_db_cache()
+        return self._db_cache['albums']
+    
+    
+    def get_genres(self):
+        if self._db_cache is None:
+            self.load_db_cache()
+        return self._db_cache['genres']
+    
+        
     def get_playing_status(self):
-        self.__print_state('get_playing_status')
         return self._player.get_playing() 
     
     
     def get_mute(self):
-        self.__print_state('get_mute')
         return self._player.get_mute()
     
     
     def toggle_mute(self):
-        self.__print_state('toggle_mute')
         if self.get_mute():
             self._player.set_mute(False)
         else:
@@ -133,12 +181,10 @@ class RBHandler(Loggable):
         
         
     def get_volume(self):
-        self.__print_state('get_volume')
         return self._player.get_volume()
     
         
     def set_volume(self, volume):
-        self.__print_state('set_volume')
         
         if not type(volume) is float:
             raise Exception('Volume must be a float')
@@ -150,7 +196,6 @@ class RBHandler(Loggable):
         
         
     def get_playing_entry_id(self):
-        self.__print_state('get_playing_entry_id')
         entry = self._player.get_playing_entry()
         if entry is None:
             return None
@@ -159,7 +204,6 @@ class RBHandler(Loggable):
     
         
     def play_entry(self, entry_id): # entry id
-        self.__print_state('play_entry')
         self.info('Playing entry %s' % entry_id)
         
         entry = self._get_entry(entry_id)
@@ -171,7 +215,6 @@ class RBHandler(Loggable):
     
         
     def set_rating(self, entry_id, rating):
-        self.__print_state('set_rating')
         self.info('Setting rating %d to entry %s' % (rating, entry_id))
         entry = self._get_entry(entry_id)
         if not entry is None:
@@ -179,25 +222,21 @@ class RBHandler(Loggable):
     
         
     def search_song(self, filter):
-        self.__print_state('search_song')
         self.info('Searching for a song with filter %s' % filter)
         return self.search(filter, TYPE_SONG)
     
     
     def search_radio(self, filter):
-        self.__print_state('search_radio')
         self.info('Searching for a radio with filter %s' % filter)
         return self.search(filter, TYPE_RADIO)
     
     
     def search_podcast(self, filter):
-        self.__print_state('search_podcast')
         self.info('Searching for a podcast with filter %s' % filter)
         return self.search(filter, TYPE_PODCAST)
     
     
     def search(self, filter, type):
-        self.__print_state('search')
         filters = {}
         filters['type'] = type
         filters['all'] = filter
@@ -206,7 +245,6 @@ class RBHandler(Loggable):
     
     
     def query(self, filters):
-        self.__print_state('query')
         
         if filters is None:
             self.info('No filters, returning empty result')
@@ -393,24 +431,20 @@ class RBHandler(Loggable):
     
     
     def get_play_order(self):
-        self.__print_state('get_play_order')
         return self._gconf.get_string(PLAY_ORDER_KEY)
     
     
     def set_play_order(self, play_order):
-        self.__print_state('set_play_order')
         self._gconf.set_string(PLAY_ORDER_KEY, play_order)
     
     
     def toggle_shuffle(self):
-        self.__print_state('toggle_shuffle')
         status = self.get_play_order()
         new_status = self._play_toggle_shuffle[status]
         self.set_play_order(new_status)
         
     
     def toggle_loop(self):
-        self.__print_state('toggle_loop')
         order = self.get_play_order()
         new_order = ORDER_LINEAR
         if self._play_toggle_loop.has_key(order):
@@ -419,7 +453,6 @@ class RBHandler(Loggable):
     
 
     def get_play_queue(self, queue_limit=100):
-        self.__print_state('get_play_queue')
         self.info('Getting play queue')
         entries = []
         self._loop_query_model(func=entries.append, query_model=self._get_play_queue_model(), limit=queue_limit)
@@ -427,7 +460,6 @@ class RBHandler(Loggable):
     
     
     def enqueue(self, entry_ids):
-        self.__print_state('enqueue')
         self.info('Adding entries %s to queue' % entry_ids)
         if type(entry_ids) is list:
             for entry_id in entry_ids:
@@ -446,8 +478,8 @@ class RBHandler(Loggable):
                 
         self._shell.props.queue_source.queue_draw()
         
+        
     def dequeue(self, entry_ids):
-        self.__print_state('dequeue')
         if type(entry_ids) is list:
             self.info('Removing entries %s from queue' % entry_ids)
             for entry_id in entry_ids:
@@ -469,12 +501,10 @@ class RBHandler(Loggable):
         
     
     def clear_play_queue(self):
-        self.__print_state('clear_play_queue')
         self._loop_query_model(func=self.dequeue, query_model=self._get_play_queue_model())
 
     
     def _get_entry(self, entry_id):
-        self.__print_state('get_entry')
         if not str(entry_id).isdigit():
             raise Exception('entry_id parameter must be an int')
         
@@ -484,7 +514,6 @@ class RBHandler(Loggable):
         return self._db.entry_lookup_by_id(entry_id)
     
     def load_entry(self, entry_id):
-        self.__print_state('load_entry')
         self.debug('Loading entry %s' % str(entry_id))
         entry = self._get_entry(entry_id)
         if entry is None:
@@ -495,34 +524,28 @@ class RBHandler(Loggable):
     
 
     def get_playing_time(self):
-        self.__print_state('get_time_playing')
         return self._player.get_playing_time()
     
     
     def get_playing_time_string(self):
-        self.__print_state('get_playing_time_string')
         return self._player.get_playing_time_string()
     
     
     def next(self):
-        self.__print_state('next')
         if self.get_playing_status():
             self._player.do_next()
         
         
     def seek(self, seconds):
-        self.__print_state('seek')
         self._player.seek(seconds)
         
         
     def previous(self):
-        self.__print_state('previous')
         if self.get_playing_status():
             self._player.do_previous()
     
     
     def play_pause(self):
-        self.__print_state('play_pause')
         self._player.playpause()
         
     
@@ -557,6 +580,7 @@ class RBHandler(Loggable):
                 break
         
         return count
+    
     
     def _get_play_queue_model(self):
         return self._shell.props.queue_source.props.query_model
@@ -593,7 +617,6 @@ class RBHandler(Loggable):
     
     
     def enqueue_playlist(self, playlist_index):
-        self.__print_state('enqueue_playlist')
         self.info('Enqueuing playlist')
         
         if not type(playlist_index) is int:
@@ -607,7 +630,6 @@ class RBHandler(Loggable):
         
     
     def get_playlist(self, playlist_index):
-        self.__print_state('get_playlist')
         self.info('Getting playlist')
         
         if not type(playlist_index) is int:
@@ -624,7 +646,6 @@ class RBHandler(Loggable):
 
     
     def get_playlist_entries(self, playlist_index, limit=100):
-        self.__print_state('get_playlist_entries')
         self.info('Getting playlist entries')
 
         if not type(playlist_index) is int:

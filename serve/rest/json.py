@@ -39,7 +39,10 @@ class JSon():
         return_value = []
         
         attributes = self.attributes
-        return_value.append(self._parse_attributes(attributes))
+        try:
+            return_value.append(self._parse_attributes(attributes))
+        except Exception, e:
+            raise Exception('Could not parse json object', e)
         
         return ''.join(return_value)
     
@@ -83,10 +86,14 @@ class JSon():
         
         return ''.join(return_value)    
     
+    
     def _encode_str(self, value):
         value = str(value)
         value = value.replace('"', '\\"')
+        #value = value.replace('&', '\\&')
+        #value = value.replace('\'', '\\\'')
         return value
+    
     
     def _parse_attributes(self, attributes):
         return_value = []
@@ -98,7 +105,7 @@ class JSon():
             return_value.append(attr)
             return_value.append("\" : ")
             
-            value = self.attributes[attr]
+            value = attributes[attr]
             return_value.append(self._parse_value(value))
             return_value.append(', ')
             
