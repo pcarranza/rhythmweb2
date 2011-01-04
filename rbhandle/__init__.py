@@ -139,11 +139,12 @@ class RBHandler(Loggable):
         db_cache['genres'] = genres_cache
         
         self._db_cache = db_cache
-        
-        self.info('Size of db cache %d' % sys.getsizeof(db_cache))
-        self.info('Size of artists_cache %d' % sys.getsizeof(artists_cache))
-        self.info('Size of albums_cache %d' % sys.getsizeof(albums_cache))
-        self.info('Size of genres_cache %d' % sys.getsizeof(genres_cache))        
+        return self._db_cache
+    
+#        self.info('Size of db cache %d' % sys.getsizeof(db_cache))
+#        self.info('Size of artists_cache %d' % sys.getsizeof(artists_cache))
+#        self.info('Size of albums_cache %d' % sys.getsizeof(albums_cache))
+#        self.info('Size of genres_cache %d' % sys.getsizeof(genres_cache))        
 
         
         
