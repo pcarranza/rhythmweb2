@@ -48,16 +48,26 @@ RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY = 7
 
 
 class RBHandler(Loggable):
+    '''
+    Rhythmbox shell wrapper, provides player, queue, playlist, 
+    artist/album/genre count cache and max instances 
+    and some other functionallities
+    '''
     
-    _instance = None
-    
-    _media_types = None
-    _play_orders = None
-    _play_toggle_loop = None
-    _play_toggle_shuffle = None
+    __CACHE_ARTISTS = 'artists'
+    __CACHE_GENRES = 'genres'
+    __CACHE_ALBUMS = 'albums'
+    __CACHE_MAX_ARTIST = 'max-artist'
+    __CACHE_MAX_GENRE = 'max-genre'
+    __CACHE_MAX_ALBUM = 'max-album'
     
     
     def __init__(self, shell):
+        '''
+        Creates a new rhythmbox handler, wrapping the RBShell object that gets 
+        by parameter
+        '''
+        
         self.debug('Creating new RBHandler object')
         
         if shell is None:
@@ -66,14 +76,14 @@ class RBHandler(Loggable):
         else:
             self.debug('Setting shell object')
         
-        self._shell = shell
-        self._db = shell.props.db
-        self._player = shell.get_player()
-        self._gconf = gconf.client_get_default()
-        self._media_types = {}
+        self.__shell = shell
+        self.__db = shell.props.db
+        self.__player = shell.get_player()
+        self.__gconf = gconf.client_get_default()
+        self.__media_types = {}
         for type in [TYPE_SONG, TYPE_RADIO, TYPE_PODCAST]:
-            rb_type = self._db.entry_type_get_by_name(type)
-            self._media_types[type] = rb_type
+            rb_type = self.__db.entry_type_get_by_name(type)
+            self.__media_types[type] = rb_type
         
         LINEAR_LOOP = "%s%s" % (ORDER_LINEAR, PLAY_LOOP)
         SHUFFLE_LOOP = "%s%s" % (ORDER_SHUFFLE, PLAY_LOOP)
@@ -104,140 +114,252 @@ class RBHandler(Loggable):
             ORDER_SHUFFLE_BY_RATING : ORDER_LINEAR,
             ORDER_SHUFFLE_BY_AGE_AND_RATING : ORDER_LINEAR}
         
-        self._db_cache = None
-    
-    def load_db_cache(self):
-        db_cache = {}
-        artists_cache = {}
-        genres_cache = {}
-        albums_cache = {}
+        self.__db_cache = {
+                           self.__CACHE_ARTISTS : {},
+                           self.__CACHE_MAX_ARTIST : None,
+                           self.__CACHE_ALBUMS : {},
+                           self.__CACHE_MAX_ALBUM : None,
+                           self.__CACHE_GENRES : {},
+                           self.__CACHE_MAX_GENRE : None
+                           }
         
-        model = self._shell.props.library_source.props.query_model
-        for row in model:
-            entry = row[0]
-            artist = self._db.entry_get(entry, rhythmdb.PROP_ARTIST)
-            album = self._db.entry_get(entry, rhythmdb.PROP_ALBUM)
-            genre = self._db.entry_get(entry, rhythmdb.PROP_GENRE)
-            
-            if artists_cache.has_key(artist):
-                artists_cache[artist] += 1
-            else:
-                artists_cache[artist] = 1
-                
-            if albums_cache.has_key(album):
-                albums_cache[album] += 1
-            else:
-                albums_cache[album] = 1
+        self.__db.connect('entry-added', self.__append_entry_to_cache)
         
-            if genres_cache.has_key(genre):
-                genres_cache[genre] += 1
-            else:
-                genres_cache[genre] = 1
         
-        db_cache['artists'] = artists_cache
-        db_cache['albums'] = albums_cache
-        db_cache['genres'] = genres_cache
         
-        self._db_cache = db_cache
-        return self._db_cache
-    
-#        self.info('Size of db cache %d' % sys.getsizeof(db_cache))
-#        self.info('Size of artists_cache %d' % sys.getsizeof(artists_cache))
-#        self.info('Size of albums_cache %d' % sys.getsizeof(albums_cache))
-#        self.info('Size of genres_cache %d' % sys.getsizeof(genres_cache))        
 
+        
+    def get_biggest_artist(self):
+        '''
+        Gets the artist that has more songs registered in the DB
+        '''
+        return self.__db_cache[self.__CACHE_MAX_ARTIST]
+
+
+    def get_biggest_album(self):
+        '''
+        Gets the album that has more songs registered in the DB
+        '''
+        return self.__db_cache[self.__CACHE_MAX_ALBUM]
+    
+
+    def get_biggest_genre(self):
+        '''
+        Gets the genre that has more songs registered in the DB
+        '''
+        return self.__db_cache[self.__CACHE_MAX_GENRE]
         
         
     def get_artists(self):
-        if self._db_cache is None:
-            self.load_db_cache()
-        return self._db_cache['artists']
+        '''
+        Gets the artists cached dictionary
+        '''
+        return self.__db_cache[self.__CACHE_ARTISTS]
     
     
     def get_albums(self):
-        if self._db_cache is None:
-            self.load_db_cache()
-        return self._db_cache['albums']
+        '''
+        Gets the albums cached dictionary
+        '''
+        return self.__db_cache[self.__CACHE_ALBUMS]
     
     
     def get_genres(self):
-        if self._db_cache is None:
-            self.load_db_cache()
-        return self._db_cache['genres']
+        '''
+        Gets the genres cached dictionary
+        '''
+        return self.__db_cache[self.__CACHE_GENRES]
     
         
     def get_playing_status(self):
-        return self._player.get_playing() 
+        '''
+        Gets the playing status, returns True or False according to playing or not
+        '''
+        return self.__player.get_playing() 
     
     
     def get_mute(self):
-        return self._player.get_mute()
+        '''
+        Gets True if the player is muted
+        '''
+        return self.__player.get_mute()
     
     
     def toggle_mute(self):
-        if self.get_mute():
-            self._player.set_mute(False)
-        else:
-            self._player.set_mute(True)
+        self.__player.toggle_mute()
         
         
     def get_volume(self):
-        return self._player.get_volume()
+        '''
+        Gets the player volume, a float between 0 and 1
+        '''
+        return self.__player.get_volume()
     
         
     def set_volume(self, volume):
-        
+        '''
+        Sets the player volume, gets a float between 0 and 1
+        '''
         if not type(volume) is float:
             raise Exception('Volume must be a float')
         
         if volume > 1:
             self.warning('Volume cannot be set over 1')
             
-        self._player.set_volume(volume)
+        self.__player.set_volume(volume)
         
         
     def get_playing_entry_id(self):
-        entry = self._player.get_playing_entry()
+        '''
+        Gets playing entry id, returns a string
+        '''
+        entry = self.__player.get_playing_entry()
         if entry is None:
             return None
         
-        return self._db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
+        return self.__db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
     
         
+    def get_playing_time(self):
+        '''
+        Gets the playing time, in seconds
+        '''
+        return self.__player.get_playing_time()
+    
+    
+    def get_playing_time_string(self):
+        '''
+        Gets the playing time, as a string in "x:xx of x:xx" format
+        '''
+        return self.__player.get_playing_time_string()
+    
+    
+    def next(self):
+        '''
+        If playing, skips the player to the next song
+        '''
+        if self.get_playing_status():
+            self.__player.do_next()
+        
+        
+    def seek(self, seconds):
+        '''
+        Seeks n seconds in the current playing song, receives and int, positive or negative
+        '''
+        self.__player.seek(seconds)
+        
+        
+    def previous(self):
+        '''
+        If playing, skips the player to the previous song
+        '''
+        if self.get_playing_status():
+            self.__player.do_previous()
+    
+    
+    def play_pause(self):
+        '''
+        Starts playing or pauses
+        '''
+        self.__player.playpause()
+        
+    
+    def get_play_order(self):
+        '''
+        Returns the play order
+        '''
+        return self.__gconf.get_string(PLAY_ORDER_KEY)
+    
+    
+    def set_play_order(self, play_order):
+        '''
+        Sets the play order
+        '''
+        self.__gconf.set_string(PLAY_ORDER_KEY, play_order)
+    
+    
+    def toggle_shuffle(self):
+        '''
+        Toggles shuffle playing
+        '''
+        status = self.get_play_order()
+        new_status = self._play_toggle_shuffle[status]
+        self.set_play_order(new_status)
+        
+    
+    def toggle_loop(self):
+        '''
+        Toggles loop playing
+        '''
+        order = self.get_play_order()
+        new_order = ORDER_LINEAR
+        if self._play_toggle_loop.has_key(order):
+            new_order = self._play_toggle_loop[order]      
+        self.set_play_order(new_order)
+    
+
+    def get_play_queue(self, queue_limit=100):
+        '''
+        Returns the play queue, limited to 100 entries by default
+        '''
+        self.info('Getting play queue')
+        entries = []
+        self.__loop_query_model(func=entries.append, query_model=self.__get_play_queue_model(), limit=queue_limit)
+        return entries
+    
+    
     def play_entry(self, entry_id): # entry id
+        '''
+        Inmediatly starts playing the entry which id gets by parameter
+        '''
         self.info('Playing entry %s' % entry_id)
         
-        entry = self._get_entry(entry_id)
+        entry = self.__get_entry(entry_id)
         if not entry is None:
             if self.get_playing_status():
                 self.play_pause()
             
-            self._player.play_entry(entry)
+            self.__player.play_entry(entry)
     
         
     def set_rating(self, entry_id, rating):
+        '''
+        Sets the provided rating to the given entry id, int 0 to 5 
+        '''
         self.info('Setting rating %d to entry %s' % (rating, entry_id))
-        entry = self._get_entry(entry_id)
+        entry = self.__get_entry(entry_id)
         if not entry is None:
-            self._db.set(entry, rhythmdb.PROP_RATING, rating)
+            self.__db.set(entry, rhythmdb.PROP_RATING, rating)
     
         
     def search_song(self, filter):
+        '''
+        Performs a query for entry type "song" with the provided filters 
+        '''
         self.info('Searching for a song with filter %s' % filter)
         return self.search(filter, TYPE_SONG)
     
     
     def search_radio(self, filter):
+        '''
+        Performs a query for entry type "radio" with the provided filters 
+        '''
         self.info('Searching for a radio with filter %s' % filter)
         return self.search(filter, TYPE_RADIO)
     
     
     def search_podcast(self, filter):
+        '''
+        Performs a query for entry type "podcast" with the provided filters 
+        '''
         self.info('Searching for a podcast with filter %s' % filter)
         return self.search(filter, TYPE_PODCAST)
     
     
     def search(self, filter, type):
+        '''
+        Performs a query for provided entry type with the provided filters 
+        '''
         filters = {}
         filters['type'] = type
         filters['all'] = filter
@@ -246,8 +368,11 @@ class RBHandler(Loggable):
     
     
     def query(self, filters):
+        '''
+        Performs a query with the provided filters 
+        '''
         
-        if filters is None:
+        if filters is None or not filters:
             self.info('No filters, returning empty result')
             return []
         
@@ -280,7 +405,7 @@ class RBHandler(Loggable):
             if 'type' in filters:
                 mtype = filters['type']
                 #self.debug('Appending query for type \"%s\"' % mtype)
-                if not self._media_types.has_key(mtype):
+                if not self.__media_types.has_key(mtype):
                     raise InvalidQueryException('Unknown media type \"%s\"' % filter['type'])
             
             if 'rating' in filters:
@@ -342,29 +467,231 @@ class RBHandler(Loggable):
                     
         if not all is None:
             self.info('Querying for all...')
-            query_model = self._query_all(mtype, play_count, rating, all, True)
+            query_model = self.__query_all(mtype, play_count, rating, all, True)
               
         elif searches:
             self.info('Querying for each...')
-            query_model = self._query_all(mtype, play_count, rating, searches)
+            query_model = self.__query_all(mtype, play_count, rating, searches)
         
         elif mtype is None:
             self.info('No search filter defined, querying for default')
-            query_model = self._query_all(TYPE_SONG, play_count, rating, searches)
+            query_model = self.__query_all(TYPE_SONG, play_count, rating, searches)
             
         else:
             self.info('Search for type only, querying for type')
-            query_model = self._query_all(mtype, play_count, rating, searches)
+            query_model = self.__query_all(mtype, play_count, rating, searches)
 
         
         entries = []
-        self._loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
+        self.__loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
         return entries
     
     
-    def _query_all(self, mtype, min_play_count, min_rating, parameters, query_for_all=False):
+    def enqueue(self, entry_ids):
+        '''
+        Appends the given entry id or ids to the playing queue 
+        '''
+        self.info('Adding entries %s to queue' % entry_ids)
+        if type(entry_ids) is list:
+            for entry_id in entry_ids:
+                entry = self.load_entry(entry_id)
+                if entry is None:
+                    continue
+                location = str(entry.location)
+                self.debug('Enqueuing entry %s' % location)
+                self.__shell.add_to_queue(location)
+        elif type(entry_ids) is int:
+            entry = self.load_entry(entry_ids)
+            if not entry is None:
+                location = str(entry.location)
+                self.debug('Enqueuing entry %s' % location)
+                self.__shell.add_to_queue(location)
+                
+        self.__shell.props.queue_source.queue_draw()
+        
+        
+    def dequeue(self, entry_ids):
+        '''
+        Removes the given entry id or ids from the playing queue 
+        '''
+        if type(entry_ids) is list:
+            self.info('Removing entries %s from queue' % entry_ids)
+            for entry_id in entry_ids:
+                entry = self.load_entry(entry_id)
+                if entry is None:
+                    continue
+                location = str(entry.location)
+                self.debug('Dequeuing entry %s' % location)
+                self.__shell.remove_from_queue(location)
+        elif type(entry_ids) is int:
+            self.info('Removing entry %d from queue' % entry_ids)
+            entry = self.load_entry(entry_ids)
+            if not entry is None:
+                location = str(entry.location)
+                self.debug('Dequeuing entry %s' % location)
+                self.__shell.remove_from_queue(location)
+                
+        self.__shell.props.queue_source.queue_draw()
+        
+    
+    def clear_play_queue(self):
+        '''
+        Cleans the playing queue
+        '''
+        self.__loop_query_model(func=self.dequeue, query_model=self.__get_play_queue_model())
+
+    
+    def load_entry(self, entry_id):
+        '''
+        Returns a RBEntry with the entry information fully loaded for the given id 
+        '''
+        self.debug('Loading entry %s' % str(entry_id))
+        entry = self.__get_entry(entry_id)
+        if entry is None:
+            self.debug('Entry %s not found' % str(entry_id))
+            return None
+        
+        return RBEntry(self.__db, entry)
+    
+
+    def get_playlists(self):
+        '''
+        Returns all registered playlists 
+        '''
+        playlists = []
+        index = 0
+        sources = self.__get_playlist_sources()
+        for playlist in sources:
+            playlistsource = PlaylistSource(index, playlist)
+            playlists.append(playlistsource)
+            index+= 1
+        
+        
+        return playlists
+    
+    
+    def enqueue_playlist(self, playlist_index):
+        '''
+        Enqueues in the play queue the given playlist 
+        '''
+        self.info('Enqueuing playlist')
+        
+        if not type(playlist_index) is int:
+            raise Exception('playlist_index parameter must be an int')
+        
+        playlist = self.get_playlist(playlist_index)
+        if playlist is None:
+            return 0
+        
+        # playlist.add_to_queue(self.__shell.props.queue_source)
+        # This way we will know how many songs are added
+        return self.__loop_query_model(func=self.enqueue, query_model=playlist.source.props.query_model)
+        
+    
+    def get_playlist(self, playlist_index):
+        '''
+        Returns the playlist required by index 
+        '''
+        self.info('Getting playlist')
+        
+        if not type(playlist_index) is int:
+            raise Exception('playlist_index parameter must be an int')
+        
+        index = 0
+        sources = self.__get_playlist_sources()
+        for playlist in sources:
+            if playlist_index == index:
+                return PlaylistSource(index, playlist)
+            index += 1
+            
+        return None
+
+    
+    def get_playlist_entries(self, playlist_index, limit=100):
+        '''
+        Returns every entry id registered in a given playlist 
+        '''
+        self.info('Getting playlist entries')
+
+        if not type(playlist_index) is int:
+            raise Exception('playlist_index parameter must be an int')
+        
+        entries = []
+        playlist = self.get_playlist(playlist_index)
+        if not playlist is None:
+            self.__loop_query_model(func=entries.append, \
+                                   query_model=playlist.source.props.query_model, \
+                                   limit=limit)
+        return entries
+
+
+    def __append_entry_to_cache(self, db, entry):
+        '''
+        Appends the given entry to the rbhandler cache 
+        '''
+        entry_id = db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
+        artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
+        album = db.entry_get(entry, rhythmdb.PROP_ALBUM)
+        genre = db.entry_get(entry, rhythmdb.PROP_GENRE)
+        
+        if not artist:
+            self.warning('Empty artist for entry %d' % entry_id)
+            return
+        
+        if not album:
+            self.warning('Empty album for entry %d' % entry_id)
+            return
+        
+        if not genre:
+            self.warning('Empty genre for entry %d' % entry_id)
+            return
+        
+        artists_cache = self.__db_cache[self.__CACHE_ARTISTS]
+        
+        if artists_cache.has_key(artist):
+            artists_cache[artist] += 1
+        else:
+            artists_cache[artist] = 1
+            
+        if self.__db_cache[self.__CACHE_MAX_ARTIST] is None:
+            self.__db_cache[self.__CACHE_MAX_ARTIST] = artist
+        elif artists_cache[artist] > artists_cache[self.__db_cache[self.__CACHE_MAX_ARTIST]]:
+            self.__db_cache[self.__CACHE_MAX_ARTIST] = artist
+            
+            
+        albums_cache = self.__db_cache[self.__CACHE_ALBUMS]
+        
+        if albums_cache.has_key(album):
+            albums_cache[album] += 1
+        else:
+            albums_cache[album] = 1
+
+        if self.__db_cache[self.__CACHE_MAX_ALBUM] is None:
+            self.__db_cache[self.__CACHE_MAX_ALBUM] = album
+        elif albums_cache[album] > albums_cache[self.__db_cache[self.__CACHE_MAX_ALBUM]]:
+            self.__db_cache[self.__CACHE_MAX_ALBUM] = album
+
+
+        genres_cache = self.__db_cache[self.__CACHE_GENRES]
+    
+        if genres_cache.has_key(genre):
+            genres_cache[genre] += 1
+        else:
+            genres_cache[genre] = 1
+
+        if self.__db_cache[self.__CACHE_MAX_GENRE] is None:
+            self.__db_cache[self.__CACHE_MAX_GENRE] = genre
+        elif genres_cache[genre] > genres_cache[self.__db_cache[self.__CACHE_MAX_GENRE]]:
+            self.__db_cache[self.__CACHE_MAX_GENRE] = genre
+    
+    
+
+    def __query_all(self, mtype, min_play_count, min_rating, parameters, query_for_all=False):
+        '''
+        Performs the quey
+        '''
         self.info('Querying...')
-        db = self._db
+        db = self.__db
         if mtype == TYPE_SONG:
             query_model = db.query_model_new(\
                      db.query_new(), \
@@ -373,14 +700,13 @@ class RBHandler(Loggable):
                      db.query_model_new_empty())
         else:
             query_model = db.query_model_new_empty()
-            
         
-        #if not mtype is None:
-        type = (rhythmdb.QUERY_PROP_EQUALS, \
-            rhythmdb.PROP_TYPE, \
-            self._db.entry_type_get_by_name(mtype))
-        #else:
-        #    type = None
+        if mtype is None:
+            type = None
+        else:
+            type = (rhythmdb.QUERY_PROP_EQUALS, \
+                rhythmdb.PROP_TYPE, \
+                self.__db.entry_type_get_by_name(mtype))
         
         
         if query_for_all: # equivalent to use an OR (many queries)
@@ -391,8 +717,8 @@ class RBHandler(Loggable):
                 if not type is None:
                     self.info('Appending Query for type \"%s\"...' % mtype)
                     db.query_append(query, type)
-                self._append_rating(query, min_rating)
-                self._append_play_count(query, min_play_count)
+                self.__append_rating_query(query, min_rating)
+                self.__append_play_count_query(query, min_play_count)
                 db.query_append(query, parameter)
                 db.do_full_query_parsed(query_model, query)
         else:
@@ -401,8 +727,8 @@ class RBHandler(Loggable):
             if not type is None:
                 self.info('Appending Query for type \"%s\"...' % mtype)
                 db.query_append(query, type)
-            self._append_rating(query, min_rating)
-            self._append_play_count(query, min_play_count)
+            self.__append_rating_query(query, min_rating)
+            self.__append_play_count_query(query, min_play_count)
             for parameter in parameters:
                 self.info('Appending Query for parameter...')
                 db.query_append(query, parameter)
@@ -411,146 +737,67 @@ class RBHandler(Loggable):
         return query_model
     
     
-    def _append_play_count(self, query, play_count):
+    def __append_play_count_query(self, query, play_count):
+        '''
+        Appends a min playcount filter to the given query
+        '''
         if play_count > 0:
             self.info('Appending min play count %d' % play_count)
-            db = self._db
+            db = self.__db
             play_count_query = (rhythmdb.QUERY_PROP_GREATER, \
                 rhythmdb.PROP_PLAY_COUNT, \
                 play_count)
             db.query_append(query, play_count_query)
 
 
-    def _append_rating(self, query, rating):
+    def __append_rating_query(self, query, rating):
+        '''
+        Appends a min rating filter to the given query
+        '''
         if rating > 0:
             self.info('Appending min rating %d' % rating)
-            db = self._db
+            db = self.__db
             rating_query = (rhythmdb.QUERY_PROP_GREATER, \
                 rhythmdb.PROP_RATING, \
                 rating)
             db.query_append(query, rating_query)
     
     
-    def get_play_order(self):
-        return self._gconf.get_string(PLAY_ORDER_KEY)
+    def __get_play_queue_model(self):
+        '''
+        Returns the main play queue query model
+        '''
+        return self.__shell.props.queue_source.props.query_model
     
     
-    def set_play_order(self, play_order):
-        self._gconf.set_string(PLAY_ORDER_KEY, play_order)
-    
-    
-    def toggle_shuffle(self):
-        status = self.get_play_order()
-        new_status = self._play_toggle_shuffle[status]
-        self.set_play_order(new_status)
+    def __get_entry_id(self, row):
+        '''
+        Returns the entry id for a given row from a query model
+        '''
+        if row is None:
+            raise Exception('Row from query model cannot be None')
         
-    
-    def toggle_loop(self):
-        order = self.get_play_order()
-        new_order = ORDER_LINEAR
-        if self._play_toggle_loop.has_key(order):
-            new_order = self._play_toggle_loop[order]      
-        self.set_play_order(new_order)
-    
-
-    def get_play_queue(self, queue_limit=100):
-        self.info('Getting play queue')
-        entries = []
-        self._loop_query_model(func=entries.append, query_model=self._get_play_queue_model(), limit=queue_limit)
-        return entries
+        entry = row[0]
+        return self.__db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
     
     
-    def enqueue(self, entry_ids):
-        self.info('Adding entries %s to queue' % entry_ids)
-        if type(entry_ids) is list:
-            for entry_id in entry_ids:
-                entry = self.load_entry(entry_id)
-                if entry is None:
-                    continue
-                location = str(entry.location)
-                self.debug('Enqueuing entry %s' % location)
-                self._shell.add_to_queue(location)
-        elif type(entry_ids) is int:
-            entry = self.load_entry(entry_ids)
-            if not entry is None:
-                location = str(entry.location)
-                self.debug('Enqueuing entry %s' % location)
-                self._shell.add_to_queue(location)
-                
-        self._shell.props.queue_source.queue_draw()
+    def __get_playlist_sources(self):
+        '''
+        Returns a list with all playlists sources registered
+        '''
+        playlists = []
+        for sourcelist in self.__shell.props.sourcelist_model:
+            if sourcelist[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY] == rb.SOURCE_GROUP_CATEGORY_PERSISTENT:
+                for playlist in sourcelist.iterchildren():
+                    playlists.append(playlist)
+        return playlists
+    
         
+    def __loop_query_model(self, func, query_model, first=0, limit=0):
+        '''
+        Loops a query model object and invokes the given function for every row, can also receive a first and a limit to "page" 
+        '''
         
-    def dequeue(self, entry_ids):
-        if type(entry_ids) is list:
-            self.info('Removing entries %s from queue' % entry_ids)
-            for entry_id in entry_ids:
-                entry = self.load_entry(entry_id)
-                if entry is None:
-                    continue
-                location = str(entry.location)
-                self.debug('Dequeuing entry %s' % location)
-                self._shell.remove_from_queue(location)
-        elif type(entry_ids) is int:
-            self.info('Removing entry %d from queue' % entry_ids)
-            entry = self.load_entry(entry_ids)
-            if not entry is None:
-                location = str(entry.location)
-                self.debug('Dequeuing entry %s' % location)
-                self._shell.remove_from_queue(location)
-                
-        self._shell.props.queue_source.queue_draw()
-        
-    
-    def clear_play_queue(self):
-        self._loop_query_model(func=self.dequeue, query_model=self._get_play_queue_model())
-
-    
-    def _get_entry(self, entry_id):
-        if not str(entry_id).isdigit():
-            raise Exception('entry_id parameter must be an int')
-        
-        entry_id = int(entry_id)
-        
-        self.debug('Getting entry %d' % entry_id)
-        return self._db.entry_lookup_by_id(entry_id)
-    
-    def load_entry(self, entry_id):
-        self.debug('Loading entry %s' % str(entry_id))
-        entry = self._get_entry(entry_id)
-        if entry is None:
-            self.debug('Entry %s not found' % str(entry_id))
-            return None
-        
-        return RBEntry(self._db, entry)
-    
-
-    def get_playing_time(self):
-        return self._player.get_playing_time()
-    
-    
-    def get_playing_time_string(self):
-        return self._player.get_playing_time_string()
-    
-    
-    def next(self):
-        if self.get_playing_status():
-            self._player.do_next()
-        
-        
-    def seek(self, seconds):
-        self._player.seek(seconds)
-        
-        
-    def previous(self):
-        if self.get_playing_status():
-            self._player.do_previous()
-    
-    
-    def play_pause(self):
-        self._player.playpause()
-        
-    
-    def _loop_query_model(self, func, query_model, first=0, limit=0):
         self.debug('Loop query_model...')
 
         if func is None:
@@ -572,7 +819,7 @@ class RBHandler(Loggable):
                 self.debug('Skipping row ')
                 continue
             
-            entry = self._get_entry_id(row)
+            entry = self.__get_entry_id(row)
             func(entry)
             count += 1
             
@@ -583,89 +830,26 @@ class RBHandler(Loggable):
         return count
     
     
-    def _get_play_queue_model(self):
-        return self._shell.props.queue_source.props.query_model
-    
-    
-    def _get_entry_id(self, row):
-        if row is None:
-            raise Exception('Row cannot be None')
+    def __get_entry(self, entry_id):
+        '''
+        Returns an entry by its id
+        '''
+        if not str(entry_id).isdigit():
+            raise Exception('entry_id parameter must be an int')
         
-        entry = row[0]
-        return self._db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
-    
-    
-    def _get_playlist_sources(self):
-        playlists = []
-        for sourcelist in self._shell.props.sourcelist_model:
-            if sourcelist[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY] == rb.SOURCE_GROUP_CATEGORY_PERSISTENT:
-                for playlist in sourcelist.iterchildren():
-                    playlists.append(playlist)
-        return playlists
-    
-    
-    def get_playlists(self):
-        playlists = []
-        index = 0
-        sources = self._get_playlist_sources()
-        for playlist in sources:
-            playlistsource = PlaylistSource(index, playlist)
-            playlists.append(playlistsource)
-            index+= 1
+        entry_id = int(entry_id)
         
-        
-        return playlists
+        self.debug('Getting entry %d' % entry_id)
+        return self.__db.entry_lookup_by_id(entry_id)
     
     
-    def enqueue_playlist(self, playlist_index):
-        self.info('Enqueuing playlist')
-        
-        if not type(playlist_index) is int:
-            raise Exception('playlist_index parameter must be an int')
-        
-        playlist = self.get_playlist(playlist_index)
-        if playlist is None:
-            return 0
-
-        return self._loop_query_model(func=self.enqueue, query_model=playlist.source.props.query_model)
-        
-    
-    def get_playlist(self, playlist_index):
-        self.info('Getting playlist')
-        
-        if not type(playlist_index) is int:
-            raise Exception('playlist_index parameter must be an int')
-        
-        index = 0
-        sources = self._get_playlist_sources()
-        for playlist in sources:
-            if playlist_index == index:
-                return PlaylistSource(index, playlist)
-            index += 1
-            
-        return None
-
-    
-    def get_playlist_entries(self, playlist_index, limit=100):
-        self.info('Getting playlist entries')
-
-        if not type(playlist_index) is int:
-            raise Exception('playlist_index parameter must be an int')
-        
-        entries = []
-        playlist = self.get_playlist(playlist_index)
-        if not playlist is None:
-            self._loop_query_model(func=entries.append, \
-                                   query_model=playlist.source.props.query_model, \
-                                   limit=limit)
-        return entries
-    
-    
-        
 
         
         
 class RBEntry():
+    '''
+    Rhythmbox entry wrapper, loads all entry data on initialization
+    '''
     
     id = None
     artist = None
@@ -699,7 +883,9 @@ class RBEntry():
         
 
 class PlaylistSource():
-    
+    '''
+    Playlist source wrapper, loads all data on initialization
+    '''
     
     def __init__(self, index, entry):
         self.index = index
@@ -715,8 +901,6 @@ class PlaylistSource():
 
         
 class InvalidQueryException(Exception):
-    
-    
     
     def __init__(self, message):
         Exception.__init__(self)

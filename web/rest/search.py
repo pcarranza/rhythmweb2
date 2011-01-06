@@ -38,7 +38,7 @@ class Page(BaseRest, Loggable):
         try:
             entry_ids = handler.query(filter)
         except InvalidQueryException, e:
-            raise ServerException(501, 'bad request, %s' % e.message)
+            raise ServerException(501, 'bad request: %s' % e.message)
         
         json = JSon()
         entries = []
@@ -79,7 +79,8 @@ class Page(BaseRest, Loggable):
                 pos = self._path_params.index('limit')
                 if len(self._path_params) > pos + 1:
                     filter['limit'] = self._path_params[pos + 1]
-        
+        else:
+            self.debug('No search path parameters')
         
         if not self._parameters is None:
             self.debug('Reading POST parameters')
@@ -120,7 +121,8 @@ class Page(BaseRest, Loggable):
                 all = self.unpack_value(self._parameters['all'])
                 filter['all'] = all
                 return filter
-            
+        else:
+            self.debug('No search post parameters')
         
         return filter
     

@@ -34,21 +34,20 @@ class Page(BaseRest, Loggable):
             raise ServerException(400, 'Bad request, %s path parameter not supported' % search_by)
         
         if len(self._path_params) == 1:
-            #raise ServerException(400, 'Bad request, %s path parameter requires a filter parameter, plain query not supported yet' % search_by)
             library = JSon()
             handler = self._components['RB']
             
             if 'artists' == search_by:
                 library.put('artists', handler.get_artists())
-                self.info('Library loaded artists dictionary')
+                library.put('biggest_artist', handler.get_biggest_artist())
                 
             elif 'genres' == search_by:
                 library.put('genres', handler.get_genres())
-                self.info('Library loaded genres dictionary')
+                library.put('biggest_genre', handler.get_biggest_genre())
                 
             else:
                 library.put('albums', handler.get_albums())
-                self.info('Library loaded albums dictionary')
+                library.put('biggest_album', handler.get_biggest_album())
                 
             return library
         
