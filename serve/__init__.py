@@ -25,105 +25,111 @@ from serve.log.loggable import Loggable
 
 class CGIServer(Loggable):
     
-    _hostname = None
-    _port = None
-    _httpd = None
-    _request_handler = None
-    _running = False
+    __hostname = None
+    __port = None
+    __httpd = None
+    __request_handler = None
+    __running = False
     
-    _components = None
+    __components = None
     
     def __init__(self, request_handler, **components):
         
         config = None
         
         if components:
-            self._components = {}
+            self.__components = {}
         
         for component in components:
             if component == 'config':
                 config = components[component]
             
-            self._components[component] = components[component]
+            self.__components[component] = components[component]
             
         if config is None:
             raise Exception('Required component \'config\' not found in components')
         
-        self._request_handler = request_handler
-        self._hostname = config.getString('hostname', False, 'localhost')
-        self._port = config.getInt('port', False, 8000)
+        self.__request_handler = request_handler
+        self.__hostname = config.getString('hostname', False, 'localhost')
+        self.__port = config.getInt('port', False, 7000)
         
     
     def start(self):
         self.debug('STARTING SERVER')
-        self.debug('HOSTNAME   %s' % self._hostname)
-        self.debug('PORT       %d' % self._port)
+        self.debug('HOSTNAME   %s' % self.__hostname)
+        self.debug('PORT       %d' % self.__port)
 
-        if self._httpd is None:
-            self._httpd = make_server(self._hostname, 
-                              self._port, 
-                              self._handle,
+        if self.__httpd is None:
+            self.__httpd = make_server(self.__hostname, 
+                              self.__port, 
+                              self.__handle,
                               handler_class=LoggingWSGIRequestHandler)
-        self._watch_cb_id = gobject.io_add_watch(self._httpd.socket,
+        self._watch_cb_id = gobject.io_add_watch(self.__httpd.socket,
                                                  gobject.IO_IN,
-                                                 self._idle_cb)
-        self._running = True
+                                                 self.__idle_cb)
+        self.__running = True
         self.debug('SERVER STARTED')
         
 
     def stop(self):
         self.debug('STOPPING SERVER')
         gobject.source_remove(self._watch_cb_id)
-        if self._httpd is None:
+        if self.__httpd is None:
             return
         
-        self._httpd = None
-        self._running = False
+        self.__httpd = None
+        self.__running = False
         self.debug('SERVER STOPPED')
     
     
-    def _idle_cb(self, source, cb_condition):
-        if not self._running:
+    def __idle_cb(self, source, cb_condition):
+        if not self.__running:
             return False
-        self._httpd.handle_request()
+        self.__httpd.handle_request()
         return True
     
     
-    def _handle(self, environ, response):
+    def __handle(self, environ, response):
         
         method = environ['REQUEST_METHOD']
         
-        for component in self._components:
-            self.debug('%s = %s' % (component, self._components[component]))
+        for component in self.__components:
+            self.debug('%s = %s' % (component, self.__components[component]))
         
         self.debug('Handling method %s' % method)
-        
-        if method == 'GET':
-            return self._do_get(environ, response)
-        
-        elif method == 'POST':
-            params = self.parse_post(environ)
+        try:
+            if method == 'GET':
+                return self.__do_get(environ, response)
             
-            if params is None:
-                self.debug('No parameters in POST method')
+            elif method == 'POST':
+                params = self.parse_post(environ)
                 
-            for p in params:
-                self.debug('POST %s = %s' % (p, str(params[p])))
-                
-            return self._do_post(environ, params, response)
-        
-        return self._request_handler.send_error(
-             500, 
-             '%s Not implemented' % method, 
-             response)
+                if params is None:
+                    self.debug('No parameters in POST method')
+                    
+                for p in params:
+                    self.debug('POST %s = %s' % (p, str(params[p])))
+                    
+                return self.__do_post(environ, params, response)
+            
+            return self.__request_handler.send_error(
+                 500, 
+                 '%s Not implemented' % method, 
+                 response)
+            
+        except Exception, e:
+            return self.__request_handler.send_error(
+                 500, 
+                 '%s Unknown exception' % e, 
+                 response)
             
             
-    def _do_get(self, environ, response):
-        return self._request_handler.do_get(environ, response, self._components)
+    def __do_get(self, environ, response):
+        return self.__request_handler.do_get(environ, response, self.__components)
         
         
-    def _do_post(self, environ, params, response):
-        return self._request_handler.do_post(environ, params, response, self._components)
+    def __do_post(self, environ, params, response):
+        return self.__request_handler.do_post(environ, params, response, self.__components)
             
             
     def parse_post(self, environ):
@@ -150,9 +156,7 @@ class CGIServer(Loggable):
 class LoggingWSGIRequestHandler(WSGIRequestHandler):
 
     def log_message(self, format, *args):
-        # RB redirects stdout to its logging system, to these
-        # request log messages, run RB with -D rhythmweb
-        sys.stdout.write("%s - - [%s] %s\n" %
+        sys.stdout.write("%s - [%s] %s\n" %
                          (self.address_string(),
                           self.log_date_time_string(),
-                          format%args))
+                          format % args))

@@ -14,29 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.rest.base import BaseRest
-from serve.log.loggable import Loggable
 from serve.request import ServerException
-from web.rest import Song
+from web.rest import RBRest
 
-class Page(BaseRest, Loggable):
-    
-    
-    def get_song_id(self):
-        if not self._path_params:
-            return None
-        
-        params = self._path_params
-        
-        if len(params) != 1:
-            raise ServerException(400, 'Bad Request')
-        
-        song_id = int(params[0])
-        
-        self.debug('Song %d' % song_id)
-        
-        return song_id
-    
+class Page(RBRest):
     
     
     def get(self):
@@ -45,9 +26,7 @@ class Page(BaseRest, Loggable):
         if song_id is None:
             return None
         
-        handler = self._components['RB']
-        
-        return Song.get_song_as_JSon(handler, song_id)
+        return self.get_song_as_json(song_id)
         
         
     def post(self):
@@ -56,19 +35,36 @@ class Page(BaseRest, Loggable):
         if song_id is None:
             return None
 
-        params = self._parameters
-        handler = self._components['RB']
-        
-        if 'rating' in params:
-            rating = self.unpack_value(params['rating'])
-            self.debug('Rating %s' % rating)
-            handler.set_rating(song_id, int(rating))
+        if self.has_parameter('rating'):
+            rating = self.get_parameter('rating')
+            self.debug('Setting Rating %s for song "%s"' % (rating, song_id))
+            self.get_rb_handler().set_rating(song_id, rating)
         
         return self.get()
         
         
-    def not_found(self):
-        return 'Song not found :('
+    def __not_found(self):
+        return 'Song %d not found :(' % self.get_song_id()
+    
+    
+    def get_song_id(self):
+        self.debug('Getting song id from path parameters')
+        
+        if not self.has_path_parameters():
+            return None
+        
+        if self.get_path_parameters_size() != 1:
+            raise ServerException(400, 'Bad Request: no song id in path')
+        
+        self.debug('Reading path parameters index 0')
+        song_id = self.get_path_parameter(0)
+        
+        try:
+            song_id = int(song_id)
+        except:
+            raise ServerException(400, 'Bad Request: song id is not a number')
+        
+        return song_id
     
     
     

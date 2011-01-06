@@ -14,23 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.rest.base import BaseRest
-from serve.log.loggable import Loggable
-from web.rest import Song
+from web.rest import RBRest
 from serve.rest.json import JSon
 
-class Page(BaseRest, Loggable):
-    
+class Page(RBRest):
     
     def get(self):
-        handler = self._components['RB']
-        
-        playlist_ids = handler.get_play_queue()
-        entries = []
-        for entry_id in playlist_ids:
-            entry = Song.get_song_as_JSon(handler, entry_id)
-            entries.append(entry)
-            
+        handler = self.get_rb_handler()
+        entry_ids = handler.get_play_queue()
+        entries = self.get_songs_as_json_list(entry_ids)
         playlist = JSon()
         playlist.put('entries', entries)
         

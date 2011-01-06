@@ -14,22 +14,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.rest.base import BaseRest
-from serve.log.loggable import Loggable
+from web.rest import RBRest
 from serve.rest.json import JSon
-from web.rest import Playlist, Song
 from serve.request import ServerException
 
-class Page(BaseRest, Loggable):
+class Page(RBRest):
     
     def get(self):
-        handler = self._components['RB']
+        handler = self.get_rb_handler()
         
-        if self._path_params is None:
+        if not self.has_path_parameters():
             rbplaylists = handler.get_playlists()
             sources = []
             for source in rbplaylists:
-                jsource = Playlist.get_playlist_as_JSon(source)
+                jsource = self.get_playlist_as_json(source)
                 sources.append(jsource)
                 
             playlists = JSon()
@@ -38,41 +36,31 @@ class Page(BaseRest, Loggable):
             return playlists
         
         else:
-            playlist_id = self._path_params[0]
-            self.debug('Playlist id %s' % playlist_id)
+            playlist_id = self.get_path_parameter(0)
             if not playlist_id.isdigit():
                 raise ServerException(400, 'Bad request, path parameter must be an int')
-            
+
             playlist_id = int(playlist_id)
+            
+            self.debug('Loading playlist with id %d' % playlist_id)
+            
             playlist = handler.get_playlist(playlist_id)
             if playlist is None:
                 raise ServerException(400, 'Bad request, playlist id %d is not valid' % playlist_id)
             
-            jplaylist = Playlist.get_playlist_as_JSon(playlist, self.get_playlist_entries(playlist_id))
+            jplaylist = self.get_playlist_as_json(playlist, self.get_playlist_entries(playlist_id))
             
             return jplaylist
             
     
     def post(self):
-        params = self._parameters
-        
-        if not params:
-            raise ServerException(400, 'Bad request, no parameters')
-
-        if not 'action' in params:
-            raise ServerException(400, 'Bad request, no action parameter')
-        
-        handler = self._components['RB']
-        action = self.unpack_value(params['action'])
+        action = self.get_parameter('action', True)
         
         json = JSon()
         
         if action == 'enqueue':
-            if not 'playlist' in params:
-                raise ServerException(400, 'Bad request, no playlist parameter to enqueue')
-            
-            playlist = self.unpack_value(params['playlist'])
-            count = handler.enqueue_playlist(int(playlist))
+            playlist = self.get_parameter('playlist', True)
+            count = self.get_rb_handler().enqueue_playlist(int(playlist))
             json.put('count', count)
             if count > 0:
                 json.put('result', 'OK')
@@ -81,12 +69,5 @@ class Page(BaseRest, Loggable):
 
 
     def get_playlist_entries(self, id):
-        handler = self._components['RB']
-        entry_ids = handler.get_playlist_entries(id)
-        
-        entries = []
-        for id in entry_ids:
-            entry = Song.get_song_as_JSon(handler, id)
-            entries.append(entry)
-            
-        return entries
+        entry_ids = self.get_rb_handler().get_playlist_entries(id)
+        return self.get_songs_as_json_list(entry_ids)

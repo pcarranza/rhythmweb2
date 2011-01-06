@@ -20,16 +20,16 @@ from serve.log.loggable import Loggable
 
 class BaseRest(Loggable):
     
-    _environ = None
-    _parameters = None
-    _path_params = None
-    _components = None
+    __environ = None
+    __parameters = None
+    __path_params = None
+    __components = None
     
     def __init__(self, components):
-        self._components = components
+        self.__components = components
         
     
-    def do_headers(self, headers=[]):
+    def __do_headers(self, headers=[]):
         if not headers:
             headers.append(('Content-type','text/html; charset=UTF-8'))
         
@@ -37,64 +37,64 @@ class BaseRest(Loggable):
     
     
     def do_get(self, environ, response):
-        self._environ = environ
+        self.__environ = environ
         self.parse_path_parameters()
         
         try:
-            return self._return_ok(self.get(), response)
+            return_value = self.get()
+            self.debug('GET Method executed OK, sending ok response')
+            return self.__return_ok(return_value, response)
         
         except ServerException, e:
-            response('%d %s' % (e.code, e.message), self.do_headers())
+            response('%d %s' % (e.code, e.message), self.__do_headers())
             return e.message
     
         except Exception, e:
-            self.error(e)
-            response('%d %s' % (500, e), self.do_headers())
+            self.error('Unknown exception when executing GET method: %s' % e)
+            response('%d %s' % (500, e), self.__do_headers())
             return '%d %s' % (500, e)
         
     
-    def do_post(self, environ, params, response):
-        self._parameters = params
-        self._environ = environ
+    def do_post(self, environ, post_params, response):
+        self.__parameters = post_params
+        self.__environ = environ
         self.parse_path_parameters()
         
         try:
-            return self._return_ok(self.post(), response)
+            return_value = self.post()
+            self.debug('POST Method executed OK, sending ok response')
+            return self.__return_ok(return_value, response)
             
         except ServerException, e:
-            response('%d %s' % (e.code, e.message), self.do_headers())
+            response('%d %s' % (e.code, e.message), self.__do_headers())
             return e.message
     
         except Exception, e:
-            self.error(e)
-            response('%d %s' % (500, e), self.do_headers())
+            self.error('Unknown exception when executing GET method: %s' % e)
+            response('%d %s' % (500, e), self.__do_headers())
             return '%d %s' % (500, e)
     
     
     
-    def _return_ok(self, value, response):
+    def __return_ok(self, value, response):
         if value is None:
-            return self._do_page_not_found(response)
-        
-        # header('Cache-Control: no-cache, must-revalidate');
-        # header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-        # header('Content-type: application/json');
+            return self.__do_page_not_found(response)
         
         if isinstance(value, JSon):
             headers = []
             headers.append(('Content-type','application/json; charset=UTF-8'))
             headers.append(('Cache-Control: ', 'no-cache; must-revalidate'))
             json = value.parse()
-            response('200 OK', self.do_headers(headers))
+            response('200 OK', self.__do_headers(headers))
             self.debug('Returning JSON: %s' % json)
             return json
         
-        response('200 OK', self.do_headers())
+        response('200 OK', self.__do_headers())
         return str(value)
 
         
     def parse_path_parameters(self):
-        path_params = self._environ['PATH_PARAMS']
+        path_params = self.__environ['PATH_PARAMS']
         
         querystring_params = []
         if path_params:
@@ -102,15 +102,16 @@ class BaseRest(Loggable):
             for param in params:
                 if param:
                     querystring_params.append(param)
-            self._path_params = querystring_params
+                    
+        self.__path_params = querystring_params
+        
             
-            
-    def _do_page_not_found(self, response):
-        response('404 NOT FOUND', self.do_headers())
-        return self.not_found()
+    def __do_page_not_found(self, response):
+        response('404 NOT FOUND', self.__do_headers())
+        return self.__not_found()
     
     
-    def not_found(self):
+    def __not_found(self):
         return 'Page not found'
     
     
@@ -154,3 +155,106 @@ class BaseRest(Loggable):
             return value.split(',')
         else:
             return [value]
+    
+    
+    def get_component(self, key):
+        self.debug('Obtaining component %s' % key)
+        
+        if not self.__components:
+            raise Exception('No components are loaded')
+        
+        if not self.__components.has_key(key):
+            raise Exception('Components dictionary does not contains key "%s"' % key)
+        
+        return self.__components[key]
+        
+
+    def get_environment(self):
+        return self.__environ
+
+    
+    def get_parameters(self):
+        return self.__parameters
+    
+    
+    def get_path_parameters(self):
+        return self.__path_params
+    
+    
+    def has_parameter(self, key):
+        if not self.__parameters:
+            return False
+        
+        return self.__parameters.has_key(key)
+    
+    
+    def get_parameter(self, key, required=False):
+        if not self.has_parameter(key):
+            if required:
+                raise ServerException(400, 'Bad request, no "%s" parameter' % key)
+            else:
+                return None
+        
+        try:
+            param = self.__parameters[key]
+            param = self.unpack_value(param)
+            return param
+        except:
+            raise ServerException(500, 'Could not unpack post parameter %d' % key)
+    
+    
+    def has_post_parameters(self):
+        if self.__parameters is None:
+            return False
+        
+        if not self.__parameters:
+            return False
+        
+        if len(self.__parameters) == 0:
+            return False
+        
+        return True
+    
+    
+    def has_path_parameters(self):
+        if self.__path_params is None:
+            return False
+        
+        if not self.__path_params:
+            return False
+        
+        if len(self.__path_params) == 0:
+            return False
+        return True
+    
+    
+    def get_parameters_size(self):
+        if not self.__parameters:
+            return 0
+        
+        return len(self.__parameters)
+    
+    
+    def get_path_parameters_size(self):
+        if not self.__path_params:
+            return 0
+        
+        return len(self.__path_params)
+    
+    
+    def get_path_parameter(self, index):
+        if not self.__path_params:
+            self.debug('No path param with index %d (empty path params)' % index)
+            return None
+        
+        if self.get_path_parameters_size() < index + 1:
+            self.debug('No path param with index %d' % index)
+            return None
+        
+        try:
+            param = self.__path_params[index]
+            param = self.unpack_value(param)
+            return param
+        except:
+            raise ServerException(500, 'Could not unpack path parameter %d' % index)
+        

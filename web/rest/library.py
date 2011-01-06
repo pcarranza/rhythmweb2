@@ -14,28 +14,26 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.rest.base import BaseRest
-from serve.log.loggable import Loggable
-from web.rest import Song
+from web.rest import RBRest
 from serve.rest.json import JSon
 from serve.request import ServerException
 
 SEARCH_TYPES = {'artists' : 'artist', 'genres' : 'genre', 'albums' : 'album'}
 
-class Page(BaseRest, Loggable):
+class Page(RBRest):
     
     def get(self):
-        if self._path_params is None:
+        if not self.has_path_parameters():
             raise ServerException(400, 'Bad request, no parameters')
        
-        search_by = self.unpack_value(self._path_params[0])
+        search_by = self.get_path_parameter(0)
         
         if not SEARCH_TYPES.has_key(search_by):
-            raise ServerException(400, 'Bad request, %s path parameter not supported' % search_by)
+            raise ServerException(400, 'Bad request, path parameter "%s" not supported' % search_by)
         
-        if len(self._path_params) == 1:
+        if self.get_path_parameters_size() == 1:
             library = JSon()
-            handler = self._components['RB']
+            handler = self.get_rb_handler()
             
             if 'artists' == search_by:
                 library.put('artists', handler.get_artists())
@@ -52,7 +50,7 @@ class Page(BaseRest, Loggable):
             return library
         
         else:
-            value = self.unpack_value(self._path_params[1])
+            value = self.get_path_parameter(1)
             value = str(value).replace('+', ' ')
             
             filter = {}
@@ -61,14 +59,10 @@ class Page(BaseRest, Loggable):
             filter['exact-match'] = True
             filter['limit'] = 0
             
-            handler = self._components['RB']
+            handler = self.get_rb_handler()
             
             entry_ids = handler.query(filter)
-            entries = []
-            for entry_id in entry_ids:
-                entry = Song.get_song_as_JSon(handler, entry_id)
-                entries.append(entry)
-                
+            entries = self.get_songs_as_json_list(entry_ids)
             library = JSon()
             library.put(search_by, value)
             library.put('entries', entries)

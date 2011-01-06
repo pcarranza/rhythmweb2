@@ -14,14 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.rest.base import BaseRest
-from serve.log.loggable import Loggable
-from web.rest import Status
+from web.rest import RBRest
 
-class Page(BaseRest, Loggable):
-    
+class Page(RBRest):
     
     def get(self):
-        handler = self._components['RB']
-        return Status.get_status_as_JSon(handler)
+        return self.get_status_as_json()
         

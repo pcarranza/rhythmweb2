@@ -263,31 +263,31 @@ class ResponseWrapper(Loggable):
         
 class ResourceHandler(Loggable):
     
-    _content_type = None
-    _open_as = None
-    _file = None
-    _extension = None
+    __content_type = None
+    __open_as = None
+    __file = None
+    __extension = None
     
     def __init__(self, resource, content_type=None, open_as=''):
         self.debug('Creating ResourceHandler Instance for resource %s' % resource)
         
         self._content_type = content_type
-        self._open_as = open_as
+        self.__open_as = open_as
         
-        self._file = resource
-        self._extension = str(os.path.splitext(self._file)[1]).lower()
+        self.__file = resource
+        self.__extension = str(os.path.splitext(self.__file)[1]).lower()
 
-        self.debug('Resource %s file is %s' % (resource, self._file))
+        self.debug('Resource %s file is %s' % (resource, self.__file))
         
         
     def handle(self, response, accept_gzip=False):
-        self.debug('Handling resource %s' % self._file)
+        self.debug('Handling resource %s' % self.__file)
         
-        (content_type, open_as) = self._get_content_type()
+        (content_type, open_as) = self.__get_content_type()
         if not content_type:
-            raise UnknownContentTypeException(self._extension)
+            raise UnknownContentTypeException(self.__extension)
         
-        mtime = os.path.getmtime(self._file)
+        mtime = os.path.getmtime(self.__file)
         mtime = datetime.fromtimestamp(mtime)
         expiration = datetime.now() + timedelta(days=365)
 
@@ -296,24 +296,24 @@ class ResourceHandler(Loggable):
                    ('Last-Modified', mtime.ctime()), \
                    ('Expires', expiration.ctime())]
         
-        response("200 OK", headers)
+        response('200 OK', headers)
 
         open_mode = 'r%s' % open_as
         
-        file = open(self._file, open_mode)
+        file = open(self.__file, open_mode)
         
-        return "".join(file.readlines())
+        return ''.join(file.readlines())
     
 
-    def _get_content_type(self):
-        if not self._content_type:
-            (self._content_type, self._open_as) = self._content_type_by_ext(self._extension)
+    def __get_content_type(self):
+        if not self.__content_type:
+            (self.__content_type, self.__open_as) = self.__content_type_by_ext(self.__extension)
         
-        self.debug('Returning content type %s' % self._content_type)
-        return (self._content_type, self._open_as)
+        self.debug('Returning content type %s' % self.__content_type)
+        return (self.__content_type, self.__open_as)
     
     
-    def _content_type_by_ext(self, ext):
+    def __content_type_by_ext(self, ext):
         if ext == '.css':
             return ('text/css', 't')
         if ext == '.htm':

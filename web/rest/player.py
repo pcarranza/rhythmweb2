@@ -14,96 +14,86 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.rest.base import BaseRest
-from serve.log.loggable import Loggable
+from web.rest import RBRest
 from serve.request import ServerException
-from web.rest import Status
 
 
-class Page(BaseRest, Loggable):
-    
+class Page(RBRest):
     
     def post(self):
-        params = self._parameters
-        
-        if not params:
+        if not self.has_post_parameters():
             raise ServerException(400, 'Bad request, no parameters')
         
-        if not 'action' in params:
-            raise ServerException(400, 'Bad request, no action parameter')
-        
-        handler = self._components['RB']
-        action = self.unpack_value(params['action'])
+        action = self.get_parameter('action', True)
+        handler = self.get_rb_handler()
         
         self.debug('POST action %s' % action)
+        
         if action == 'play_pause':
             handler.play_pause()
+            
             
         elif action == 'next':
             handler.next()
             
+            
         elif action == 'previous':
             handler.previous()
             
-        elif action == 'seek':
-            if not 'time' in params:
-                raise ServerException(400, 'Bad request, no time parameter')
             
-            time = self.unpack_value(params['time'])
+        elif action == 'seek':
+            time = self.get_parameter('time', True)
+            
             try:
                 time = int(time)
             except:
                 raise ServerException(400, 'Bad request, time parameter must be an integer number')
+            
             handler.seek(time)
             
+            
         elif action == 'enqueue':
-            if not 'entry_id' in params:
-                raise ServerException(400, 'Bad request, no entry_id parameter')
-            self.debug('Enqueue Entry id %s' % params['entry_id'][0])
-            entry_ids = self.pack_as_list(params['entry_id'][0])
+            entry_id = self.get_parameter('entry_id', True)
+            entry_ids = self.pack_as_list(entry_id)
             handler.enqueue(entry_ids)
             
-        elif action == 'dequeue':
-            if not 'entry_id' in params:
-                raise ServerException(400, 'Bad request, no entry_id parameter')
             
-            entry_ids = self.pack_as_list(params['entry_id'][0])
+        elif action == 'dequeue':
+            entry_id = self.get_parameter('entry_id', True)
+            entry_ids = self.pack_as_list(entry_id)
             handler.dequeue(entry_ids)
+            
             
         elif action == 'clear_queue':
             handler.clear_play_queue()
         
+        
         elif action == 'play_entry':
-            if not 'entry_id' in params:
-                raise ServerException(400, 'Bad request, no entry_id parameter')
-
-            entry_id = self.unpack_value(params['entry_id'])
+            entry_id = self.get_parameter('entry_id', True)
             if type(entry_id) is list:
                 raise ServerException(400, 'Bad request, only one entry_id parameter accepted')
             handler.play_entry(entry_id)
-            
+        
+        
         elif action == 'mute':
             handler.toggle_mute()
+        
             
         elif action == 'set_volume':
-            if not 'volume' in params:
-                raise ServerException(400, 'Bad request, no volume parameter')
-            
-            volume = self.unpack_value(params['volume'])
+            volume = self.get_parameter('volume', True)
             try:
                 volume = float(volume)
             except:
                 raise ServerException(400, 'Bad request, volume parameter must be float type')
+            
             handler.set_volume(volume)
             
-        else:
-            raise ServerException(400, 'Bad request, action %s is not supported' % action)
             
-        status = Status.get_status_as_JSon(handler)
+        else:
+            raise ServerException(400, 'Bad request, action "%s" is not supported' % action)
+            
+
+        status = self.get_status_as_json()        
         status.put('last_action', action)
         
         return status
-    
-    
-    
-            

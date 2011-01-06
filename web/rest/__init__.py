@@ -15,7 +15,39 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from serve.rest.json import JSon
+from serve.rest.base import BaseRest
+from serve.log.loggable import Loggable
 
+class RBRest(BaseRest, Loggable):
+    
+    
+    def get_rb_handler(self):
+        return self.get_component('RB')
+    
+    
+    def get_song_as_json(self, entry_id):
+        self.debug('Obtaining entry_id %s as json object' % entry_id)
+        return Song.get_song_as_JSon(self.get_rb_handler(), entry_id)
+    
+    
+    def get_songs_as_json_list(self, entries):
+        self.debug('Loading entries list as json list')
+        entries_list = []
+        for entry_id in entries:
+            entry = self.get_song_as_json(entry_id)
+            entries.append(entry)
+        return entries_list
+    
+    
+    def get_playlist_as_json(self, playlist, entries = None):
+        self.debug('Loading playlist as json object')
+        return Playlist.get_playlist_as_JSon(playlist, entries)
+    
+    
+    def get_status_as_json(self):
+        self.debug('Loading status as json object')
+        return Status.get_status_as_JSon(self.get_rb_handler())    
+    
 
 class Song:
     
