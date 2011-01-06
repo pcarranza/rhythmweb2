@@ -25,5 +25,4 @@ class Page(RBRest):
         entries = self.get_songs_as_json_list(entry_ids)
         playlist = JSon()
         playlist.put('entries', entries)
-        
         return playlist

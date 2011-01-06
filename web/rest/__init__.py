@@ -34,8 +34,12 @@ class RBRest(BaseRest, Loggable):
         self.debug('Loading entries list as json list')
         entries_list = []
         for entry_id in entries:
-            entry = self.get_song_as_json(entry_id)
-            entries.append(entry)
+            if type(entry_id) is int:
+                entry = self.get_song_as_json(entry_id)
+                entries_list.append(entry)
+            else:
+                self.warning('Entry %s is not an int, skipping' % entry_id)
+                
         return entries_list
     
     
