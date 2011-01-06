@@ -635,15 +635,15 @@ class RBHandler(Loggable):
         genre = db.entry_get(entry, rhythmdb.PROP_GENRE)
         
         if not artist:
-            self.warning('Empty artist for entry %d' % entry_id)
+            self.debug('Empty artist for entry %d %s, skipping' % (entry_id, db.entry_get(entry, rhythmdb.PROP_LOCATION)))
             return
         
         if not album:
-            self.warning('Empty album for entry %d' % entry_id)
+            self.debug('Empty album for entry %d %s, skipping' % (entry_id, db.entry_get(entry, rhythmdb.PROP_LOCATION)))
             return
         
         if not genre:
-            self.warning('Empty genre for entry %d' % entry_id)
+            self.debug('Empty genre for entry %d %s, skipping' % (entry_id, db.entry_get(entry, rhythmdb.PROP_LOCATION)))
             return
         
         artists_cache = self.__db_cache[self.__CACHE_ARTISTS]
