@@ -135,6 +135,11 @@ img {
 	float: left;
 }
 
+.dequeue {
+	display:block;
+	float: left;
+}
+
 .play {
 	background:url(img/play_grey.png) no-repeat center center;
 	height: 24px; 

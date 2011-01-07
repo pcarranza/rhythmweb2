@@ -292,8 +292,10 @@ function add_queue_entry(index, entry) {
 	
 	$('#queue').append(line);
 
-	add_rate_action(line_id, rating_id, entry);
 	add_dequeue_action(line_id, container_id, entry);
+	add_play_entry_action(line_id, container_id, entry);
+	
+	add_rate_action(line_id, rating_id, entry);
 }
 
 
@@ -344,7 +346,7 @@ function create_entry_line(line_id, container_id, rating_id, entry) {
 
 function add_dequeue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_dequeue';
-	var dequeue = '<img id="' + action_id + '" class="link sep" src="img/remove.png" width="24" height="24" alt="Remove" title="Remove from queue" />';
+	var dequeue = '<img id="' + action_id + '" class="link dequeue" src="img/remove.png" width="24" height="24" alt="Remove" title="Remove from queue" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(dequeue);
 	$('#' + action_id).click(function() {
