@@ -509,12 +509,9 @@ function load_tag_cloud() {
 			clazz = get_tag_cloud_class(value, bigger_value);
 			id = 'ar_' + index;
 			$('#artists_cloud').append('<div id="' + 
-					id + 
-					'" class="tag_ar ' + 
-					clazz + 
-					'">' + 
-					name + 
-					'</div>');
+					id + '" class="tag_ar ' + 
+					clazz + '" title="artist: ' + name + ' [' + value + ']">' + 
+					name + '</div>');
 			$('#' + id).bind('click', { type : 'artist', 'name' : name, limit : value }, cloud_search);
 		});
 		
@@ -530,7 +527,10 @@ function load_tag_cloud() {
 			name = album.name;
 			clazz = get_tag_cloud_class(value, bigger_value);
 			id = 'al_' + index;
-			$('#albums_cloud').append('<div id="' + id + '" class="tag_al ' + clazz + '">' + name + '</div>');
+			$('#albums_cloud').append('<div id="' + id + 
+					'" class="tag_al ' + clazz + 
+					'" title="album: ' + name + ' [' + value + ']">' + name + 
+					'</div>');
 			$('#' + id).bind('click', { type : 'album', 'name' : name, limit : value }, cloud_search);			
 		});
 		
@@ -545,7 +545,10 @@ function load_tag_cloud() {
 			name = genre.name;
 			clazz = get_tag_cloud_class(value, bigger_value);
 			id = 'gr_' + index;
-			$('#genres_cloud').append('<div id="' + id + '" class="tag_gr ' + clazz + '">' + name + '</div>');
+			$('#genres_cloud').append('<div id="' + id + 
+					'" class="tag_gr ' + clazz + 
+					'" title="genre: ' + name + ' [' + value + ']">' + name + 
+					'</div>');
 			$('#' + id).bind('click', { type : 'genre', 'name' : name, limit : value }, cloud_search);			
 		});
 		
