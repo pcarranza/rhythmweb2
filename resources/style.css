@@ -65,7 +65,7 @@ img {
 }
 /* ****************************************************** END PLAYER */
 /* ****************************************************** QUEUE */
-#queue, #library {
+#queue, #library, #tags {
 	float: left;
 	clear: both;
 	width: 100%;
@@ -265,3 +265,64 @@ img {
 	font-style: italic;
 }
 /* ****************************************************** END SEARCH */
+
+
+/* ****************************************************** TAG CLOUD */
+.tag_ar {
+	float: left;
+	margin-left: 1em;
+	margin-right: 1em;
+	color: 330066;
+	cursor: pointer;
+}
+
+.tag_al {
+	float: left;
+	margin-left: 1em;
+	margin-right: 1em;
+	color: 660033;
+	cursor: pointer;
+}
+
+.tag_gr {
+	float: left;
+	margin-left: 1em;
+	margin-right: 1em;
+	color: 000033;
+	cursor: pointer;
+}
+
+.xxx_large {
+	font-weight: bold;
+	font-size: xx-large;
+}
+
+.xx_large {
+	font-size: xx-large;
+}
+
+.x_large {
+	font-size: x-large;
+}
+
+.large {
+	font-size: large;
+}
+
+.medium {
+	font-size: medium;
+}
+
+.small {
+	font-size: small;
+}
+
+.x_small {
+	font-size: x-small;
+}
+
+.xx_small {
+	font-size: xx-small;
+}
+
+/* ****************************************************** END TAG CLOUD */

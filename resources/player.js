@@ -84,7 +84,17 @@ $(document).ready(function() {
 		
 		$('#library').removeClass('hide');
 	});
-	
+
+	$('#tab_tags').click(function () {
+		clear_tabs();
+		hide_all();
+		$(this).addClass('selected');
+
+		load_tag_cloud();
+		
+		$('#tags').removeClass('hide');
+	});
+
 	
 	$('#tab_search').click(function () {
 		clear_tabs();
@@ -96,31 +106,7 @@ $(document).ready(function() {
 
 	$('#do_search').click(function() {
 		parameters = parse_search_parameters();
-		info('<i>searching...</i>');
-		var url = 'rest/search';
-		$('#search_result').html('');
-		$('#search_result').append(search_parameters_to_html(parameters));
-		$.post(url, parameters, function(json) {
-			$('#search_parameters').append(create_add_all('search_add_all'))
-			$('#search_result').append(create_header());
-			var ids = '';
-			$.each(json.entries, function(index, entry) {
-				add_search_entry(index, entry, 'search_result');
-				ids += entry.id + ',';
-			});
-			if (ids.length > 0)
-				ids = ids.slice(0, ids.length - 1);
-			
-			$('#search_add_all').click(function() {
-				$.post("rest/player", { action: "enqueue", "entry_id" : ids }, function(data) {
-					var numbers = /\d+/g; 
-					while(id = numbers.exec(ids)) {
-						$('#search_result_line_' + id).fadeOut('fast');
-					}
-					info('<i>search result added to queue</i>');
-				});
-			}); 
-		});
+		do_search(parameters);
 	});
 
 	$('#search_filter').keypress(function(event) {
@@ -131,6 +117,35 @@ $(document).ready(function() {
 
 	$('#search_filter').focus();
 });
+
+
+function do_search(parameters) {
+	info('<i>searching...</i>');
+	var url = 'rest/search';
+	$('#search_result').html('');
+	$('#search_result').append(search_parameters_to_html(parameters));
+	$.post(url, parameters, function(json) {
+		$('#search_parameters').append(create_add_all('search_add_all'))
+		$('#search_result').append(create_header());
+		var ids = '';
+		$.each(json.entries, function(index, entry) {
+			add_search_entry(index, entry, 'search_result');
+			ids += entry.id + ',';
+		});
+		if (ids.length > 0)
+			ids = ids.slice(0, ids.length - 1);
+		
+		$('#search_add_all').click(function() {
+			$.post("rest/player", { action: "enqueue", "entry_id" : ids }, function(data) {
+				var numbers = /\d+/g; 
+				while(id = numbers.exec(ids)) {
+					$('#search_result_line_' + id).fadeOut('fast');
+				}
+				info('<i>search result added to queue</i>');
+			});
+		}); 
+	});
+}
 
 
 function create_add_all(id) {
@@ -403,12 +418,14 @@ function clear_tabs() {
 	$('#tab_queue').removeClass('selected');
 	$('#tab_library').removeClass('selected');
 	$('#tab_search').removeClass('selected');
+	$('#tab_tags').removeClass('selected');
 }
 
 function hide_all() {
 	$('#queue').addClass('hide');
 	$('#library').addClass('hide');
 	$('#search').addClass('hide');
+	$('#tags').addClass('hide');
 }
 
 
@@ -474,6 +491,110 @@ function load_library(first, limit) {
 			}
 		}
 	});
+}
+
+
+function load_tag_cloud() {
+	$('#artists_cloud').html('');
+	$('#albums_cloud').html('');
+	$('#genres_cloud').html('');
+	
+	$.getJSON('rest/library/artists', function(json) {
+		bigger = json.biggest_artist;
+		bigger_value = bigger.value;
+		
+		$.each(json.artists, function(index, artist) {
+			value = artist.value;
+			name = artist.name;
+			clazz = get_tag_cloud_class(value, bigger_value);
+			id = 'ar_' + index;
+			$('#artists_cloud').append('<div id="' + 
+					id + 
+					'" class="tag_ar ' + 
+					clazz + 
+					'">' + 
+					name + 
+					'</div>');
+			$('#' + id).bind('click', { type : 'artist', 'name' : name, limit : value }, cloud_search);
+		});
+		
+	});
+	
+
+	$.getJSON('rest/library/albums', function(json) {
+		bigger = json.biggest_album;
+		bigger_value = bigger.value;
+		
+		$.each(json.albums, function(index, album) {
+			value = album.value;
+			name = album.name;
+			clazz = get_tag_cloud_class(value, bigger_value);
+			id = 'al_' + index;
+			$('#albums_cloud').append('<div id="' + id + '" class="tag_al ' + clazz + '">' + name + '</div>');
+			$('#' + id).bind('click', { type : 'album', 'name' : name, limit : value }, cloud_search);			
+		});
+		
+	});
+
+	$.getJSON('rest/library/genres', function(json) {
+		bigger = json.biggest_genre;
+		bigger_value = bigger.value;
+		
+		$.each(json.genres, function(index, genre) {
+			value = genre.value;
+			name = genre.name;
+			clazz = get_tag_cloud_class(value, bigger_value);
+			id = 'gr_' + index;
+			$('#genres_cloud').append('<div id="' + id + '" class="tag_gr ' + clazz + '">' + name + '</div>');
+			$('#' + id).bind('click', { type : 'genre', 'name' : name, limit : value }, cloud_search);			
+		});
+		
+	});
+
+}
+
+
+function cloud_search(event) {
+	data = event.data;
+	var parameters = {};
+	if (data.type == 'artist') {
+		parameters.artist = data.name;
+	} else if (data.type == 'album') {
+		parameters.album = data.name;
+	} else {
+		parameters.genre = data.name;
+	}
+	parameters.limit = data.limit;
+	parameters.type = 'song';
+	
+	clear_tabs();
+	hide_all();
+	$('#tab_search').addClass('selected');
+	$('#search').removeClass('hide');
+	do_search(parameters);
+}
+
+
+function get_tag_cloud_class(value, max_value) {
+	percent = value / max_value;
+	if (percent > 0.9) {
+		return 'xxx_large';
+	} else if (percent > 0.7) {
+		return 'xx_large';
+	} else if (percent > 0.5) {
+		return 'x_large';
+	} else if (percent > 0.4) {
+		return 'large';
+	} else if (percent > 0.3) {
+		return 'medium';
+	} else if (percent > 0.2) {
+		return 'small';
+	} else if (percent > 0.1) {
+		return 'x_small';
+	} else {
+		return 'xx_small';
+	}
+
 }
 
 
@@ -572,3 +693,21 @@ function parse_search_parameters() {
 	return query_parameters;
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
