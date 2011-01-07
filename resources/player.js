@@ -162,9 +162,9 @@ function search_parameters_to_html(parameters) {
 	for(var property in parameters) {
 		var value = parameters[property];
 		component += '<span class="cell">' +
-					'<span class="prop">' + property + '=</span>' + 
+					'<span class="prop">' + property + '</span>:' + 
 					'<span class="val">' + value + '</span>' + 
-				'</span>';
+					'</span>';
 	}
 	component += '</div>';
 	return component;
