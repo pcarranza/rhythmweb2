@@ -288,9 +288,8 @@ function add_queue_entry(index, entry) {
 	var line_id = 'track_line_' + entry.id;
 	var container_id = 'track_actions_' + entry.id;
 	var rating_id = 'track_rating_' + entry.id;
-	var line = create_entry_line(line_id, container_id, rating_id, entry);
 	
-	$('#queue').append(line);
+	create_entry_line('queue', line_id, container_id, rating_id, entry);
 
 	add_dequeue_action(line_id, container_id, entry);
 	add_play_entry_action(line_id, container_id, entry);
@@ -303,9 +302,7 @@ function add_search_entry(index, entry, container) {
 	var line_id = container + '_line_' + entry.id;
 	var container_id = line_id + '_actions';
 	var rating_id = line_id + '_rating';
-	var line = create_entry_line(line_id, container_id, rating_id, entry);
-	
-	$('#' + container).append(line);
+	create_entry_line(container, line_id, container_id, rating_id, entry);
 	
 	add_enqueue_action(line_id, container_id, entry);
 	add_play_entry_action(line_id, container_id, entry);
@@ -316,30 +313,37 @@ function add_search_entry(index, entry, container) {
 
 function create_header() {
 	var line = '<div class="line">';
-	line += '<span id="track_actions"></span>';
-	line += '<span id="track_number">#</span>';
-	line += '<span id="track_title">Title</span>';
-	line += '<span id="track_genre">Genre</span>';
-	line += '<span id="track_artist">Artist</span>';
-	line += '<span id="track_album">Album</span>';
-	line += '<span id="track_duration">Duration</span>';
-	line += '<span id="track_rating">&nbsp;</span>';
+	line += '<span class="track_actions"></span>';
+	line += '<span class="track_number">#</span>';
+	line += '<span class="track_title">Title</span>';
+	line += '<span class="track_genre">Genre</span>';
+	line += '<span class="track_artist">Artist</span>';
+	line += '<span class="track_album">Album</span>';
+	line += '<span class="track_duration">Duration</span>';
+	line += '<span class="track_rating">&nbsp;</span>';
 	line += '</div>';
 	return line;
 }
 
 
-function create_entry_line(line_id, container_id, rating_id, entry) {
+function create_entry_line(append_to, line_id, container_id, rating_id, entry) {
 	var line = '<div id="' + line_id + '" class="line">';
-	line += '<span id="track_actions"><span id="' + container_id + '"></span></span>';
-	line += '<span id="track_number">' + entry.track_number + '</span>';
-	line += '<span id="track_title">' + entry.title + '</span>';
-	line += '<span id="track_genre">' + entry.genre + '</span>';
-	line += '<span id="track_artist">' + entry.artist + '</span>';
-	line += '<span id="track_album">' + entry.album + '</span>';
-	line += '<span id="track_duration">' + human_time(entry.duration) + '</span>';
-	line += '<span id="track_rating"><span id="' + rating_id + '"></span></span>';
+	line += '<span class="track_actions"><span id="' + container_id + '"></span></span>';
+	line += '<span class="track_number">' + entry.track_number + '</span>';
+	line += '<span class="track_title">' + entry.title + '</span>';
+	line += '<span class="track_genre link" id="' + line_id +'_genre" title="browse genre">' + entry.genre + '</span>';
+	line += '<span class="track_artist link" id="' + line_id +'_artist"  title="browse artist">' + entry.artist + '</span>';
+	line += '<span class="track_album link" id="' + line_id +'_album"  title="browse album">' + entry.album + '</span>';
+	line += '<span class="track_duration">' + human_time(entry.duration) + '</span>';
+	line += '<span class="track_rating"><span id="' + rating_id + '"></span></span>';
 	line += '</div>';
+	
+	$('#' + append_to).append(line);
+	
+	$('#' + line_id + '_genre').bind('click', { type : 'genre', 'name' : entry.genre }, cloud_search);
+	$('#' + line_id + '_artist').bind('click', { type : 'artist', 'name' : entry.artist }, cloud_search);
+	$('#' + line_id + '_album').bind('click', { type : 'album', 'name' : entry.album }, cloud_search);
+	
 	return line;
 }
 

@@ -83,44 +83,44 @@ img {
 	font-style: italic;
 	color: #f80; 
 }
-#track_actions {
+.track_actions {
 	width: 8%;
 	display: table-cell;
 	padding-right: 10px;
 	text-align: right;
 	vertical-align: middle;
 }
-#track_number {
+.track_number {
 	width: 2%;
 	display: table-cell;
 	vertical-align: middle;
 }
-#track_title {
+.track_title {
 	width: 20%;
 	display: table-cell;
 	vertical-align: middle;
 }
-#track_genre {
+.track_genre {
 	width: 10%;
 	display: table-cell;
 	vertical-align: middle;
 }
-#track_artist {
+.track_artist {
 	width: 15%;
 	display: table-cell;
 	vertical-align: middle;
 }
-#track_album {
+.track_album {
 	width: 25%;
 	display: table-cell;
 	vertical-align: middle;
 }
-#track_duration {
+.track_duration {
 	width: 5%;
 	display: table-cell;
 	vertical-align: middle;
 }
-#track_rating {
+.track_rating {
 	width: 15%;
 	display: table-cell;
 	vertical-align: middle;
