@@ -512,7 +512,7 @@ function load_tag_cloud() {
 					id + '" class="tag_ar ' + 
 					clazz + '" title="artist: ' + name + ' [' + value + ']">' + 
 					name + '</div>');
-			$('#' + id).bind('click', { type : 'artist', 'name' : name, limit : value }, cloud_search);
+			$('#' + id).bind('click', { type : 'artist', 'name' : name }, cloud_search);
 		});
 		
 	});
@@ -531,7 +531,7 @@ function load_tag_cloud() {
 					'" class="tag_al ' + clazz + 
 					'" title="album: ' + name + ' [' + value + ']">' + name + 
 					'</div>');
-			$('#' + id).bind('click', { type : 'album', 'name' : name, limit : value }, cloud_search);			
+			$('#' + id).bind('click', { type : 'album', 'name' : name }, cloud_search);			
 		});
 		
 	});
@@ -549,7 +549,7 @@ function load_tag_cloud() {
 					'" class="tag_gr ' + clazz + 
 					'" title="genre: ' + name + ' [' + value + ']">' + name + 
 					'</div>');
-			$('#' + id).bind('click', { type : 'genre', 'name' : name, limit : value }, cloud_search);			
+			$('#' + id).bind('click', { type : 'genre', 'name' : name }, cloud_search);			
 		});
 		
 	});
@@ -567,7 +567,7 @@ function cloud_search(event) {
 	} else {
 		parameters.genre = data.name;
 	}
-	parameters.limit = data.limit;
+	parameters.limit = 0;
 	parameters.type = 'song';
 	
 	clear_tabs();
