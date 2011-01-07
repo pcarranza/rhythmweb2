@@ -326,6 +326,9 @@ class RBHandler(Loggable):
         '''
         Sets the provided rating to the given entry id, int 0 to 5 
         '''
+        if not type(rating) is int:
+            raise Exception('Rating parameter must be an int')
+        
         self.info('Setting rating %d to entry %s' % (rating, entry_id))
         entry = self.__get_entry(entry_id)
         if not entry is None:
