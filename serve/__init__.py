@@ -153,10 +153,13 @@ class CGIServer(Loggable):
     
     
     
-class LoggingWSGIRequestHandler(WSGIRequestHandler):
-
+class LoggingWSGIRequestHandler(WSGIRequestHandler, Loggable):
+    '''
+    Logger request handler wrapper
+    '''
+    
     def log_message(self, format, *args):
-        sys.stdout.write("%s - [%s] %s\n" %
+        self.info('%s - [%s] %s' %
                          (self.address_string(),
                           self.log_date_time_string(),
                           format % args))

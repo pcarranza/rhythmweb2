@@ -23,20 +23,20 @@ from gzip import GzipFile
 class RequestHandler(Loggable):
 
     
-    _resource_path = None
-    _web_path = None
-    _components = None
+    __resource_path = None
+    __web_path = None
+    __components = None
 
     
     def __init__(self, path):
         self.info('Request Handler started')
-        self._resource_path = os.path.join(path, 'resources')
-        self._web_path = os.path.join(path, 'web')
+        self.__resource_path = os.path.join(path, 'resources')
+        self.__web_path = os.path.join(path, 'web')
         
     
     def do_get(self, environ, response, components={}):
         self.info('Invoking get method')
-        self._components = components
+        self.__components = components
         
         wrapper = ResponseWrapper(environ, response)
         return_value = self.handle_method('get', environ, wrapper.response)
@@ -50,7 +50,7 @@ class RequestHandler(Loggable):
             for param in params:
                 self.debug("%s = %s" % (param, params[param]))
         
-        self._components = components
+        self.__components = components
         
         # gzipping POST does not works, for some reason... 
         # wrapper = ResponseWrapper(environ, response)
@@ -73,8 +73,8 @@ class RequestHandler(Loggable):
             
         self.info('%s method - %s' % (request_method.upper(), request_path))
  
-        resource_path = self._resource_path
-        web_path = self._web_path
+        resource_path = self.__resource_path
+        web_path = self.__web_path
         
         path_options = str(request_path).split('/')
         walked_path = ''
@@ -159,7 +159,7 @@ class RequestHandler(Loggable):
         self.debug('Importing module path %s' % page_path)
         
         class_path = os.path.splitext(page_path)[0]
-        class_path = class_path.replace(self._web_path, '')
+        class_path = class_path.replace(self.__web_path, '')
         class_path = class_path.replace('/', '.')
         class_path = 'web' + class_path
         self.debug('Importing module path %s' % class_path)
@@ -181,28 +181,28 @@ class RequestHandler(Loggable):
         
         self.debug('Creating instance of class %s' % klass)
         
-        for component in self._components:
-            self.debug('COMPONENT %s = %s' % (component, self._components[component]))
+        for component in self.__components:
+            self.debug('COMPONENT %s = %s' % (component, self.__components[component]))
         
-        return klass(self._components)
+        return klass(self.__components)
 
         
     def send_error(self, code, message, response):
         self.error('Sending error \'%s\' %s' % (code, message))
         error_message = '%d %s' % (code, message)
-        response(error_message, self._default_headers())
+        response(error_message, self.__default_headers())
         return 'ERROR: %s ' % message
-    
-    
-    def _default_headers(self, headers=[]):
-        if not headers:
-            headers = [('Content-type', 'text/html; charset=UTF-8')]
-            
-        return headers
     
     
     def get_resource_handler(self, resource):
         return ResourceHandler(resource) # dont cache
+    
+    
+    def __default_headers(self, headers=[]):
+        if not headers:
+            headers = [('Content-type', 'text/html; charset=UTF-8')]
+            
+        return headers
     
     
     
@@ -210,10 +210,10 @@ class ResponseWrapper(Loggable):
     
     
     def __init__(self, environment, response, compression_level=8):
-        self._response = response
-        self._env = environment
-        self._accept_gzip = self.is_accept_gzip()
-        self._compression_level = compression_level
+        self.__response = response
+        self.__env = environment
+        self.__accept_gzip = self.is_accept_gzip()
+        self.__compression_level = compression_level
         
         
     def response(self, status, headers):
@@ -223,26 +223,26 @@ class ResponseWrapper(Loggable):
             headers = [('Content-type', 'text/html; charset=UTF-8'), \
                        ('Cache-Control', 'public')]
         
-        if self._accept_gzip:
+        if self.__accept_gzip:
             self.debug('Client accepts gzip encoding, appendig to headers')
             headers.append(("Content-Encoding", "gzip"))
             headers.append(("Vary", "Accept-Encoding"))
         
-        self._response(status, headers)
+        self.__response(status, headers)
     
     
     def wrap(self, return_value):
-        if self._accept_gzip:
+        if self.__accept_gzip:
             self.debug('GZipping response')        
-            return self.gzip_string(return_value, self._compression_level)
+            return self.gzip_string(return_value, self.__compression_level)
         
         self.debug('Plain response, no gzipping requested')        
         return return_value
         
 
     def is_accept_gzip(self):
-        if 'HTTP_ACCEPT_ENCODING' in self._env:
-            accept = self._env['HTTP_ACCEPT_ENCODING']
+        if 'HTTP_ACCEPT_ENCODING' in self.__env:
+            accept = self.__env['HTTP_ACCEPT_ENCODING']
             accept = str(accept).split(',')
             if 'gzip' in accept:
                 self.debug('Client accepts gzip encoding')        
