@@ -52,7 +52,28 @@ class RBRest(BaseRest, Loggable):
         self.debug('Loading status as json object')
         return Status.get_status_as_JSon(self.get_rb_handler())    
     
-
+    
+    def get_library_as_json_list(self, library):
+        self.debug('Converting library dictionary to json list')
+        libraries = []
+        
+        for key in library:
+            libraries.append(self.get_name_value_as_json(key, library[key]))
+            
+        return libraries
+    
+    
+    def get_name_value_as_json(self, name, value):
+        json = JSon()
+        json.put('name', name)
+        json.put('value', value)
+        return json
+    
+    
+    def get_logname(self):
+        return 'Rest_' + self.__class__.__name__
+    
+    
 class Song:
     
     @staticmethod
@@ -114,3 +135,5 @@ class Status:
         status.put('volume', handler.get_volume())
         
         return status
+
+

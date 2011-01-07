@@ -132,22 +132,28 @@ class RBHandler(Loggable):
     def get_biggest_artist(self):
         '''
         Gets the artist that has more songs registered in the DB
+        @return: a (name, value) tuple
         '''
-        return self.__db_cache[self.__CACHE_MAX_ARTIST]
+        max_artist = self.__db_cache[self.__CACHE_MAX_ARTIST]
+        return (max_artist, self.__db_cache[self.__CACHE_ARTISTS][max_artist]) 
 
 
     def get_biggest_album(self):
         '''
         Gets the album that has more songs registered in the DB
+        @return: a (name, value) tuple
         '''
-        return self.__db_cache[self.__CACHE_MAX_ALBUM]
+        max_album = self.__db_cache[self.__CACHE_MAX_ALBUM]
+        return (max_album, self.__db_cache[self.__CACHE_ALBUMS][max_album])
     
 
     def get_biggest_genre(self):
         '''
         Gets the genre that has more songs registered in the DB
+        @return: a (name, value) tuple
         '''
-        return self.__db_cache[self.__CACHE_MAX_GENRE]
+        max_genre = self.__db_cache[self.__CACHE_MAX_GENRE]
+        return (max_genre, self.__db_cache[self.__CACHE_GENRES][max_genre])
         
         
     def get_artists(self):

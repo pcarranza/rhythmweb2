@@ -71,3 +71,7 @@ class Page(RBRest):
     def get_playlist_entries(self, id):
         entry_ids = self.get_rb_handler().get_playlist_entries(id)
         return self.get_songs_as_json_list(entry_ids)
+
+
+    def get_logname(self):
+        return 'Rest_playlists'

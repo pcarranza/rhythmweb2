@@ -35,8 +35,11 @@ class Loggable(object):
         self._print(message, logging.WARNING)
     
     def _print(self, message, level):
-        logname = self.__class__.__name__
+        logname = self.get_logname()
         log = serve.log.get_logger(logname)
         log.log(level, message)
         
         # sys.stderr.write('STDERR - %s\n' % message)
+    
+    def get_logname(self):
+        return self.__class__.__name__

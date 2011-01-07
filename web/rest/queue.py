@@ -26,3 +26,7 @@ class Page(RBRest):
         playlist = JSon()
         playlist.put('entries', entries)
         return playlist
+
+
+    def get_logname(self):
+        return 'Rest_queue'

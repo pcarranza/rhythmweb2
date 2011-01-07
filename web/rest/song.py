@@ -72,5 +72,7 @@ class Page(RBRest):
         return song_id
     
     
-    
+    def get_logname(self):
+        return 'Rest_song'
+
 

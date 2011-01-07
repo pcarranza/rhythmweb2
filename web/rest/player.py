@@ -97,3 +97,7 @@ class Page(RBRest):
         status.put('last_action', action)
         
         return status
+    
+    
+    def get_logname(self):
+        return 'Rest_player'

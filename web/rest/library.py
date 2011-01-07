@@ -36,16 +36,19 @@ class Page(RBRest):
             handler = self.get_rb_handler()
             
             if 'artists' == search_by:
-                library.put('artists', handler.get_artists())
-                library.put('biggest_artist', handler.get_biggest_artist())
+                library.put('artists', self.get_library_as_json_list(handler.get_artists()))
+                (name, value) = handler.get_biggest_artist()
+                library.put('biggest_artist', self.get_name_value_as_json(name, value))
                 
             elif 'genres' == search_by:
-                library.put('genres', handler.get_genres())
-                library.put('biggest_genre', handler.get_biggest_genre())
+                library.put('genres', self.get_library_as_json_list(handler.get_genres()))
+                (name, value) = handler.get_biggest_genre()
+                library.put('biggest_genre', self.get_name_value_as_json(name, value))
                 
             else:
-                library.put('albums', handler.get_albums())
-                library.put('biggest_album', handler.get_biggest_album())
+                library.put('albums', self.get_library_as_json_list(handler.get_albums()))
+                (name, value) = handler.get_biggest_album()
+                library.put('biggest_album', self.get_name_value_as_json(name, value))
                 
             return library
         
@@ -64,7 +67,11 @@ class Page(RBRest):
             entry_ids = handler.query(filter)
             entries = self.get_songs_as_json_list(entry_ids)
             library = JSon()
-            library.put(search_by, value)
+            library.put(SEARCH_TYPES[search_by], value)
             library.put('entries', entries)
             
             return library
+
+
+    def get_logname(self):
+        return 'Rest_library'

@@ -153,3 +153,7 @@ class Page(RBRest):
             unpacked['type'] = self.__unpack_type(path_params)
         
         return unpacked
+    
+    
+    def get_logname(self):
+        return 'Rest_search'
