@@ -246,12 +246,19 @@ img {
 #search_filter:hover {
 	border: 1px solid blue;
 }
+
+#img_searching {
+	margin-left: auto;
+	margin-right: auto;
+	vertical-align: middle;
+}
+
 #do_search {
 	vertical-align: middle;
 	cursor: pointer;
 }
 #search_add_all {
-	float: right;
+	float: left;
 }
 .searchfor {
 	float: left;

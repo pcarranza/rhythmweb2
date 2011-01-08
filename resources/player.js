@@ -124,17 +124,18 @@ function do_search(parameters) {
 	var url = 'rest/search';
 	$('#search_result').html('');
 	$('#search_result').append(search_parameters_to_html(parameters));
+	$('#search_result').append('<img id="img_searching" src="img/loading.gif" width="16" height="16" alt="Searching..." title="Searching..." />');
 	$.post(url, parameters, function(json) {
-		$('#search_parameters').append(create_add_all('search_add_all'))
-		$('#search_result').append(create_header());
+		$('#img_searching').hide();
+		$('#search_result').append(create_header('search_header_actions'));
+		$('#search_header_actions').append(create_add_all('search_add_all'))
 		var ids = '';
 		$.each(json.entries, function(index, entry) {
-			add_search_entry(index, entry, 'search_result');
+			add_search_entry(index, entry, 'search_result', true);
 			ids += entry.id + ',';
 		});
 		if (ids.length > 0)
 			ids = ids.slice(0, ids.length - 1);
-		
 		$('#search_add_all').click(function() {
 			$.post("rest/player", { action: "enqueue", "entry_id" : ids }, function(data) {
 				var numbers = /\d+/g; 
@@ -298,22 +299,22 @@ function add_queue_entry(index, entry) {
 }
 
 
-function add_search_entry(index, entry, container) {
+function add_search_entry(index, entry, container, fadeout) {
 	var line_id = container + '_line_' + entry.id;
 	var container_id = line_id + '_actions';
 	var rating_id = line_id + '_rating';
 	create_entry_line(container, line_id, container_id, rating_id, entry);
 	
-	add_enqueue_action(line_id, container_id, entry);
+	add_enqueue_action(line_id, container_id, entry, fadeout);
 	add_play_entry_action(line_id, container_id, entry);
 	
 	add_rate_action(line_id, rating_id, entry);
 }
 
 
-function create_header() {
+function create_header(actions_id) {
 	var line = '<div class="line">';
-	line += '<span class="track_actions"></span>';
+	line += '<span class="track_actions" id="' + actions_id + '"></span>';
 	line += '<span class="track_number">#</span>';
 	line += '<span class="track_title">Title</span>';
 	line += '<span class="track_genre">Genre</span>';
@@ -362,7 +363,7 @@ function add_dequeue_action(line_id, container_id, entry) {
 }
 
 
-function add_enqueue_action(line_id, container_id, entry) {
+function add_enqueue_action(line_id, container_id, entry, fadeout) {
 	var action_id = container_id + '_enqueue';
 	var enqueue = '<img id="' + action_id + '" class="link enqueue" src="img/add.png" width="24" height="24" alt="Add" title="Add to queue"/>';
 	var entry_id = entry.id;
@@ -370,6 +371,8 @@ function add_enqueue_action(line_id, container_id, entry) {
 	$('#' + action_id).click(function() {
 		$.post("rest/player", { action: "enqueue", "entry_id" : entry_id }, function(data) {
 			info('\"' + entry.title + '\" <i>added to queue</i>');
+			if (fadeout)
+				$('#' + line_id).fadeOut('fast');
 		});
 	});
 }
@@ -476,10 +479,10 @@ function load_library(first, limit) {
 						'</span>');
 			}
 
-			$('#library').append(create_header());
+			$('#library').append(create_header('library_header_actions'));
 			
 			$.each(json.entries, function(index, entry) {
-				add_search_entry(index, entry, 'library');
+				add_search_entry(index, entry, 'library', false);
 			});
 			
 			if(first > 0) {
