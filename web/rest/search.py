@@ -23,10 +23,10 @@ from serve.request import ServerException
 class Page(RBRest):
     
     TYPES = {'song' : 'song', 
-             'radio' : 'radio', 
-             'iradio' : 'radio', 
-             'podcast' : 'podcast', 
-             'podcast-post' : 'podcast'}
+             'radio' : 'iradio', 
+             'iradio' : 'iradio', 
+             'podcast' : 'podcast-post', 
+             'podcast-post' : 'podcast-post'}
     
     
     def get(self):
@@ -34,16 +34,14 @@ class Page(RBRest):
         handler = self.get_rb_handler()
         filter = self.get_filter()
         
-        if filter:
-            for f in filter:
-                self.debug('Searching for %s: \"%s\"' % (f, str(filter[f])))
-        else:
-            self.debug('Filter is empty')
-        
         try:
             entry_ids = handler.query(filter)
         except InvalidQueryException, e:
-            raise ServerException(501, 'bad request: %s' % e.message)
+            self.error('Invalid query: %s' % e)
+            raise ServerException(400, 'bad request: %s' % e.message)
+        except Exception, e:
+            self.error('Unknown exception: %s' % e)
+            raise ServerException(500, 'Exception when executing query: %s' % e)
         
         json = JSon()
         
@@ -130,8 +128,10 @@ class Page(RBRest):
     
     def __unpack_type(self, type):
         if self.TYPES.has_key(type):
+            self.debug('Returning type for "%s"' % type)
             return self.TYPES[type]
         
+        self.debug('No type for "%s"' % type)
         return None
     
     

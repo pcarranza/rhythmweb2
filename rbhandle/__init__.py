@@ -382,7 +382,7 @@ class RBHandler(Loggable):
         '''
         Performs a query with the provided filters 
         '''
-        
+        self.debug('RBHandler.query...')
         if filters is None or not filters:
             self.info('No filters, returning empty result')
             return []
@@ -397,6 +397,12 @@ class RBHandler(Loggable):
         prop_match = rhythmdb.QUERY_PROP_LIKE
         
         if filters:
+            for key in filters:
+                value = filters[key]
+                if type(value) is str:
+                    self.debug('Searching for %s: "%s"' % (key, value))
+                else:
+                    self.warning('Searching for %s but type is "%s"' % (key, type(value)))
             
             if 'exact-match' in filters:
                 prop_match = rhythmdb.QUERY_PROP_EQUALS
@@ -415,9 +421,12 @@ class RBHandler(Loggable):
             
             if 'type' in filters:
                 mtype = filters['type']
-                #self.debug('Appending query for type \"%s\"' % mtype)
+                self.debug('Appending query for type \"%s\"' % mtype)
                 if not self.__media_types.has_key(mtype):
-                    raise InvalidQueryException('Unknown media type \"%s\"' % filter['type'])
+                    self.debug('Media \"%s\" not found' % mtype)
+                    raise InvalidQueryException('Unknown media type \"%s\"' % mtype)
+                else:
+                    self.debug('Type %s added to query' % mtype)
             
             if 'rating' in filters:
                 rating = str(filters['rating'])
@@ -492,9 +501,10 @@ class RBHandler(Loggable):
             self.info('Search for type only, querying for type')
             query_model = self.__query_all(mtype, play_count, rating, searches)
 
-        
+        self.debug('RBHandler.query executed, loading results...')
         entries = []
         self.__loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
+        self.debug('RBHandler.query executed, returning results...')
         return entries
     
     

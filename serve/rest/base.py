@@ -126,21 +126,28 @@ class BaseRest(Loggable):
     
     def unpack_value(self, value):
         if type(value) is dict:
-            svalue = ''.join(value)
-            self.debug('Value \"%s\" was packed as dictionary' % svalue)
+            self.debug('Value is as dictionary, returning dictionary')
+            return value
             
         elif type(value) is list:
             if len(value) == 1:
-                self.debug('Value \"%s\" was packed as 1 element list' % value[0])
-                return value[0]
+                self.debug('Value was packed as 1 element list')
+                svalue = value[0]
+                if type(svalue) is str:
+                    svalue = svalue.strip()
+                    self.debug('Value "%s" is a string, returning stripped' % svalue)
+                else:
+                    self.debug('Value has type "%s", returning value' % type(svalue))
+                    
+                return svalue
             
-            svalue = ''.join(value)
-            self.debug('Value \"%s\" was packed as list' % svalue)
+            else:
+                self.debug('Value is a list of %d elements, returning list' % len(value))
+                return value
+            
         else:
-            svalue = str(value)
-            self.debug('Value \"%s\" was packed as plain string' % svalue)
-            
-        return svalue.strip()
+            self.debug('Value has type "%s", returning value' % type(value))
+            return value
 
 
     def pack_as_list(self, value):
