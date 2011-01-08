@@ -125,6 +125,8 @@ class RBHandler(Loggable):
         
         self.__db.connect('entry-added', self.__append_entry_to_cache)
         
+        self.__playing_song = None
+        self.__player.connect('playing-song-changed', self.__playing_song_changed)
         
         
 
@@ -642,6 +644,7 @@ class RBHandler(Loggable):
         artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
         album = db.entry_get(entry, rhythmdb.PROP_ALBUM)
         genre = db.entry_get(entry, rhythmdb.PROP_GENRE)
+        play_count = db.entry_get(entry, rhythmdb.PROP_PLAY_COUNT)
         
         if not artist:
             self.debug('Empty artist for entry %d %s, skipping' % (entry_id, db.entry_get(entry, rhythmdb.PROP_LOCATION)))
@@ -654,26 +657,37 @@ class RBHandler(Loggable):
         if not genre:
             self.debug('Empty genre for entry %d %s, skipping' % (entry_id, db.entry_get(entry, rhythmdb.PROP_LOCATION)))
             return
+
+        if not play_count:
+            play_count = 0
         
+        self.__append_artist(artist, play_count)
+        self.__append_album(album, play_count)
+        self.__append_genre(genre, play_count)
+    
+    def __append_artist(self, artist, play_count):
+        self.debug('Append playcount in %d to artist "%s"' % (play_count, artist))    
         artists_cache = self.__db_cache[self.__CACHE_ARTISTS]
         
         if artists_cache.has_key(artist):
-            artists_cache[artist] += 1
+            artists_cache[artist] += play_count
         else:
-            artists_cache[artist] = 1
+            artists_cache[artist] = play_count
             
         if self.__db_cache[self.__CACHE_MAX_ARTIST] is None:
             self.__db_cache[self.__CACHE_MAX_ARTIST] = artist
         elif artists_cache[artist] > artists_cache[self.__db_cache[self.__CACHE_MAX_ARTIST]]:
             self.__db_cache[self.__CACHE_MAX_ARTIST] = artist
             
-            
+    
+    def __append_album(self, album, play_count):
+        self.debug('Append playcount in %d to album "%s"' % (play_count, album))
         albums_cache = self.__db_cache[self.__CACHE_ALBUMS]
         
         if albums_cache.has_key(album):
-            albums_cache[album] += 1
+            albums_cache[album] += play_count
         else:
-            albums_cache[album] = 1
+            albums_cache[album] = play_count
 
         if self.__db_cache[self.__CACHE_MAX_ALBUM] is None:
             self.__db_cache[self.__CACHE_MAX_ALBUM] = album
@@ -681,18 +695,38 @@ class RBHandler(Loggable):
             self.__db_cache[self.__CACHE_MAX_ALBUM] = album
 
 
+    def __append_genre(self, genre, play_count):
+        self.debug('Append playcount in %d to genre "%s"' % (play_count, genre))
         genres_cache = self.__db_cache[self.__CACHE_GENRES]
     
         if genres_cache.has_key(genre):
-            genres_cache[genre] += 1
+            genres_cache[genre] += play_count
         else:
-            genres_cache[genre] = 1
+            genres_cache[genre] = play_count
 
         if self.__db_cache[self.__CACHE_MAX_GENRE] is None:
             self.__db_cache[self.__CACHE_MAX_GENRE] = genre
         elif genres_cache[genre] > genres_cache[self.__db_cache[self.__CACHE_MAX_GENRE]]:
             self.__db_cache[self.__CACHE_MAX_GENRE] = genre
     
+    
+    def __playing_song_changed(self, player, entry):
+        self.debug('Playing song changed....')
+        if not self.__playing_song is None:
+            old_playcount = self.__playing_song.play_count
+            old_entry = self.__get_entry(self.__playing_song.id)
+            new_play_count = self.__db.entry_get(old_entry, rhythmdb.PROP_PLAY_COUNT)
+            if old_playcount < new_play_count:
+                diff = new_play_count - old_playcount
+                self.__append_artist(self.__playing_song.artist, diff)
+                self.__append_album(self.__playing_song.album, diff)
+                self.__append_genre(self.__playing_song.genre, diff)
+                
+        if entry is None:
+            self.__playing_song = None
+        else:
+            self.__playing_song = RBEntry(self.__db, entry)
+            
     
 
     def __query_all(self, mtype, min_play_count, min_rating, parameters, query_for_all=False):
