@@ -412,6 +412,7 @@ function set_rating(event) {
 	var url = "rest/song/" + data.id;
 	$.post(url, { rating : data.rating }, function(json) {
 		var rating = json.rating;
+		info('<i>setting rating to ' + rating + '</i>')
 		var index;
 		for (index = 1; index <= 6; index++) {
 			if (index <= rating) {
