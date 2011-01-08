@@ -15,11 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import gconf
-import urllib
 import rb, rhythmdb
+import os.path, urllib
 
 from serve.log.loggable import Loggable
-import sys
 
 TYPE_SONG = 'song'
 TYPE_RADIO = 'iradio'
@@ -651,10 +650,18 @@ class RBHandler(Loggable):
         Appends the given entry to the rbhandler cache 
         '''
         entry_id = db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
+        location = db.entry_get(entry, rhythmdb.PROP_LOCATION)
+        
+        if location and str(location).startswith('file://'):
+            fpath = urllib.url2pathname(location)
+            fpath = str(fpath).replace('file://', '')
+            if not os.path.exists(fpath):
+                self.debug('Skipping missing file %s' % fpath)
+                return
+
         artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
         album = db.entry_get(entry, rhythmdb.PROP_ALBUM)
         genre = db.entry_get(entry, rhythmdb.PROP_GENRE)
-        location = db.entry_get(entry, rhythmdb.PROP_LOCATION)
         duration = db.entry_get(entry, rhythmdb.PROP_DURATION)
         play_count = db.entry_get(entry, rhythmdb.PROP_PLAY_COUNT)
         
