@@ -654,26 +654,32 @@ class RBHandler(Loggable):
         artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
         album = db.entry_get(entry, rhythmdb.PROP_ALBUM)
         genre = db.entry_get(entry, rhythmdb.PROP_GENRE)
+        location = db.entry_get(entry, rhythmdb.PROP_LOCATION)
+        duration = db.entry_get(entry, rhythmdb.PROP_DURATION)
         play_count = db.entry_get(entry, rhythmdb.PROP_PLAY_COUNT)
         
         if not artist:
-            self.debug('Empty artist for entry %d %s, skipping' % (entry_id, db.entry_get(entry, rhythmdb.PROP_LOCATION)))
+            self.debug('Empty artist for entry %d %s, skipping' % (entry_id, location))
             return
         
         if not album:
-            self.debug('Empty album for entry %d %s, skipping' % (entry_id, db.entry_get(entry, rhythmdb.PROP_LOCATION)))
+            self.debug('Empty album for entry %d %s, skipping' % (entry_id, location))
             return
         
         if not genre:
-            self.debug('Empty genre for entry %d %s, skipping' % (entry_id, db.entry_get(entry, rhythmdb.PROP_LOCATION)))
+            self.debug('Empty genre for entry %d %s, skipping' % (entry_id, location))
             return
 
         if not play_count:
             play_count = 0
         
-        self.__append_artist(artist, play_count)
-        self.__append_album(album, play_count)
-        self.__append_genre(genre, play_count)
+        if not duration or duration == 0:
+            self.debug('Skipping entry %d for artist=%s/album=%s/genre=%s due to duration=0' % (entry_id, artist, album, genre))
+        else:
+            self.__append_artist(artist, play_count)
+            self.__append_album(album, play_count)
+            self.__append_genre(genre, play_count)
+    
     
     def __append_artist(self, artist, play_count):
         self.debug('Append playcount in %d to artist "%s"' % (play_count, artist))    
