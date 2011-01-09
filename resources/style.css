@@ -126,8 +126,7 @@ img {
 	vertical-align: middle;
 }
 #clear_queue {
-	float: right;
-	clear: right;
+	float: left;
 }
 
 .enqueue {

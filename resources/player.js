@@ -268,8 +268,8 @@ function clear_info(speed, message) {
 function load_queue() {
 	$.getJSON('rest/queue', function(json) {
 		$('#queue').html('');
-		$('#queue').append(create_remove_all('clear_queue'));
-		$('#queue').append(create_header());
+		$('#queue').append(create_header('queue_header_actions'));
+		$('#queue_header_actions').append(create_remove_all('clear_queue'));
 		if (json && json.entries) {
 			$.each(json.entries, function(index, entry) {
 				add_queue_entry(index, entry);

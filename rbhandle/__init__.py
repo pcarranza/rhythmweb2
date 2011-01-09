@@ -662,7 +662,6 @@ class RBHandler(Loggable):
         artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
         album = db.entry_get(entry, rhythmdb.PROP_ALBUM)
         genre = db.entry_get(entry, rhythmdb.PROP_GENRE)
-        duration = db.entry_get(entry, rhythmdb.PROP_DURATION)
         play_count = db.entry_get(entry, rhythmdb.PROP_PLAY_COUNT)
         
         if not artist:
@@ -680,12 +679,9 @@ class RBHandler(Loggable):
         if not play_count:
             play_count = 0
         
-        if not duration or duration == 0:
-            self.debug('Skipping entry %d for artist=%s/album=%s/genre=%s due to duration=0' % (entry_id, artist, album, genre))
-        else:
-            self.__append_artist(artist, play_count)
-            self.__append_album(album, play_count)
-            self.__append_genre(genre, play_count)
+        self.__append_artist(artist, play_count)
+        self.__append_album(album, play_count)
+        self.__append_genre(genre, play_count)
     
     
     def __append_artist(self, artist, play_count):
