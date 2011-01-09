@@ -127,6 +127,11 @@ function do_search(parameters) {
 	$('#search_result').append('<img id="img_searching" src="img/loading.gif" width="16" height="16" alt="Searching..." title="Searching..." />');
 	$.post(url, parameters, function(json) {
 		$('#img_searching').hide();
+		$('#search_parameters').append(
+				'<span class="cell">' +
+				'<span class="prop">count</span>:' + 
+				'<span class="val">' + json.entries.length + '</span>' + 
+				'</span>');
 		$('#search_result').append(create_header('search_header_actions'));
 		$('#search_header_actions').append(create_add_all('search_add_all'))
 		var ids = '';
