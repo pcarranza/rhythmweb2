@@ -17,9 +17,7 @@
 */
 
 var timers = [];
-var library_loaded = false;
 var clear_status = null;
-
 
 $(document).ready(function() {
 	update_status();
@@ -72,19 +70,6 @@ $(document).ready(function() {
 	});
 	
 	
-	$('#tab_library').click(function () {
-		clear_tabs();
-		hide_all();
-		$(this).addClass('selected');
-
-		if (!library_loaded) {
-			load_library(0, 50);
-			library_loaded = true;
-		}
-		
-		$('#library').removeClass('hide');
-	});
-
 	$('#tab_tags').click(function () {
 		clear_tabs();
 		hide_all();
@@ -93,6 +78,16 @@ $(document).ready(function() {
 		load_tag_cloud();
 		
 		$('#tags').removeClass('hide');
+	});
+	
+	$('#tab_playlists').click(function() {
+		clear_tabs();
+		hide_all()
+		$(this).addClass('selected');
+		
+		load_playlists();
+		
+		$('#playlists').removeClass('hide');
 	});
 
 	
@@ -108,7 +103,8 @@ $(document).ready(function() {
 		parameters = parse_search_parameters();
 		do_search(parameters);
 	});
-
+	
+	
 	$('#search_filter').keypress(function(event) {
 		  if (event.keyCode == '13') {
 			  $('#do_search').click();
@@ -411,6 +407,7 @@ function add_rate_action(line_id, container_id, entry) {
 	}
 }
 
+
 function set_rating(event) {
 	var data = event.data;
 	var action_scheme = data.scheme;
@@ -429,85 +426,21 @@ function set_rating(event) {
 	});
 }
 
+
 function clear_tabs() {
 	$('#tab_queue').removeClass('selected');
-	$('#tab_library').removeClass('selected');
 	$('#tab_search').removeClass('selected');
 	$('#tab_tags').removeClass('selected');
+	$('#tab_playlists').removeClass('selected');
 }
+
 
 function hide_all() {
 	$('#queue').addClass('hide');
-	$('#library').addClass('hide');
 	$('#search').addClass('hide');
 	$('#tags').addClass('hide');
+	$('#playlists').addClass('hide');
 }
-
-
-function load_library(first, limit) {
-	var url = 'rest/search/song/first/' + first + '/limit/' + limit;
-	$('#library').html('');
-	$.getJSON(url, function(json) {
-		if (json && json.entries) {
-			first = parseInt(first);
-			limit = parseInt(limit);
-			var count = json.entries.length;
-			var prev = first - limit;
-			var next = first + limit;
-
-			if(first > 0) {
-				$('#library').append('<span class="library_previous">' +
-						'<img id="go_previous_top" src="img/go-previous.png" class="link" width="24" height="24"  alt="Previous" title="Previous" />' + 
-						'</span>');
-				$('#go_previous_top').click( function() {
-					load_library(prev, limit);
-				});
-			} else {
-				$('#library').append('<span class="library_previous">' +
-						'&nbsp;' +
-						'</span>');
-			}
-
-			$('#library').append('<span class="library_status">showing ' + count + 
-					' starting at ' + first + 
-					'</span>');
-			
-			if (count == limit) {
-				$('#library').append('<span class="library_next">' + 
-						'<img id="go_next_top" src="img/go-next.png" class="link" width="24" height="24" alt="Next" title="Next"/>' +
-						'</span>');
-				$('#go_next_top').click( function() {
-					load_library(next, limit);
-				});
-			} else {
-				$('#library').append('<span class="library_next">' +
-						'&nbsp;' +
-						'</span>');
-			}
-
-			$('#library').append(create_header('library_header_actions'));
-			
-			$.each(json.entries, function(index, entry) {
-				add_search_entry(index, entry, 'library', false);
-			});
-			
-			if(first > 0) {
-				$('#library').append('<img id="go_previous" src="img/go-previous.png" class="link" width="24" height="24" alt="Previous" title="Previous" />');
-				$('#go_previous').click( function() {
-					load_library(prev, limit);
-				});
-			}
-			
-			if (count == limit) {
-				$('#library').append('<img id="go_next" src="img/go-next.png" class="link" width="24" height="24" alt="Next" title="Next" />');
-				$('#go_next').click( function() {
-					load_library(next, limit);
-				});
-			}
-		}
-	});
-}
-
 
 function load_tag_cloud() {
 	$('#artists_cloud').html('');
@@ -570,6 +503,62 @@ function load_tag_cloud() {
 	});
 
 }
+
+
+function load_playlists() {
+	$('#playlists').html('')
+	$.getJSON('/rest/playlists', function(json) {
+		$.each(json.playlists, function(index, playlist) {
+			add_playlist('playlists', playlist);
+		});
+	});
+}
+
+
+function add_playlist(container, playlist) {
+	row = '<div class="pl_row">' +
+			'<div id="playlist_' + playlist.id + '" class="pl_name" title="Enqueue playlist"><img id="do_playlist_' + playlist.id + '" src="img/apply.png" width="24" height="24" alt="Enqueue playlist" title="Enqueue playlist"/>' +
+			'[' + playlist.name + ']</div>' +
+			'<div id="pl_entries_' + playlist.id + '" class="pl_entries">' + 
+				'<img id="pl_load_' + playlist.id + '" src="img/add.png" class="link pl_load" width="24" height="24" alt="Show" title="Show entries">' + 
+			'</div>' +
+		'</div>';
+	$('#' + container).append(row);
+	$('#playlist_' + playlist.id).click(function () {
+		$.post("rest/playlists", { action: "enqueue", "playlist" : playlist.id }, function (data) {
+			info('<i>Playlist [' + playlist.name + '] added to play queue</i>');
+		});
+	});
+	$('#pl_load_' + playlist.id).click(function () {
+		var url = 'rest/playlists/' + playlist.id;
+		var entries_id = 'pl_entries_' + playlist.id;
+		$('#' + entries_id).html(
+				'<img id="img_searching" src="img/loading.gif" width="16" height="16" alt="Fetching playlist..." title="Fetching playlist..." />');
+		$.getJSON(url, function(json) {
+			var header_actions = 'playlist_' + playlist.id + '_header_actions';
+			$('#' + entries_id).html('');
+			$('#' + entries_id).append(create_header(header_actions));
+			$.each(json.entries, function(index, entry) {
+				add_search_entry(index, entry, entries_id, true);
+			});
+			
+		});
+	});
+}
+
+function add_playlist_entries(playlist) {
+	var url = 'rest/playlists/' + playlist.id;
+	$.getJSON(url, function(json) {
+		var container_id = '#' + 'pl_entries_' + json.id;
+		$.each(json.entries, function(index, entry) {
+			$(container_id).append( entry.title + ' by ' + entry.artist + ' ');
+		});
+		
+	});
+	
+	
+}
+
 
 
 function cloud_search(event) {
