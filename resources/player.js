@@ -569,22 +569,22 @@ function load_tag_cloud() {
 
 function cloud_search(event) {
 	data = event.data;
-	var parameters = {};
+	var filter;
 	if (data.type == 'artist') {
-		parameters.artist = data.name;
+		filter = '[artist:' + data.name + ']';
 	} else if (data.type == 'album') {
-		parameters.album = data.name;
+		filter = '[album:' + data.name + ']';
 	} else {
-		parameters.genre = data.name;
+		filter = '[genre:' + data.name + ']';
 	}
-	parameters.limit = 0;
-	parameters.type = 'song';
+	filter += ' [limit:0] [type:song]';
 	
 	clear_tabs();
 	hide_all();
 	$('#tab_search').addClass('selected');
+	$('#search_filter').val(filter);
 	$('#search').removeClass('hide');
-	do_search(parameters);
+	$('#do_search').click();
 }
 
 
