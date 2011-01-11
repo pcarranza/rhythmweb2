@@ -83,6 +83,7 @@ img {
 	font-style: italic;
 	color: #f80; 
 }
+
 .track_actions {
 	width: 8%;
 	display: table-cell;
@@ -124,6 +125,10 @@ img {
 	width: 15%;
 	display: table-cell;
 	vertical-align: middle;
+}
+.track_artist:hover, .track_album:hover, .track_genre:hover, .track_duration:hover, .track_title:hover {
+    font-weight: bold;
+    font-style: normal;
 }
 #clear_queue {
 	float: left;
