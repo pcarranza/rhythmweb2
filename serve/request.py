@@ -208,6 +208,8 @@ class RequestHandler(Loggable):
     
 class ResponseWrapper(Loggable):
     
+    __headers = None
+    __status = None
     
     def __init__(self, environment, response, compression_level=8):
         self.__response = response
@@ -227,17 +229,35 @@ class ResponseWrapper(Loggable):
             self.debug('Client accepts gzip encoding, appendig to headers')
             headers.append(("Content-Encoding", "gzip"))
             headers.append(("Vary", "Accept-Encoding"))
-        
-        self.__response(status, headers)
+            
+        self.__headers = headers
+        self.__status = status
     
     
     def wrap(self, return_value):
+        if self.__status is None:
+            raise ServerException(500, 'No response status was setted')
+        
+        if self.__headers is None:
+            raise ServerException(500, 'No response headers were setted')
+        
         if self.__accept_gzip:
             self.debug('GZipping response')        
-            return self.gzip_string(return_value, self.__compression_level)
+            value = self.gzip_string(return_value, self.__compression_level)
+        else:
+            self.debug('Plain response, no gzipping requested')
+            value = return_value
+            
+        length = len(value)
+        self.__headers.append(('Content-Length', str(length)))
         
-        self.debug('Plain response, no gzipping requested')        
-        return return_value
+        self.debug('Responding with code %s' % self.__status)
+        for header in self.__headers:
+            self.debug('   - %s : %s' % tuple(header))
+        
+        self.__response(self.__status, self.__headers)
+        return value
+                
         
 
     def is_accept_gzip(self):
