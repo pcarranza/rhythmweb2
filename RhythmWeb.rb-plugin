@@ -1,6 +1,6 @@
 [RB Plugin]
 Loader=python
-Module=RhythmWeb
+Module=rhythmweb
 IAge=1
 Name=RhythmWeb
 Description=Rhythmbox Web Page controller
