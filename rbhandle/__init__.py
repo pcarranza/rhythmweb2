@@ -849,7 +849,9 @@ class RBHandler(Loggable):
         '''
         playlists = []
         for sourcelist in self.__shell.props.sourcelist_model:
-            if sourcelist[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY] == rb.SOURCE_GROUP_CATEGORY_PERSISTENT:
+            category = sourcelist[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
+            if category == rb.SOURCE_GROUP_CATEGORY_PERSISTENT or \
+                    category == rb.SOURCE_GROUP_CATEGORY_REMOVABLE:
                 for playlist in sourcelist.iterchildren():
                     playlists.append(playlist)
         return playlists

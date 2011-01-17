@@ -517,8 +517,10 @@ function load_playlists() {
 
 function add_playlist(container, playlist) {
 	row = '<div class="pl_row">' +
-			'<div id="playlist_' + playlist.id + '" class="pl_name" title="Enqueue playlist"><img id="do_playlist_' + playlist.id + '" src="img/apply.png" width="24" height="24" alt="Enqueue playlist" title="Enqueue playlist"/>' +
-			'[' + playlist.name + ']</div>' +
+			'<div id="playlist_' + playlist.id + '" class="pl_name" title="Enqueue playlist">' + 
+				'<img id="do_playlist_' + playlist.id + '" src="img/apply.png" width="24" height="24" alt="Enqueue playlist" title="Enqueue playlist"/>' + 
+			'</div>' +
+			'<div id="pl_playlist_name_' + playlist.id + '" class="link pl_name" title="Show entries">[' + playlist.name + ']</div>' +
 			'<div id="pl_entries_' + playlist.id + '" class="pl_entries">' + 
 				'<img id="pl_load_' + playlist.id + '" src="img/add.png" class="link pl_load" width="24" height="24" alt="Show" title="Show entries">' + 
 			'</div>' +
@@ -529,21 +531,26 @@ function add_playlist(container, playlist) {
 			info('<i>Playlist [' + playlist.name + '] added to play queue</i>');
 		});
 	});
-	$('#pl_load_' + playlist.id).click(function () {
-		var url = 'rest/playlists/' + playlist.id;
-		var entries_id = 'pl_entries_' + playlist.id;
-		$('#' + entries_id).html(
-				'<img id="img_searching" src="img/loading.gif" width="16" height="16" alt="Fetching playlist..." title="Fetching playlist..." />');
-		$.getJSON(url, function(json) {
-			var header_actions = 'playlist_' + playlist.id + '_header_actions';
-			$('#' + entries_id).html('');
-			$('#' + entries_id).append(create_header(header_actions));
-			$.each(json.entries, function(index, entry) {
-				add_search_entry(index, entry, entries_id, true);
-			});
-			
+	$('#pl_load_' + playlist.id).bind('click', { id : playlist.id  }, load_playlist);
+	$('#pl_playlist_name_' + playlist.id).bind('click', { id : playlist.id  }, load_playlist);
+}
+
+function load_playlist(event) {
+	var playlist = event.data;
+	var url = 'rest/playlists/' + playlist.id;
+	var entries_id = 'pl_entries_' + playlist.id;
+	$('#' + entries_id).html(
+			'<img id="img_searching" src="img/loading.gif" width="16" height="16" alt="Fetching playlist..." title="Fetching playlist..." />');
+	$.getJSON(url, function(json) {
+		var header_actions = 'playlist_' + playlist.id + '_header_actions';
+		$('#' + entries_id).html('');
+		$('#' + entries_id).append(create_header(header_actions));
+		$.each(json.entries, function(index, entry) {
+			add_search_entry(index, entry, entries_id, true);
 		});
+		
 	});
+	
 }
 
 function add_playlist_entries(playlist) {
