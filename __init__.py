@@ -63,11 +63,12 @@ class RhythmWeb(rb.Plugin, Loggable):
         
         server = CGIServer(request_handler, config=config, RB=rbhandler)
         server.start()
-        self.server = server
+        shell.server = server
+        
         
         
     def deactivate(self, shell):
-        if not self.server is None:
-            self.server.stop()
+        if not shell.server is None:
+            shell.server.stop()
 
 

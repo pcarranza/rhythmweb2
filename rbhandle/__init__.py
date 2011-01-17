@@ -122,19 +122,28 @@ class RBHandler(Loggable):
                            self.__CACHE_MAX_GENRE : None
                            }
         
+        self.__db_cache_loaded = False
         self.__db.connect('entry-added', self.__append_entry_to_cache)
-        
         self.__playing_song = None
         self.__player.connect('playing-song-changed', self.__playing_song_changed)
         
         
-
+    def __assert_cache(self):
+        if not self.__db_cache_loaded:
+            self.warning("Forcing cache load")
+            self.__db.entry_foreach(self.__force_entry_load_into_cache)
+            
+            
+    def __force_entry_load_into_cache(self, entry):
+        self.__append_entry_to_cache(self.__db, entry)
+        
         
     def get_biggest_artist(self):
         '''
         Gets the artist that has more songs registered in the DB
         @return: a (name, value) tuple
         '''
+        self.__assert_cache()
         max_artist = self.__db_cache[self.__CACHE_MAX_ARTIST]
         return (max_artist, self.__db_cache[self.__CACHE_ARTISTS][max_artist]) 
 
@@ -144,6 +153,7 @@ class RBHandler(Loggable):
         Gets the album that has more songs registered in the DB
         @return: a (name, value) tuple
         '''
+        self.__assert_cache()
         max_album = self.__db_cache[self.__CACHE_MAX_ALBUM]
         return (max_album, self.__db_cache[self.__CACHE_ALBUMS][max_album])
     
@@ -153,6 +163,7 @@ class RBHandler(Loggable):
         Gets the genre that has more songs registered in the DB
         @return: a (name, value) tuple
         '''
+        self.__assert_cache()
         max_genre = self.__db_cache[self.__CACHE_MAX_GENRE]
         return (max_genre, self.__db_cache[self.__CACHE_GENRES][max_genre])
         
@@ -161,6 +172,7 @@ class RBHandler(Loggable):
         '''
         Gets the artists cached dictionary
         '''
+        self.__assert_cache()
         return self.__db_cache[self.__CACHE_ARTISTS]
     
     
@@ -168,6 +180,7 @@ class RBHandler(Loggable):
         '''
         Gets the albums cached dictionary
         '''
+        self.__assert_cache()
         return self.__db_cache[self.__CACHE_ALBUMS]
     
     
@@ -175,6 +188,7 @@ class RBHandler(Loggable):
         '''
         Gets the genres cached dictionary
         '''
+        self.__assert_cache()
         return self.__db_cache[self.__CACHE_GENRES]
     
         
@@ -643,12 +657,14 @@ class RBHandler(Loggable):
                                    query_model=playlist.source.props.query_model, \
                                    limit=limit)
         return entries
-
-
+    
+    
     def __append_entry_to_cache(self, db, entry):
         '''
         Appends the given entry to the rbhandler cache 
         '''
+        self.__db_cache_loaded = True
+        
         entry_id = db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
         location = db.entry_get(entry, rhythmdb.PROP_LOCATION)
         
