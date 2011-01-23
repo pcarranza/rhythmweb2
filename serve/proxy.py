@@ -32,7 +32,7 @@ ERRORS = {
 class BufferProxyServer(TCPServer, Loggable):
     
     def __init__(self, proxy_host, proxy_port, target_host, target_port):
-        TCPServer.__init__(self, (proxy_host, proxy_port), SocketServer.StreamRequestHandler, True)
+        TCPServer.__init__(self, (proxy_host, proxy_port), SocketServer.StreamRequestHandler)
         self.target_address = (target_host, target_port)
         self.server_thread = None
         self.daemon_threads = False
