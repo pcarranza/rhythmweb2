@@ -29,12 +29,12 @@ import rbhandle
 from rbhandle import RBHandler
 
 from serve import CGIServer
-from serve.request import RequestHandler
 from serve.conf import Configuration
 from serve.log.loggable import Loggable
 
 import serve.log
 import logging
+from serve.app import CGIApplication
 
 class RhythmWeb(rb.Plugin, Loggable):
     
@@ -55,11 +55,13 @@ class RhythmWeb(rb.Plugin, Loggable):
     def activate(self, shell):
         config = self.config
         config.printConfiguration(self)
-
-        request_handler = RequestHandler(self.base_path)
         rbhandler = RBHandler(shell)
         
-        server = CGIServer(request_handler, config=config, RB=rbhandler)
+        components = {'config' : config, 'RB' : rbhandler}
+        
+        application = CGIApplication('RhythmWeb', self.base_path, components)
+        
+        server = CGIServer(application, config)
         server.start()
         shell.server = server
         

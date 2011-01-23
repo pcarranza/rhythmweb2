@@ -29,28 +29,17 @@ class CGIServer(Loggable):
     __hostname = None
     __port = None
     __httpd = None
-    __request_handler = None
+    __application = None
+    __config = None
     __running = False
     
-    __components = None
-    
-    def __init__(self, request_handler, **components):
+    def __init__(self, application, config):
         
-        config = None
-        
-        if components:
-            self.__components = {}
-        
-        for component in components:
-            if component == 'config':
-                config = components[component]
-            
-            self.__components[component] = components[component]
-            
         if config is None:
             raise Exception('Required component \'config\' not found in components')
         
-        self.__request_handler = request_handler
+        self.__config = config
+        self.__application = application
         self.__hostname = config.getString('hostname', False, 'localhost')
         self.__port = config.getInt('port', False, 7000)
         
@@ -63,7 +52,7 @@ class CGIServer(Loggable):
         if self.__httpd is None:
             self.__httpd = make_server(self.__hostname, 
                               self.__port, 
-                              self.__handle,
+                              self.__application.handle_request,
                               handler_class=LoggingWSGIRequestHandler)
         self._watch_cb_id = gobject.io_add_watch(self.__httpd.socket,
                                                  gobject.IO_IN,
@@ -90,74 +79,26 @@ class CGIServer(Loggable):
         return True
     
     
-    def __handle(self, environ, response):
-        
-        method = environ['REQUEST_METHOD']
-        
-        self.trace('Handling method %s' % method)
-        try:
-            if method == 'GET':
-                return self.__do_get(environ, response)
-            
-            elif method == 'POST':
-                params = self.parse_post(environ)
-                
-                if params is None:
-                    self.debug('No parameters in POST method')
-                    
-                for p in params:
-                    self.debug('POST %s = %s' % (p, str(params[p])))
-                    
-                return self.__do_post(environ, params, response)
-            
-            return self.__request_handler.send_error(
-                 500, 
-                 '%s Not implemented' % method, 
-                 response)
-            
-        except Exception, e:
-            return self.__request_handler.send_error(
-                 500, 
-                 '%s Unknown exception' % e, 
-                 response)
-            
-            
-    def __do_get(self, environ, response):
-        return self.__request_handler.do_get(environ, response, self.__components)
-        
-        
-    def __do_post(self, environ, params, response):
-        return self.__request_handler.do_post(environ, params, response, self.__components)
-            
-            
-    def parse_post(self, environ):
-        self.debug('Parsing post parameters')
-        
-        if 'CONTENT_TYPE' in environ:
-            length = -1
-            if 'CONTENT_LENGTH' in environ:
-                length = int(environ['CONTENT_LENGTH'])
-                
-            if environ['CONTENT_TYPE'] == 'application/x-www-form-urlencoded':
-                return cgi.parse_qs(environ['wsgi.input'].read(length))
-            
-            if environ['CONTENT_TYPE'] == 'multipart/form-data':
-                return cgi.parse_multipart(environ['wsgi.input'].read(length))
-            
-            else:
-                return cgi.parse_qs(environ['wsgi.input'].read(length))
-            
-        return None
     
     
     
 class LoggingWSGIRequestHandler(WSGIRequestHandler, Loggable):
     '''
-    Logger request handler wrapper
+    Request handler, ends up invoking app method
     '''
+    
+    def get_environ(self):
+        '''
+        Just in case I need to add something...
+        '''
+        return WSGIRequestHandler.get_environ(self)
+    
     
     def log_message(self, format, *args):
         self.info('%s - [%s] %s' %
                          (self.address_string(),
                           self.log_date_time_string(),
                           format % args))
+    
+    def get_logname(self):
+        return 'REQUEST'

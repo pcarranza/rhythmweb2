@@ -29,4 +29,4 @@ class Page(RBRest):
 
 
     def get_logname(self):
-        return 'Rest_queue'
+        return 'QUEUE'

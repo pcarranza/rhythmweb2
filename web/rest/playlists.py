@@ -42,7 +42,7 @@ class Page(RBRest):
 
             playlist_id = int(playlist_id)
             
-            self.debug('Loading playlist with id %d' % playlist_id)
+            self.trace('Loading playlist with id %d' % playlist_id)
             
             playlist = handler.get_playlist(playlist_id)
             if playlist is None:
@@ -74,4 +74,4 @@ class Page(RBRest):
 
 
     def get_logname(self):
-        return 'Rest_playlists'
+        return 'PLAYLISTS'

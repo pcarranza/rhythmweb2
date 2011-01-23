@@ -30,7 +30,8 @@ LOG_LEVEL = {
 
 
 class LoggerFactory:
-
+    
+    
     def __init__(self):
         self._loggers = {}
         
@@ -76,9 +77,10 @@ class LoggerFactory:
         log = logging.getLogger(name)
         log.setLevel(logging.root.level)
 
-        logging.debug('Created logger %s with level %s' % (
-                   name,
-                   logging.getLevelName(log.level)))
+        logging.log(LEVEL_TRACE, 
+                    'Created logger %s with level %s' % (
+                    name,
+                    logging.getLevelName(log.level)))
         
         self._loggers[name] = log
 

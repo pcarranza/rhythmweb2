@@ -42,7 +42,7 @@ class Page(RBRest):
             except:
                 raise ServerException(400, 'Bad Request: rating must be a number')
             
-            self.debug('Setting Rating %s for song "%s"' % (rating, song_id))
+            self.info('Setting Rating %s for song "%s"' % (rating, song_id))
             self.get_rb_handler().set_rating(song_id, rating)
         
         return self.get()
@@ -53,7 +53,7 @@ class Page(RBRest):
     
     
     def get_song_id(self):
-        self.debug('Getting song id from path parameters')
+        self.trace('Getting song id from path parameters')
         
         if not self.has_path_parameters():
             return None
@@ -61,7 +61,7 @@ class Page(RBRest):
         if self.get_path_parameters_size() != 1:
             raise ServerException(400, 'Bad Request: no song id in path')
         
-        self.debug('Reading path parameters index 0')
+        self.trace('Reading path parameters index 0')
         song_id = self.get_path_parameter(0)
         
         try:
@@ -73,6 +73,6 @@ class Page(RBRest):
     
     
     def get_logname(self):
-        return 'Rest_song'
+        return 'SONG'
 
 

@@ -165,7 +165,7 @@ class BaseRest(Loggable):
     
     
     def get_component(self, key):
-        self.debug('Obtaining component %s' % key)
+        self.trace('Obtaining component %s' % key)
         
         if not self.__components:
             raise Exception('No components are loaded')
@@ -251,11 +251,11 @@ class BaseRest(Loggable):
     
     def get_path_parameter(self, index):
         if not self.__path_params:
-            self.debug('No path param with index %d (empty path params)' % index)
+            self.warn('No path param with index %d (empty path params)' % index)
             return None
         
         if self.get_path_parameters_size() < index + 1:
-            self.debug('No path param with index %d' % index)
+            self.warn('No path param with index %d' % index)
             return None
         
         try:

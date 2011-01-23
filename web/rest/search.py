@@ -56,12 +56,12 @@ class Page(RBRest):
         
         
     def post(self):
-        self.debug('POST search')
+        self.trace('POST search')
         return self.get()
         
         
     def get_filter(self):
-        self.debug('get_filter')
+        self.trace('get_filter')
         filter = {}
 
         if self.has_path_parameters():
@@ -128,10 +128,10 @@ class Page(RBRest):
     
     def __unpack_type(self, type):
         if self.TYPES.has_key(type):
-            self.debug('Returning type for "%s"' % type)
+            self.trace('Returning type for "%s"' % type)
             return self.TYPES[type]
         
-        self.debug('No type for "%s"' % type)
+        self.trace('No type for "%s"' % type)
         return None
     
     
@@ -156,4 +156,4 @@ class Page(RBRest):
     
     
     def get_logname(self):
-        return 'Rest_search'
+        return 'SEARCH'

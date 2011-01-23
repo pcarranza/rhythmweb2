@@ -27,7 +27,7 @@ class Page(RBRest):
         action = self.get_parameter('action', True)
         handler = self.get_rb_handler()
         
-        self.debug('POST action %s' % action)
+        self.info('POST action %s' % action)
         
         if action == 'play_pause':
             handler.play_pause()
@@ -100,4 +100,4 @@ class Page(RBRest):
     
     
     def get_logname(self):
-        return 'Rest_player'
+        return 'PLAYER'

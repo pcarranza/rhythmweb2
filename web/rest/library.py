@@ -74,4 +74,4 @@ class Page(RBRest):
 
 
     def get_logname(self):
-        return 'Rest_library'
+        return 'LIBRARY'

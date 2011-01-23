@@ -26,12 +26,12 @@ class RBRest(BaseRest, Loggable):
     
     
     def get_song_as_json(self, entry_id):
-        self.debug('Obtaining entry_id %s as json object' % entry_id)
+        self.trace('Obtaining entry_id %s as json object' % entry_id)
         return Song.get_song_as_JSon(self.get_rb_handler(), entry_id)
     
     
     def get_songs_as_json_list(self, entries):
-        self.debug('Loading entries list as json list')
+        self.trace('Loading entries list as json list')
         entries_list = []
         for entry_id in entries:
             if type(entry_id) is int:
@@ -44,17 +44,17 @@ class RBRest(BaseRest, Loggable):
     
     
     def get_playlist_as_json(self, playlist, entries = None):
-        self.debug('Loading playlist as json object')
+        self.trace('Loading playlist as json object')
         return Playlist.get_playlist_as_JSon(playlist, entries)
     
     
     def get_status_as_json(self):
-        self.debug('Loading status as json object')
+        self.trace('Loading status as json object')
         return Status.get_status_as_JSon(self.get_rb_handler())    
     
     
     def get_library_as_json_list(self, library):
-        self.debug('Converting library dictionary to json list')
+        self.trace('Converting library dictionary to json list')
         libraries = []
         
         for key in library:
