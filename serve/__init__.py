@@ -23,6 +23,7 @@ from wsgiref.simple_server import make_server
 from serve.log.loggable import Loggable
 
 
+
 class CGIServer(Loggable):
     
     __hostname = None

@@ -17,29 +17,49 @@
 import logging
 import serve.log
 
-class Loggable(object):
+LOG_LEVEL = {
+             'DEBUG'    : logging.DEBUG,
+             'INFO'     : logging.INFO,
+             'WARNING'  : logging.WARNING,
+             'ERROR'    : logging.ERROR,
+             'CRITICAL' : logging.CRITICAL
+             }
 
+class Loggable(object):
+    
+    factory = None
+    
+    def get_logger_factory(self):
+        if Loggable.factory is None:
+            Loggable.factory = serve.log.get_factory()
+            
+        return Loggable.factory
+    
+    
     def info(self, message):
         self._print(message, logging.INFO)
-
+    
+    
     def debug(self, message):
         self._print(message, logging.DEBUG)
     
+    
     def error(self, message):
         self._print(message, logging.ERROR)
+        
 
     def critical(self, message):
         self._print(message, logging.CRITICAL)
+        
 
     def warning(self, message):
         self._print(message, logging.WARNING)
+        
     
     def _print(self, message, level):
-        logname = self.get_logname()
-        log = serve.log.get_logger(logname)
+        log = self.get_logger_factory().getLogger(self.get_logname())
         log.log(level, message)
         
-        # sys.stderr.write('STDERR - %s\n' % message)
-    
+        
     def get_logname(self):
         return self.__class__.__name__
