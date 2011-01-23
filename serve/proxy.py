@@ -37,6 +37,12 @@ class BufferProxyServer(TCPServer, Loggable):
         self.server_thread = None
         self.daemon_threads = False
         self.default_buffer_size = 1024
+
+        if self.socket.getsockname() is None:        
+            self.socket.bind(self.server_address)
+            self.server_address = self.socket.getsockname()
+        
+        self.server_activate()
     
     
     def start(self):
