@@ -46,7 +46,6 @@ class RhythmWeb(rb.Plugin, Loggable):
         config_path = os.path.join(base_path, 'cfg', 'rb-serve.conf')
         config = Configuration()
         config.load_configuration(config_path)
-        
         serve.log.get_factory().configure(config)
         
         self.base_path = base_path
@@ -55,8 +54,7 @@ class RhythmWeb(rb.Plugin, Loggable):
             
     def activate(self, shell):
         config = self.config
-        if config.getBoolean('debug'):
-            config.printConfiguration(self)
+        config.printConfiguration(self)
 
         request_handler = RequestHandler(self.base_path)
         rbhandler = RBHandler(shell)

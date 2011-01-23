@@ -56,9 +56,9 @@ class CGIServer(Loggable):
         
     
     def start(self):
-        self.debug('STARTING SERVER')
-        self.debug('HOSTNAME   %s' % self.__hostname)
-        self.debug('PORT       %d' % self.__port)
+        self.info('   STARTING SERVER')
+        self.info('   HOSTNAME   %s' % self.__hostname)
+        self.info('   PORT       %d' % self.__port)
 
         if self.__httpd is None:
             self.__httpd = make_server(self.__hostname, 
@@ -69,18 +69,18 @@ class CGIServer(Loggable):
                                                  gobject.IO_IN,
                                                  self.__idle_cb)
         self.__running = True
-        self.debug('SERVER STARTED')
+        self.info('   SERVER STARTED')
         
 
     def stop(self):
-        self.debug('STOPPING SERVER')
+        self.info('   STOPPING SERVER')
         gobject.source_remove(self._watch_cb_id)
         if self.__httpd is None:
             return
         
         self.__httpd = None
         self.__running = False
-        self.debug('SERVER STOPPED')
+        self.info('   SERVER STOPPED')
     
     
     def __idle_cb(self, source, cb_condition):
@@ -94,10 +94,7 @@ class CGIServer(Loggable):
         
         method = environ['REQUEST_METHOD']
         
-        for component in self.__components:
-            self.debug('%s = %s' % (component, self.__components[component]))
-        
-        self.debug('Handling method %s' % method)
+        self.trace('Handling method %s' % method)
         try:
             if method == 'GET':
                 return self.__do_get(environ, response)

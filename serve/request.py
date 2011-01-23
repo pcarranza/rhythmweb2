@@ -29,13 +29,13 @@ class RequestHandler(Loggable):
 
     
     def __init__(self, path):
-        self.info('Request Handler started')
+        self.debug('Request Handler started')
         self.__resource_path = os.path.join(path, 'resources')
         self.__web_path = os.path.join(path, 'web')
         
     
     def do_get(self, environ, response, components={}):
-        self.info('Invoking get method')
+        self.debug('Invoking get method')
         self.__components = components
         
         wrapper = ResponseWrapper(environ, response)
@@ -44,11 +44,11 @@ class RequestHandler(Loggable):
     
     
     def do_post(self, environ, params, response, components={}):
-        self.info('Invoking post method')
+        self.debug('Invoking post method')
         self.debug('POST parameters:')
         if params:
             for param in params:
-                self.debug("%s = %s" % (param, params[param]))
+                self.debug("   %s = %s" % (param, params[param]))
         
         self.__components = components
         
@@ -71,7 +71,7 @@ class RequestHandler(Loggable):
         if not request_path.startswith('/'):
             request_path = '/' + request_path
             
-        self.info('%s method - %s' % (request_method.upper(), request_path))
+        self.debug('%s method - %s' % (request_method.upper(), request_path))
  
         resource_path = self.__resource_path
         web_path = self.__web_path
@@ -253,7 +253,7 @@ class ResponseWrapper(Loggable):
         
         self.debug('Responding with code %s' % self.__status)
         for header in self.__headers:
-            self.debug('   - %s : %s' % tuple(header))
+            self.debug('   %s : %s' % tuple(header))
         
         self.__response(self.__status, self.__headers)
         return value

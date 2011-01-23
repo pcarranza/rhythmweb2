@@ -22,7 +22,8 @@ class Configuration:
     
     def __init__(self):
         self._params = {}
-        self.debug('New configuration instance')
+        self.__config_log = []
+        self.__config_log.append(' - New configuration instance')
         
         
     def debug(self, message):
@@ -55,17 +56,17 @@ class Configuration:
     def _readConfigurationLine(self, line):
         (key, value) = line.split('=')
         if not key:
-            self.debug('Line \"%s\" has no key' % line)
+            self.__config_log.append('Line \"%s\" has no key' % line)
             raise InvalidConfigurationLineException(line)
         key = str(key).strip()
         
         if not value:
-            self.debug('Key \"%s\" has no value' % key)
+            self.__config_log.append('Key \"%s\" has no value' % key)
             value = ''
             
         value = str(value).strip()
         
-        self.debug('Setting value \"%s\" for key \"%s\"' % (value, key))
+        self.__config_log.append('Setting value \"%s\" for key \"%s\"' % (value, key))
         self._params[key] = value
         
         
@@ -104,6 +105,11 @@ class Configuration:
     
     
     def printConfiguration(self, logger):
+        if self.getBoolean('debug', False, False):
+            logger.info('Configuration process:')
+            for line in self.__config_log:
+                logger.info(line)
+            
         logger.info('--------------------------')
         logger.info('Showing app configuration:')
         logger.info('--------------------------')

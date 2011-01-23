@@ -16,14 +16,8 @@
 
 import logging
 import serve.log
+from serve.log import LEVEL_TRACE
 
-LOG_LEVEL = {
-             'DEBUG'    : logging.DEBUG,
-             'INFO'     : logging.INFO,
-             'WARNING'  : logging.WARNING,
-             'ERROR'    : logging.ERROR,
-             'CRITICAL' : logging.CRITICAL
-             }
 
 class Loggable(object):
     
@@ -38,6 +32,10 @@ class Loggable(object):
     
     def info(self, message):
         self._print(message, logging.INFO)
+
+
+    def trace(self, message):
+        self._print(message, LEVEL_TRACE)
     
     
     def debug(self, message):

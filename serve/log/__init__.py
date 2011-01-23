@@ -16,6 +16,18 @@
 
 import logging
 
+LEVEL_TRACE = 5
+
+LOG_LEVEL = {
+             'TRACE'    : LEVEL_TRACE,
+             'DEBUG'    : logging.DEBUG,
+             'INFO'     : logging.INFO,
+             'WARNING'  : logging.WARNING,
+             'ERROR'    : logging.ERROR,
+             'CRITICAL' : logging.CRITICAL
+             }
+
+
 
 class LoggerFactory:
 
@@ -29,12 +41,22 @@ class LoggerFactory:
         logfilename = config.getString('log.file', 
                                          False, 
                                          'web.log')
-        default_log_level = config.getInt('log.level', \
+        str_default_log_level = config.getString('log.level', \
                                         False, \
-                                        logging.INFO)
+                                        'INFO')
         log_format = config.getString('log.format', \
                                       False, \
                                       logging.BASIC_FORMAT)
+        
+        if str(str_default_log_level).isdigit():
+            default_log_level = int(str_default_log_level)
+        else:
+            str_default_log_level = str_default_log_level.strip()
+            if not LOG_LEVEL.has_key(str_default_log_level):
+                raise Exception('Log level %s is not valid' % str_default_log_level)
+            
+            default_log_level = LOG_LEVEL[str_default_log_level]
+             
         
         logging.basicConfig(filename=logfilename, \
                             level=default_log_level, \

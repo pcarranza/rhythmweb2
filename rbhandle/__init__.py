@@ -67,13 +67,13 @@ class RBHandler(Loggable):
         by parameter
         '''
         
-        self.debug('Creating new RBHandler object')
+        self.trace('Creating new RBHandler object')
         
         if shell is None:
             self.error('Setting shell object to None')
             raise Exception('Shell object cannot be null')
         else:
-            self.debug('Setting shell object')
+            self.trace('Setting shell object')
         
         self.__shell = shell
         self.__db = shell.props.db
@@ -395,7 +395,7 @@ class RBHandler(Loggable):
         '''
         Performs a query with the provided filters 
         '''
-        self.debug('RBHandler.query...')
+        self.trace('RBHandler.query...')
         if filters is None or not filters:
             self.info('No filters, returning empty result')
             return []
@@ -436,7 +436,7 @@ class RBHandler(Loggable):
                 mtype = filters['type']
                 self.debug('Appending query for type \"%s\"' % mtype)
                 if not self.__media_types.has_key(mtype):
-                    self.debug('Media \"%s\" not found' % mtype)
+                    self.error('Media \"%s\" not found' % mtype)
                     raise InvalidQueryException('Unknown media type \"%s\"' % mtype)
                 else:
                     self.debug('Type %s added to query' % mtype)
@@ -555,14 +555,14 @@ class RBHandler(Loggable):
                 if entry is None:
                     continue
                 location = str(entry.location)
-                self.debug('Dequeuing entry %s' % location)
+                self.trace('Dequeuing entry %s' % location)
                 self.__shell.remove_from_queue(location)
         elif type(entry_ids) is int:
             self.info('Removing entry %d from queue' % entry_ids)
             entry = self.load_entry(entry_ids)
             if not entry is None:
                 location = str(entry.location)
-                self.debug('Dequeuing entry %s' % location)
+                self.trace('Dequeuing entry %s' % location)
                 self.__shell.remove_from_queue(location)
                 
         self.__shell.props.queue_source.queue_draw()
@@ -582,7 +582,7 @@ class RBHandler(Loggable):
         self.debug('Loading entry %s' % str(entry_id))
         entry = self.__get_entry(entry_id)
         if entry is None:
-            self.debug('Entry %s not found' % str(entry_id))
+            self.info('Entry %s not found' % str(entry_id))
             return None
         
         return RBEntry(self.__db, entry)
@@ -672,7 +672,7 @@ class RBHandler(Loggable):
             fpath = urllib.url2pathname(location)
             fpath = str(fpath).replace('file://', '')
             if not os.path.exists(fpath):
-                self.debug('Skipping missing file %s' % fpath)
+                self.trace('Skipping missing file %s' % fpath)
                 return
 
         artist = db.entry_get(entry, rhythmdb.PROP_ARTIST)
@@ -681,15 +681,15 @@ class RBHandler(Loggable):
         play_count = db.entry_get(entry, rhythmdb.PROP_PLAY_COUNT)
         
         if not artist:
-            self.debug('Empty artist for entry %d %s, skipping' % (entry_id, location))
+            self.trace('Empty artist for entry %d %s, skipping' % (entry_id, location))
             return
         
         if not album:
-            self.debug('Empty album for entry %d %s, skipping' % (entry_id, location))
+            self.trace('Empty album for entry %d %s, skipping' % (entry_id, location))
             return
         
         if not genre:
-            self.debug('Empty genre for entry %d %s, skipping' % (entry_id, location))
+            self.trace('Empty genre for entry %d %s, skipping' % (entry_id, location))
             return
 
         if not play_count:
@@ -701,7 +701,7 @@ class RBHandler(Loggable):
     
     
     def __append_artist(self, artist, play_count):
-        self.debug('Append playcount in %d to artist "%s"' % (play_count, artist))    
+        self.trace('Append playcount in %d to artist "%s"' % (play_count, artist))    
         artists_cache = self.__db_cache[self.__CACHE_ARTISTS]
         
         if artists_cache.has_key(artist):
@@ -716,7 +716,7 @@ class RBHandler(Loggable):
             
     
     def __append_album(self, album, play_count):
-        self.debug('Append playcount in %d to album "%s"' % (play_count, album))
+        self.trace('Append playcount in %d to album "%s"' % (play_count, album))
         albums_cache = self.__db_cache[self.__CACHE_ALBUMS]
         
         if albums_cache.has_key(album):
@@ -731,7 +731,7 @@ class RBHandler(Loggable):
 
 
     def __append_genre(self, genre, play_count):
-        self.debug('Append playcount in %d to genre "%s"' % (play_count, genre))
+        self.trace('Append playcount in %d to genre "%s"' % (play_count, genre))
         genres_cache = self.__db_cache[self.__CACHE_GENRES]
     
         if genres_cache.has_key(genre):
@@ -878,7 +878,7 @@ class RBHandler(Loggable):
         Loops a query model object and invokes the given function for every row, can also receive a first and a limit to "page" 
         '''
         
-        self.debug('Loop query_model...')
+        self.trace('Loop query_model...')
 
         if func is None:
             raise Exception('Func cannot be None')
@@ -892,11 +892,11 @@ class RBHandler(Loggable):
         index = 0
         count = 0
         for row in query_model:
-            self.debug('Reading Row...')
+            self.trace('Reading Row...')
 
             if index < first:
                 index += + 1
-                self.debug('Skipping row ')
+                self.trace('Skipping row ')
                 continue
             
             entry = self.__get_entry_id(row)
@@ -919,7 +919,7 @@ class RBHandler(Loggable):
         
         entry_id = int(entry_id)
         
-        self.debug('Getting entry %d' % entry_id)
+        self.trace('Getting entry %d' % entry_id)
         return self.__db.entry_lookup_by_id(entry_id)
     
     
