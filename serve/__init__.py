@@ -56,12 +56,14 @@ class CGIServer(Loggable):
         handle_request = self.__application.handle_request
                 
         hostname = config.getString('hostname', False, 'localhost')
+        
         port = config.getInt('port', False, 7001)
         self.info('   HOSTNAME   %s' % hostname)
         self.info('   PORT       %d' % port)
 
         use_proxy = config.getBoolean('proxy', False, True)
         proxy_port = config.getInt('proxy.port', False, 7000)
+        proxy_hostname = config.getString('proxy.hostname', False, 'localhost')
         
         if self.__internal_server is None:
             self.__internal_server = make_server(
@@ -79,10 +81,10 @@ class CGIServer(Loggable):
         
         if use_proxy and self.__proxy_server is None:
             self.info('   STARTING PROXY')
-            self.info('   HOSTNAME   %s' % hostname)
-            self.info('   PROXY_PORT %d' % proxy_port)
+            self.info('   PROXY_HOSTNAME %s' % proxy_hostname)
+            self.info('   PROXY_PORT     %d' % proxy_port)
             
-            self.__proxy_server = BufferProxyServer(hostname, proxy_port, port)
+            self.__proxy_server = BufferProxyServer(proxy_hostname, proxy_port, hostname, port)
             self.__proxy_server.start()
             
             self.info('   PROXY STARTED')
