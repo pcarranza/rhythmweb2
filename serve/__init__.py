@@ -101,4 +101,4 @@ class LoggingWSGIRequestHandler(WSGIRequestHandler, Loggable):
                           format % args))
     
     def get_logname(self):
-        return 'REQUEST'
+        return 'Request'
