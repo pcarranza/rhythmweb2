@@ -21,17 +21,23 @@ import cgi
 from wsgiref.simple_server import WSGIRequestHandler
 from wsgiref.simple_server import make_server
 from serve.log.loggable import Loggable
+from SocketServer import ThreadingTCPServer, TCPServer
 
+import SocketServer
+import socket
+import time
+import threading
+from serve.proxy import BufferProxyServer
 
 
 class CGIServer(Loggable):
     
-    __hostname = None
-    __port = None
-    __httpd = None
     __application = None
     __config = None
     __running = False
+
+    __internal_server = None
+    __proxy_server = None
     
     def __init__(self, application, config):
         
@@ -40,48 +46,72 @@ class CGIServer(Loggable):
         
         self.__config = config
         self.__application = application
-        self.__hostname = config.getString('hostname', False, 'localhost')
-        self.__port = config.getInt('port', False, 7000)
         
     
     def start(self):
         self.info('   STARTING SERVER')
-        self.info('   HOSTNAME   %s' % self.__hostname)
-        self.info('   PORT       %d' % self.__port)
 
-        if self.__httpd is None:
-            self.__httpd = make_server(self.__hostname, 
-                              self.__port, 
-                              self.__application.handle_request,
+        config = self.__config
+        
+        handle_request = self.__application.handle_request
+                
+        hostname = config.getString('hostname', False, 'localhost')
+        port = config.getInt('port', False, 7001)
+        self.info('   HOSTNAME   %s' % hostname)
+        self.info('   PORT       %d' % port)
+
+        use_proxy = config.getBoolean('proxy', False, True)
+        proxy_port = config.getInt('proxy.port', False, 7000)
+        
+        if self.__internal_server is None:
+            self.__internal_server = make_server(
+                              hostname, 
+                              port, 
+                              handle_request,
                               handler_class=LoggingWSGIRequestHandler)
-        self._watch_cb_id = gobject.io_add_watch(self.__httpd.socket,
+            
+        self.__watch_request_loop_id = gobject.io_add_watch(self.__internal_server.socket,
                                                  gobject.IO_IN,
-                                                 self.__idle_cb)
+                                                 self.__idle_request_loop)
+        
         self.__running = True
         self.info('   SERVER STARTED')
+        
+        if use_proxy and self.__proxy_server is None:
+            self.info('   STARTING PROXY')
+            self.info('   HOSTNAME   %s' % hostname)
+            self.info('   PROXY_PORT %d' % proxy_port)
+            
+            self.__proxy_server = BufferProxyServer(hostname, proxy_port, port)
+            self.__proxy_server.start()
+            
+            self.info('   PROXY STARTED')
+        
         
 
     def stop(self):
         self.info('   STOPPING SERVER')
-        gobject.source_remove(self._watch_cb_id)
-        if self.__httpd is None:
+        gobject.source_remove(self.__watch_request_loop_id)
+        if self.__internal_server is None:
             return
         
-        self.__httpd = None
+        if not self.__proxy_server is None:
+            self.info('   STOPPING PROXY SERVER')
+            self.__proxy_server.stop()
+        
+        self.__internal_server = None
+        self.__proxy_server = None
         self.__running = False
         self.info('   SERVER STOPPED')
     
     
-    def __idle_cb(self, source, cb_condition):
+    def __idle_request_loop(self, source, cb_condition):
         if not self.__running:
             return False
-        self.__httpd.handle_request()
+        self.__internal_server.handle_request()
         return True
     
-    
-    
-    
-    
+
 class LoggingWSGIRequestHandler(WSGIRequestHandler, Loggable):
     '''
     Request handler, ends up invoking app method
@@ -102,3 +132,14 @@ class LoggingWSGIRequestHandler(WSGIRequestHandler, Loggable):
     
     def get_logname(self):
         return 'Request'
+    
+
+
+
+    
+    
+    
+    
+        
+    
+    
