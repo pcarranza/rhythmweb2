@@ -20,6 +20,7 @@ import threading
 import socket
 import sys
 import time
+import select
 
 ERRORS = {
   400 : 'Bad request',
@@ -37,26 +38,46 @@ class BufferProxyServer(TCPServer, Loggable):
         self.server_thread = None
         self.daemon_threads = False
         self.default_buffer_size = 1024
+        self.__is_shut_down = threading.Event()
+        self.__shutdown_request = False
 
-        if self.socket.getsockname() is None:        
-            self.socket.bind(self.server_address)
-            self.server_address = self.socket.getsockname()
-        
-        self.server_activate()
+       
+
+    def serve_forever(self, poll_interval=0.5):
+        """Handle one request at a time until shutdown.
+        Polls for shutdown every poll_interval seconds. Ignores
+        self.timeout. If you need to do periodic tasks, do them in
+        another thread.
+        """
+        self.__is_shut_down.clear()
+        try:
+            while not self.__shutdown_request:
+                r, w, e = select.select([self], [], [], poll_interval)
+                if self in r:
+                    self._handle_request_noblock()
+        finally:
+            self.__shutdown_request = False
+            self.__is_shut_down.set()
+    
+    
+    def shutdown(self):                                                                        
+        self.__shutdown_request = True
+        self.__is_shut_down.wait()
     
     
     def start(self):
         if not self.server_thread:
-            self.debug('starting proxy server thread')
+            self.debug('STARTING PROXY SERVER THREAD')
             self.server_thread = threading.Thread(target=self.serve_forever)
             self.server_thread.start()
+            self.debug('PROXY SERVER THREAD STARTED')
         
         
     def stop(self):
         if self.server_thread:
-            self.debug('stopping proxy server thread...')
+            self.debug('STOPPING PROXY SERVER THREAD...')
             self.shutdown()
-            self.debug('proxy server thread stopped')
+            self.debug('PROXY SERVER THREAD STOPPED')
             
         self.server_thread = None
         
@@ -68,8 +89,14 @@ class BufferProxyServer(TCPServer, Loggable):
             return requestline[:-1]
         return requestline
 
+
+    def handle_request(self):
+        self.trace('HANDLING REQUEST')
+        return self._handle_request_noblock(self)
+        
         
     def _handle_request_noblock(self):
+        self.trace('HANDLING NON_BLOCKING REQUEST')
         
         try:
             request, client_address = self.socket.accept()

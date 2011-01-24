@@ -79,7 +79,7 @@ class CGIServer(Loggable):
         self.__running = True
         self.info('   SERVER STARTED')
         
-        if use_proxy and self.__proxy_server is None:
+        if use_proxy == True:
             self.info('   STARTING PROXY')
             self.info('   PROXY_HOSTNAME %s' % proxy_hostname)
             self.info('   PROXY_PORT     %d' % proxy_port)

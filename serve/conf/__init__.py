@@ -85,6 +85,11 @@ class Configuration:
         if value is None:
             return False
         
+        if type(value) is str:
+            if value.lower() == 'true':
+                return True
+            return False
+        
         return bool(value)
     
     
