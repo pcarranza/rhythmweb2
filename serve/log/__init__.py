@@ -39,13 +39,13 @@ class LoggerFactory:
     def configure(self, config):
         self._loggers.clear()
         
-        logfilename = config.getString('log.file', 
+        logfilename = config.get_string('log.file', 
                                          False, 
                                          'web.log')
-        str_default_log_level = config.getString('log.level', \
+        str_default_log_level = config.get_string('log.level', \
                                         False, \
                                         'INFO')
-        log_format = config.getString('log.format', \
+        log_format = config.get_string('log.format', \
                                       False, \
                                       logging.BASIC_FORMAT)
         
@@ -69,7 +69,7 @@ class LoggerFactory:
         logging.debug('ROOT LOGGER LEVEL: %s' % logging.getLevelName(logging.root.level))
         
 
-    def getLogger(self, name):
+    def get_logger(self, name):
         
         if self._loggers.has_key(name):
             return self._loggers[name]
@@ -95,4 +95,4 @@ def get_factory():
 
 
 def get_logger(name):
-    return get_factory().getLogger(name)
+    return get_factory().get_logger(name)

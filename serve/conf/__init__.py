@@ -50,10 +50,10 @@ class Configuration:
             if line.startswith('#'):
                 continue
             
-            self._readConfigurationLine(line)
+            self.__read_configuration_line(line)
         
         
-    def _readConfigurationLine(self, line):
+    def __read_configuration_line(self, line):
         (key, value) = line.split('=')
         if not key:
             self.__config_log.append('Line \"%s\" has no key' % line)
@@ -70,7 +70,7 @@ class Configuration:
         self._params[key] = value
         
         
-    def _getParameter(self, key, required, defaultValue):
+    def __get_parameter(self, key, required, defaultValue):
         if not self._params.has_key(key):
             if required:
                 raise RequiredParameterException(key)
@@ -80,8 +80,8 @@ class Configuration:
         return self._params[key]
     
         
-    def getBoolean(self, key, required=False, defaultValue=False):
-        value = self._getParameter(key, required, defaultValue)
+    def get_boolean(self, key, required=False, defaultValue=False):
+        value = self.__get_parameter(key, required, defaultValue)
         if value is None:
             return False
         
@@ -93,24 +93,24 @@ class Configuration:
         return bool(value)
     
     
-    def getString(self, key, required=False, defaultValue=''):
-        value = self._getParameter(key, required, defaultValue)
+    def get_string(self, key, required=False, defaultValue=''):
+        value = self.__get_parameter(key, required, defaultValue)
         if value is None:
             return ''
         
         return str(value)
     
     
-    def getInt(self, key, required=False, defaultValue=0):
-        value = self._getParameter(key, required, defaultValue)
+    def get_int(self, key, required=False, defaultValue=0):
+        value = self.__get_parameter(key, required, defaultValue)
         if value is None:
             return 0
         
         return int(value)
     
     
-    def printConfiguration(self, logger):
-        if self.getBoolean('debug', False, False):
+    def print_configuration(self, logger):
+        if self.get_boolean('debug', False, False):
             logger.info('Configuration process:')
             for line in self.__config_log:
                 logger.info(line)

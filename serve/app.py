@@ -29,11 +29,17 @@ class CGIApplication(Loggable):
     
     def __init__(self, app_name, path, components):
         self.debug('%s CGI Application started' % app_name)
-        self.__resource_path = os.path.join(path, 'resources')
+        
+        config = components['config']
         self.__web_path = os.path.join(path, 'web')
         self.__components = components
         self.__app_name = app_name
     
+        theme = config.get_string('theme', True, 'default')
+        resource_path = os.path.join(path, 'resources')
+        resource_path = os.path.join(resource_path, theme)
+        self.__resource_path = resource_path
+        
     
     def handle_request(self, environ, response):
         

@@ -54,7 +54,7 @@ class RhythmWeb(rb.Plugin, Loggable):
             
     def activate(self, shell):
         config = self.config
-        config.printConfiguration(self)
+        config.print_configuration(self)
         rbhandler = RBHandler(shell)
         
         components = {'config' : config, 'RB' : rbhandler}

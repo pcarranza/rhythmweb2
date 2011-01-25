@@ -31,31 +31,31 @@ class Loggable(object):
     
     
     def info(self, message):
-        self._print(message, logging.INFO)
+        self.__print(message, logging.INFO)
 
 
     def trace(self, message):
-        self._print(message, LEVEL_TRACE)
+        self.__print(message, LEVEL_TRACE)
     
     
     def debug(self, message):
-        self._print(message, logging.DEBUG)
+        self.__print(message, logging.DEBUG)
     
     
     def error(self, message):
-        self._print(message, logging.ERROR)
+        self.__print(message, logging.ERROR)
         
 
     def critical(self, message):
-        self._print(message, logging.CRITICAL)
+        self.__print(message, logging.CRITICAL)
         
 
     def warning(self, message):
-        self._print(message, logging.WARNING)
+        self.__print(message, logging.WARNING)
         
     
-    def _print(self, message, level):
-        log = self.get_logger_factory().getLogger(self.get_logname())
+    def __print(self, message, level):
+        log = self.get_logger_factory().get_logger(self.get_logname())
         log.log(level, message)
         
         

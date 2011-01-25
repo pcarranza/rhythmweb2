@@ -254,13 +254,13 @@ function update_status() {
 		} else {
 			muted = false;
 			$('#vol_status').attr('title', 'Volume: ' + (volume * 100) + '%')
-			if (volume >= 0.75) {
+			if (volume >= 0.81) {
 				// high
 				$('#vol_status').attr('src', 'img/volume-high.png');
-			} else if (volume >= 0.5) {
+			} else if (volume >= 0.51) {
 				// medium
 				$('#vol_status').attr('src', 'img/volume-medium.png');
-			} else if (volume >= 0.25) {
+			} else if (volume >= 0.11) {
 				// low
 				$('#vol_status').attr('src', 'img/volume-low.png');
 			} else {

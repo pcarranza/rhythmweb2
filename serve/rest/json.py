@@ -40,14 +40,14 @@ class JSon():
         
         attributes = self.attributes
         try:
-            return_value.append(self._parse_attributes(attributes))
+            return_value.append(self.__parse_attributes(attributes))
         except Exception, e:
             raise Exception('Could not parse json object', e)
         
         return ''.join(return_value)
     
         
-    def _parse_value(self, value):
+    def __parse_value(self, value):
         return_value = []
         
         if type(value) is list:
@@ -55,7 +55,7 @@ class JSon():
             
             return_value.append('[ ')
             for v in value:
-                list_value.append(self._parse_value(v))
+                list_value.append(self.__parse_value(v))
                 list_value.append(', ')
             
             if len(list_value) > 0:
@@ -65,11 +65,11 @@ class JSon():
             return_value.append(' ]')
             
         elif type(value) is dict:
-            return_value.append(self._parse_attributes(value))
+            return_value.append(self.__parse_attributes(value))
         
         elif type(value) is str:
             return_value.append("\"")
-            return_value.append(self._encode_str(value))
+            return_value.append(self.__encode_str(value))
             return_value.append("\" ")
         
         elif type(value) is bool:
@@ -82,20 +82,18 @@ class JSon():
             return_value.append(value.parse())
             
         else: # type(value) is int or type(value) is float:
-            return_value.append(self._encode_str(value))
+            return_value.append(self.__encode_str(value))
         
         return ''.join(return_value)    
     
     
-    def _encode_str(self, value):
+    def __encode_str(self, value):
         value = str(value)
         value = value.replace('"', '\\"')
-        #value = value.replace('&', '\\&')
-        #value = value.replace('\'', '\\\'')
         return value
     
     
-    def _parse_attributes(self, attributes):
+    def __parse_attributes(self, attributes):
         return_value = []
         
         return_value.append('{ ')
@@ -106,7 +104,7 @@ class JSon():
             return_value.append("\" : ")
             
             value = attributes[attr]
-            return_value.append(self._parse_value(value))
+            return_value.append(self.__parse_value(value))
             return_value.append(', ')
             
         if return_value[-1] == ', ':
