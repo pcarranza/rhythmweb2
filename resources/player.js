@@ -19,6 +19,7 @@
 var timers = [];
 var clear_status = null;
 var volume = null;
+var muted = null;
 
 $(document).ready(function() {
 	update_status();
@@ -119,10 +120,26 @@ $(document).ready(function() {
 	$('#vol_up').click(function() {
 		set_volume(0.1);
 	});
-
+	
+	$('#vol_status').click(function() {
+		toggle_mute();
+	});
 
 	$('#search_filter').focus();
 });
+
+
+function toggle_mute() {
+	if (muted) {
+		info('Unmuting...')
+	} else {
+		info('Muting...')
+	}
+	
+	$.post("rest/player", { action: "mute" }, function(data) {
+		update_status();
+	});
+}
 
 
 function set_volume(step) {
@@ -221,26 +238,35 @@ function update_status() {
 			$('#play').show();
 			$('#pause').hide();
 		}
-
+		
+		
 		if (json && json.volume) {
 			volume = json.volume;
+			volume = Math.round(volume*100)/100;
 		} else {
 			volume = 0;
 		}
-		
-		$('#vol_status').attr('title', 'Volume: ' + (volume * 100) + '%')
-		if (volume >= 0.75) {
-			// high
-			$('#vol_status').attr('src', 'img/volume-high.png');
-		} else if (volume >= 0.5) {
-			// medium
-			$('#vol_status').attr('src', 'img/volume-medium.png');
-		} else if (volume >= 0.25) {
-			// low
-			$('#vol_status').attr('src', 'img/volume-low.png');
-		} else {
-			// muted
+
+		if (json && json.muted) {
+			muted = true;
+			$('#vol_status').attr('title', 'Muted')
 			$('#vol_status').attr('src', 'img/volume-muted.png');
+		} else {
+			muted = false;
+			$('#vol_status').attr('title', 'Volume: ' + (volume * 100) + '%')
+			if (volume >= 0.75) {
+				// high
+				$('#vol_status').attr('src', 'img/volume-high.png');
+			} else if (volume >= 0.5) {
+				// medium
+				$('#vol_status').attr('src', 'img/volume-medium.png');
+			} else if (volume >= 0.25) {
+				// low
+				$('#vol_status').attr('src', 'img/volume-low.png');
+			} else {
+				// muted
+				$('#vol_status').attr('src', 'img/volume-muted.png');
+			}
 		}
 		
 		if (json && json.playing) {
