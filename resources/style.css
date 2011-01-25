@@ -63,6 +63,23 @@ img {
 	clear: right;
 	margin-right: 1em;
 }
+
+#volume {
+	float: right;
+	clear: right;
+	margin-right: 1em;
+	line-height: 2em;
+}
+
+#volume img {
+	vertical-align: middle;
+}
+
+#vol_status {
+	margin-left: 6px;
+	margin-right: 6px;
+}
+
 /* ****************************************************** END PLAYER */
 /* ****************************************************** QUEUE */
 #queue, #library, #tags, #playlists {
@@ -171,6 +188,7 @@ img {
 
 #status_feedback {
 	color: #f80;
+	float: left;
 }
 
 #tabs ul {

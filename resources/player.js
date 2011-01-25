@@ -18,6 +18,7 @@
 
 var timers = [];
 var clear_status = null;
+var volume = null;
 
 $(document).ready(function() {
 	update_status();
@@ -110,9 +111,42 @@ $(document).ready(function() {
 			  $('#do_search').click();
 		  }
 	});
+	
+	$('#vol_down').click(function() {
+		set_volume(-0.1);
+	});
+	
+	$('#vol_up').click(function() {
+		set_volume(0.1);
+	});
+
 
 	$('#search_filter').focus();
 });
+
+
+function set_volume(step) {
+	var new_volume;
+	
+	if (!volume)
+		new_volume = 0;
+	else
+		new_volume = volume;
+	
+	new_volume += step;
+	
+	if (new_volume < 0)
+		new_volume = 0;
+	else if (new_volume > 1)
+		new_volume = 1;
+	
+	new_volume = Math.round(new_volume*100)/100;
+	
+	$.post("rest/player", { action: "set_volume", "volume" : new_volume }, function(data) {
+		info('Volume ' + (new_volume * 100) + '%');
+		update_status();
+	});
+}
 
 
 function do_search(parameters) {
@@ -188,6 +222,27 @@ function update_status() {
 			$('#pause').hide();
 		}
 
+		if (json && json.volume) {
+			volume = json.volume;
+		} else {
+			volume = 0;
+		}
+		
+		$('#vol_status').attr('title', 'Volume: ' + (volume * 100) + '%')
+		if (volume >= 0.75) {
+			// high
+			$('#vol_status').attr('src', 'img/volume-high.png');
+		} else if (volume >= 0.5) {
+			// medium
+			$('#vol_status').attr('src', 'img/volume-medium.png');
+		} else if (volume >= 0.25) {
+			// low
+			$('#vol_status').attr('src', 'img/volume-low.png');
+		} else {
+			// muted
+			$('#vol_status').attr('src', 'img/volume-muted.png');
+		}
+		
 		if (json && json.playing) {
 			
 			var artist = '';
@@ -578,7 +633,7 @@ function cloud_search(event) {
 	} else {
 		filter = '[genre:' + data.name + ']';
 	}
-	filter += ' [limit:0] [type:song]';
+	filter += ' [limit:100] [type:song]';
 	
 	clear_tabs();
 	hide_all();
