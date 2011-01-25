@@ -35,7 +35,7 @@ class CGIApplication(Loggable):
         self.__components = components
         self.__app_name = app_name
     
-        theme = config.get_string('theme', True, 'default')
+        theme = config.get_string('theme', False, 'default')
         resource_path = os.path.join(path, 'resources')
         resource_path = os.path.join(resource_path, theme)
         self.__resource_path = resource_path
