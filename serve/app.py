@@ -18,6 +18,7 @@ from serve.log.loggable import Loggable
 import os
 import cgi
 from serve.request import ResponseWrapper, ResourceHandler, ServerException
+import re
 
 class CGIApplication(Loggable):
     
@@ -30,14 +31,11 @@ class CGIApplication(Loggable):
     def __init__(self, app_name, path, components):
         self.debug('%s CGI Application started' % app_name)
         
-        config = components['config']
         self.__web_path = os.path.join(path, 'web')
         self.__components = components
         self.__app_name = app_name
     
-        theme = config.get_string('theme', False, 'default')
         resource_path = os.path.join(path, 'resources')
-        resource_path = os.path.join(resource_path, theme)
         self.__resource_path = resource_path
         
     
@@ -116,8 +114,23 @@ class CGIApplication(Loggable):
         # wrapper = ResponseWrapper(environ, response)
         return self.handle_method('post', environ, response, params)
         # return wrapper.wrap(return_value)
-    
         
+    
+    def __get_resource_path(self, environ):
+        config = self.__components['config']
+        
+        theme_key = 'theme'
+        if environ.has_key('HTTP_USER_AGENT'):
+            agent = environ['HTTP_USER_AGENT']
+            if re.search('(Android|iPhone)', agent):
+                theme_key = 'theme.mobile'
+                
+        theme = config.get_string(theme_key, False, 'default')
+        resource_path = os.path.join(self.__resource_path, theme)
+        
+        return resource_path
+    
+    
     def handle_method(self, request_method, environ, response, params=None):
         
         self.trace('-------------------------------------')
@@ -136,7 +149,7 @@ class CGIApplication(Loggable):
             
         self.debug('%s method - path: %s' % (request_method.upper(), request_path))
  
-        resource_path = self.__resource_path
+        resource_path = self.__get_resource_path(environ)
         web_path = self.__web_path
         
         path_options = str(request_path).split('/')

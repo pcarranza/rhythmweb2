@@ -35,10 +35,12 @@ from serve.log.loggable import Loggable
 import serve.log
 import logging
 from serve.app import CGIApplication
+from preferences import Preferences
 
 class RhythmWeb(rb.Plugin, Loggable):
     
     config = None
+    preferences = None
     
     def __init__(self):
         base_path = os.path.dirname(__file__)
@@ -50,8 +52,12 @@ class RhythmWeb(rb.Plugin, Loggable):
         
         self.base_path = base_path
         self.config = config
+        self.config_path = config_path
         
-            
+        resource_path = os.path.join(base_path, 'resources')
+        config.put('*resources', resource_path)
+
+        
     def activate(self, shell):
         config = self.config
         config.print_configuration(self)
@@ -65,10 +71,26 @@ class RhythmWeb(rb.Plugin, Loggable):
         server.start()
         shell.server = server
         
+        self.preferences = Preferences(config, self.config_path)
+
         
         
     def deactivate(self, shell):
         if not shell.server is None:
             shell.server.stop()
+        
+        del shell.server
+        del self.config
+        del self.config_path
+        del self.base_path
 
+        if not self.preferences.button == None:
+            self.preferences.button.disconnect(self.connect_id_pref2)
+        del self.preferences 
+
+
+    def create_configure_dialog(self, dialog=None):
+        dialog = self.preferences.show_dialog()
+        self.connect_id_pref2 = self.preferences.button.connect('clicked', lambda x: dialog.destroy() )
+        return dialog
 

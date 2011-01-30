@@ -27,6 +27,7 @@ LOG_LEVEL = {
              'CRITICAL' : logging.CRITICAL
              }
 
+LOG_LEVEL_ARRAY = [ 'TRACE', 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL' ]
 
 
 class LoggerFactory:

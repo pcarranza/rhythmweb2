@@ -16,6 +16,7 @@
 
 import os, sys
 
+
 class Configuration:
     
     _params = None
@@ -109,6 +110,10 @@ class Configuration:
         return int(value)
     
     
+    def put(self, key, value):
+        self._params[key] = value
+        
+    
     def print_configuration(self, logger):
         if self.get_boolean('debug', False, False):
             logger.info('Configuration process:')
@@ -122,6 +127,18 @@ class Configuration:
             logger.info('%s = %s' % (key, self._params[key]))
         logger.info('--------------------------')
         
+        
+    def save_configuration(self, path):
+        lines = []
+        for key in self._params:
+            if str(key).startswith('*'):
+                continue
+            line = '%s=%s\n' % (key, self._params[key])
+            lines.append(line)
+
+        file = open(path, 'w')
+        file.writelines(lines)
+        file.close()
         
 # /Configuration
 
