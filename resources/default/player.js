@@ -82,14 +82,14 @@ $(document).ready(function() {
 		$('#tags').removeClass('hide');
 	});
 	
-	$('#tab_playlists').click(function() {
+	$('#tab_sources').click(function() {
 		clear_tabs();
 		hide_all()
 		$(this).addClass('selected');
 		
-		load_playlists();
+		load_sources();
 		
-		$('#playlists').removeClass('hide');
+		$('#sources').removeClass('hide');
 	});
 
 	
@@ -512,7 +512,7 @@ function clear_tabs() {
 	$('#tab_queue').removeClass('selected');
 	$('#tab_search').removeClass('selected');
 	$('#tab_tags').removeClass('selected');
-	$('#tab_playlists').removeClass('selected');
+	$('#tab_sources').removeClass('selected');
 }
 
 
@@ -520,7 +520,7 @@ function hide_all() {
 	$('#queue').addClass('hide');
 	$('#search').addClass('hide');
 	$('#tags').addClass('hide');
-	$('#playlists').addClass('hide');
+	$('#sources').addClass('hide');
 }
 
 function load_tag_cloud() {
@@ -586,44 +586,70 @@ function load_tag_cloud() {
 }
 
 
-function load_playlists() {
-	$('#playlists').html('')
+function load_sources() {
+	$('#sources').html('')
 	$.getJSON('/rest/playlists', function(json) {
-		$.each(json.playlists, function(index, playlist) {
-			add_playlist('playlists', playlist);
+		$.each(json.playlists, function(index, source) {
+			add_source('sources', source);
 		});
 	});
 }
 
 
-function add_playlist(container, playlist) {
+
+function add_play_entry_action(line_id, container_id, entry) {
+	var action_id = container_id + '_play';
+	var play_entry = '<div id="' + action_id + '" class="link play" alt="Play entry" title="Play directly">&nbsp;</div>';
+	var entry_id = entry.id;
+	$('#' + container_id).append(play_entry);
+	$('#' + action_id).click(function() {
+		$.post("rest/player", { action: "play_entry", "entry_id" : entry_id }, function(data) {
+			info('\"' + entry.title + '\" <i>started playing</i>');
+			timers.push(setTimeout('update_status()', 500));
+		});
+	});
+}
+
+
+function add_source(container, source) {
+	var play_source_action = 'play_source_' + source.id;
+	var play_source = '<div id="' + play_source_action + '" class="link play" alt="Play source" title="Play source">&nbsp;</div>';
 	row = '<div class="pl_row">' +
-			'<div id="playlist_' + playlist.id + '" class="pl_name" title="Enqueue playlist">' + 
-				'<img id="do_playlist_' + playlist.id + '" src="img/apply.png" width="24" height="24" alt="Enqueue playlist" title="Enqueue playlist"/>' + 
+			'<div id="playlist_' + source.id + '" class="pl_name" title="Enqueue source">' + 
+				'<img id="do_source_' + source.id + '" src="img/apply.png" width="24" height="24" alt="Enqueue source" title="Enqueue source" class="enqueue"/>' +
+				play_source + 
 			'</div>' +
-			'<div id="pl_playlist_name_' + playlist.id + '" class="link pl_name" title="Show entries">[' + playlist.name + ']</div>' +
-			'<div id="pl_entries_' + playlist.id + '" class="pl_entries">' + 
-				'<img id="pl_load_' + playlist.id + '" src="img/add.png" class="link pl_load" width="24" height="24" alt="Show" title="Show entries">' + 
+			'<div id="pl_source_name_' + source.id + '" class="link pl_name" title="Show entries">' + source.name + '</div>' +
+			'<div id="pl_entries_' + source.id + '" class="pl_entries">' + 
+				'<img id="pl_load_' + source.id + '" src="img/add.png" class="link pl_load" width="24" height="24" alt="Show" title="Show entries">' + 
 			'</div>' +
 		'</div>';
 	$('#' + container).append(row);
-	$('#playlist_' + playlist.id).click(function () {
-		$.post("rest/playlists", { action: "enqueue", "playlist" : playlist.id }, function (data) {
-			info('<i>Playlist [' + playlist.name + '] added to play queue</i>');
+	$('#source_' + source.id).click(function () {
+		$.post("rest/playlists", { action: "enqueue", "source" : source.id }, function (data) {
+			info('<i>Source <b>' + source.name + '</b> added to play queue</i>');
 		});
 	});
-	$('#pl_load_' + playlist.id).bind('click', { id : playlist.id  }, load_playlist);
-	$('#pl_playlist_name_' + playlist.id).bind('click', { id : playlist.id  }, load_playlist);
+	$('#pl_load_' + source.id).bind('click', { id : source.id  }, load_source);
+	$('#pl_source_name_' + source.id).bind('click', { id : source.id  }, load_source);
+	
+	$('#' + play_source_action).click(function() {
+		$.post("rest/playlists", { action: "play_source", "source" : source.id }, function(data) {
+			info('Source <b>' + source.name + '</b> <i>started playing</i>');
+			timers.push(setTimeout('update_status()', 500));
+		});
+	});
 }
 
-function load_playlist(event) {
-	var playlist = event.data;
-	var url = 'rest/playlists/' + playlist.id;
-	var entries_id = 'pl_entries_' + playlist.id;
+
+function load_source(event) {
+	var source = event.data;
+	var url = 'rest/playlists/' + source.id;
+	var entries_id = 'pl_entries_' + source.id;
 	$('#' + entries_id).html(
-			'<img id="img_searching" src="img/loading.gif" width="16" height="16" alt="Fetching playlist..." title="Fetching playlist..." />');
+			'<img id="img_searching" src="img/loading.gif" width="16" height="16" alt="Fetching source..." title="Fetching source..." />');
 	$.getJSON(url, function(json) {
-		var header_actions = 'playlist_' + playlist.id + '_header_actions';
+		var header_actions = 'source_' + source.id + '_header_actions';
 		$('#' + entries_id).html('');
 		$('#' + entries_id).append(create_header(header_actions));
 		$.each(json.entries, function(index, entry) {
@@ -634,20 +660,17 @@ function load_playlist(event) {
 	
 }
 
-function add_playlist_entries(playlist) {
-	var url = 'rest/playlists/' + playlist.id;
+/*
+function add_source_entries(source) {
+	var url = 'rest/playlists/' + source.id;
 	$.getJSON(url, function(json) {
 		var container_id = '#' + 'pl_entries_' + json.id;
 		$.each(json.entries, function(index, entry) {
 			$(container_id).append( entry.title + ' by ' + entry.artist + ' ');
 		});
-		
 	});
-	
-	
 }
-
-
+*/
 
 function cloud_search(event) {
 	data = event.data;

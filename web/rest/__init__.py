@@ -43,9 +43,9 @@ class RBRest(BaseRest, Loggable):
         return entries_list
     
     
-    def get_playlist_as_json(self, playlist, entries = None):
+    def get_source_as_json(self, playlist, entries = None):
         self.trace('Loading playlist as json object')
-        return Playlist.get_playlist_as_JSon(playlist, entries)
+        return Playlist.get_source_as_JSon(playlist, entries)
     
     
     def get_status_as_json(self):
@@ -104,13 +104,14 @@ class Song:
 class Playlist:
     
     @staticmethod
-    def get_playlist_as_JSon(playlist, entries = None):
+    def get_source_as_JSon(playlist, entries = None):
         json = JSon()
-        json.put('id', playlist.index)
+        json.put('id', playlist.id)
         json.put('name', playlist.name)
         json.put('visibility', playlist.visibility)
         json.put('is_group', playlist.is_group)
         json.put('is_playing', playlist.is_playing)
+        json.put('type', playlist.source_type)
         if not entries is None:
             json.put('entries', entries)
         return json

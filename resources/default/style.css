@@ -81,7 +81,7 @@ img {
 
 /* ****************************************************** END PLAYER */
 /* ****************************************************** QUEUE */
-#queue, #library, #tags, #playlists {
+#queue, #library, #tags, #sources {
 	float: left;
 	clear: both;
 	width: 100%;
@@ -359,7 +359,7 @@ img {
 }
 
 /* ****************************************************** END TAG CLOUD */
-/* ****************************************************** PLAYLISTS */
+/* ****************************************************** SOURCES */
 .pl_row {
 	width: 100%;
 	float: left;
@@ -376,8 +376,10 @@ img {
 	float: left;
 	clear: right;
 	font-size: large;
+	font-weigth: bolder;
 	color: 000033;
 	cursor: pointer;
+	margin-left: 1em;
 }
 
 .pl_load {
@@ -389,4 +391,4 @@ img {
 	float: left;
 	font-size: medium;
 }
-/* ****************************************************** END PLAYLISTS */
+/* ****************************************************** END SOURCES */

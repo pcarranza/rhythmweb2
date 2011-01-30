@@ -45,6 +45,9 @@ RB_SOURCELIST_MODEL_COLUMN_VISIBILITY = 5
 RB_SOURCELIST_MODEL_COLUMN_IS_GROUP = 6
 RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY = 7
 
+SOURCETYPE_PLAYLIST = 'playlist'
+SOURCETYPE_SOURCE = 'source'
+
 
 class RBHandler(Loggable):
     '''
@@ -282,7 +285,7 @@ class RBHandler(Loggable):
         '''
         Starts playing or pauses
         '''
-        self.__player.playpause()
+        return self.__player.playpause()
         
     
     def get_play_order(self):
@@ -341,6 +344,15 @@ class RBHandler(Loggable):
                 self.play_pause()
             
             self.__player.play_entry(entry)
+
+
+    def play_source(self, source_index):
+        self.info('Set source playing')
+        source = self.get_source(source_index)
+        if self.get_playing_status():
+            self.play_pause()
+        self.__shell.props.shell_player.set_playing_source(source.source)
+        return self.play_pause()
     
         
     def set_rating(self, entry_id, rating):
@@ -592,72 +604,73 @@ class RBHandler(Loggable):
         '''
         Returns all registered playlists 
         '''
-        playlists = []
+        return self.__get_sources(False)
+
+
+    def get_sources(self):
+        '''
+        Returns all fixed sources 
+        '''
+        return self.__get_sources(True)
+    
+    
+    def __get_wrapped_sources(self, sourcelist):
+        sources = []
         index = 0
-        sources = self.__get_playlist_sources()
-        for playlist in sources:
-            playlistsource = PlaylistSource(index, playlist)
-            playlists.append(playlistsource)
+        for source in sourcelist:
+            source = RBSource(index, source)
+            sources.append(source)
             index+= 1
         
-        
-        return playlists
+        return sources
     
     
-    def enqueue_playlist(self, playlist_index):
+    def enqueue_source(self, source_index):
         '''
         Enqueues in the play queue the given playlist 
         '''
         self.info('Enqueuing playlist')
         
-        if not type(playlist_index) is int:
+        if not type(source_index) is int:
             raise Exception('playlist_index parameter must be an int')
         
-        playlist = self.get_playlist(playlist_index)
-        if playlist is None:
+        source = self.get_source(source_index)
+        if source is None:
             return 0
         
         # playlist.add_to_queue(self.__shell.props.queue_source)
         # This way we will know how many songs are added
-        return self.__loop_query_model(func=self.enqueue, query_model=playlist.source.props.query_model)
+        return self.__loop_query_model(
+                   func=self.enqueue, 
+                   query_model=source.query_model)
         
     
-    def get_playlist(self, playlist_index):
-        '''
-        Returns the playlist required by index 
-        '''
-        self.info('Getting playlist')
-        
-        if not type(playlist_index) is int:
-            raise Exception('playlist_index parameter must be an int')
+    def get_source(self, source_index):
+        self.info('Getting source with index %d' % source_index)
+
+        if not type(source_index) is int:
+            raise Exception('source_index parameter must be an int')
         
         index = 0
-        sources = self.__get_playlist_sources()
-        for playlist in sources:
-            if playlist_index == index:
-                return PlaylistSource(index, playlist)
+        sources = self.__get_sources(True)
+        for source in sources:
+            if source.index == source_index:
+                self.debug('Returning source with index %d' % index)
+                return source
             index += 1
-            
-        return None
-
-    
-    def get_playlist_entries(self, playlist_index, limit=100):
-        '''
-        Returns every entry id registered in a given playlist 
-        '''
-        self.info('Getting playlist entries')
-
-        if not type(playlist_index) is int:
-            raise Exception('playlist_index parameter must be an int')
         
+        return None
+        
+        
+    def get_source_entries(self, source, limit=100):
+        self.info('Getting source entries')
         entries = []
-        playlist = self.get_playlist(playlist_index)
-        if not playlist is None:
+        if not source is None:
             self.__loop_query_model(func=entries.append, \
-                                   query_model=playlist.source.props.query_model, \
+                                   query_model=source.query_model, \
                                    limit=limit)
         return entries
-    
+        
     
     def __append_entry_to_cache(self, db, entry):
         '''
@@ -859,20 +872,29 @@ class RBHandler(Loggable):
         return self.__db.entry_get(entry, rhythmdb.PROP_ENTRY_ID)
     
     
-    def __get_playlist_sources(self):
+    def __get_sources(self, all_sources=False):
         '''
-        Returns a list with all playlists sources registered
+        Returns a list with all sources registered
         '''
-        playlists = []
+        index = 0
+        sources = []
+        
         for sourcelist in self.__shell.props.sourcelist_model:
             category = sourcelist[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
             if category == rb.SOURCE_GROUP_CATEGORY_PERSISTENT or \
                     category == rb.SOURCE_GROUP_CATEGORY_REMOVABLE:
                 for playlist in sourcelist.iterchildren():
-                    playlists.append(playlist)
-        return playlists
-    
-        
+                    sources.append(RBSource(index, playlist, SOURCETYPE_PLAYLIST))
+                    index += 1
+            elif category == rb.SOURCE_GROUP_CATEGORY_FIXED:
+                for source in sourcelist.iterchildren():
+                    if all_sources:
+                        sources.append(RBSource(index, source, SOURCETYPE_SOURCE))
+                    index += 1
+            
+        return sources
+
+
     def __loop_query_model(self, func, query_model, first=0, limit=0):
         '''
         Loops a query model object and invokes the given function for every row, can also receive a first and a limit to "page" 
@@ -923,9 +945,7 @@ class RBHandler(Loggable):
         return self.__db.entry_lookup_by_id(entry_id)
     
     
-
-        
-        
+    
 class RBEntry():
     '''
     Rhythmbox entry wrapper, loads all entry data on initialization
@@ -962,13 +982,15 @@ class RBEntry():
         
         
 
-class PlaylistSource():
+class RBSource():
     '''
-    Playlist source wrapper, loads all data on initialization
+    Source wrapper, loads all data on initialization
     '''
     
-    def __init__(self, index, entry):
+    def __init__(self, index, entry, source_type):
+        self.id = index
         self.index = index
+        self.source_type = source_type
         self.is_playing = entry[RB_SOURCELIST_MODEL_COLUMN_PLAYING]
         self.pixbuf = entry[RB_SOURCELIST_MODEL_COLUMN_PIXBUF]
         self.name = entry[RB_SOURCELIST_MODEL_COLUMN_NAME]
@@ -977,6 +999,8 @@ class PlaylistSource():
         self.visibility = entry[RB_SOURCELIST_MODEL_COLUMN_VISIBILITY]
         self.is_group = entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]
         self.group_category = entry[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
+        self.query_model = self.source.props.query_model
+        
     
 
         
