@@ -205,6 +205,7 @@ function create_add_all(id) {
 	return '<img id="' + id + '" src="img/apply.png" width="24" height="24" class="link" alt="Add All" title="Add all to queue"/>'
 }
 
+
 function create_remove_all(id) {
 	return '<img id="' + id + '" src="img/clear.png" width="24" height="24" class="link" alt="Clear queue" title="Remove all from queue"/>'
 }
@@ -414,9 +415,12 @@ function create_entry_line(append_to, line_id, container_id, rating_id, entry) {
 	line += '<span class="track_actions"><span id="' + container_id + '"></span></span>';
 	line += '<span class="track_number">' + entry.track_number + '</span>';
 	line += '<span class="track_title">' + entry.title + '</span>';
-	line += '<span class="track_genre link" id="' + line_id +'_genre" title="browse genre">' + entry.genre + '</span>';
-	line += '<span class="track_artist link" id="' + line_id +'_artist"  title="browse artist">' + entry.artist + '</span>';
-	line += '<span class="track_album link" id="' + line_id +'_album"  title="browse album">' + entry.album + '</span>';
+	line += '<span class="track_genre link" id="' + line_id +'_genre" title="browse genre">' + 
+			entry.genre + '</span>';
+	line += '<span class="track_artist link" id="' + line_id +'_artist"  title="browse artist">' + 
+			entry.artist + '</span>';
+	line += '<span class="track_album link" id="' + line_id +'_album"  title="browse album">' + 
+			entry.album + '</span>';
 	line += '<span class="track_duration">' + human_time(entry.duration) + '</span>';
 	line += '<span class="track_rating"><span id="' + rating_id + '"></span></span>';
 	line += '</div>';
@@ -433,7 +437,8 @@ function create_entry_line(append_to, line_id, container_id, rating_id, entry) {
 
 function add_dequeue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_dequeue';
-	var dequeue = '<img id="' + action_id + '" class="link dequeue" src="img/remove.png" width="24" height="24" alt="Remove" title="Remove from queue" />';
+	var dequeue = '<img id="' + action_id + '" class="link dequeue" src="img/remove.png" ' + 
+			'width="24" height="24" alt="Remove" title="Remove from queue" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(dequeue);
 	$('#' + action_id).click(function() {
@@ -447,7 +452,8 @@ function add_dequeue_action(line_id, container_id, entry) {
 
 function add_enqueue_action(line_id, container_id, entry, fadeout) {
 	var action_id = container_id + '_enqueue';
-	var enqueue = '<img id="' + action_id + '" class="link enqueue" src="img/add.png" width="24" height="24" alt="Add" title="Add to queue"/>';
+	var enqueue = '<img id="' + action_id + '" class="link enqueue" src="img/add.png" ' + 
+			'width="24" height="24" alt="Add" title="Add to queue"/>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(enqueue);
 	$('#' + action_id).click(function() {
@@ -461,7 +467,8 @@ function add_enqueue_action(line_id, container_id, entry, fadeout) {
 
 function add_play_entry_action(line_id, container_id, entry) {
 	var action_id = container_id + '_play';
-	var play_entry = '<div id="' + action_id + '" class="link play" alt="Play entry" title="Play directly">&nbsp;</div>';
+	var play_entry = '<div id="' + action_id + '" class="link play" alt="Play entry" ' + 
+			'title="Play directly">&nbsp;</div>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(play_entry);
 	$('#' + action_id).click(function() {
@@ -480,11 +487,18 @@ function add_rate_action(line_id, container_id, entry) {
 	for(var index = 1; index < 6; index++) {
 		var action_id = action_scheme + index;
 		if (index > rating) {
-			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star-grey.png" width="24" height="24" alt="Rate" title="Rate" />');
+			$('#' + container_id).append(
+				'<img id="' + action_id + '" class="link" src="img/star-grey.png" ' + 
+				'width="24" height="24" alt="Rate" title="Rate" />');
 		} else {
-			$('#' + container_id).append('<img id="' + action_id + '" class="link" src="img/star.png" width="24" height="24" alt="Rate" title="Rate" />');
+			$('#' + container_id).append(
+				'<img id="' + action_id + '" class="link" src="img/star.png" ' + 
+				'width="24" height="24" alt="Rate" title="Rate" />');
 		}
-		$('#' + action_id).bind('click', { id : entry_id, rating : index, scheme : action_scheme }, set_rating);
+		$('#' + action_id).bind(
+			'click', 
+			{ id : entry_id, rating : index, scheme : action_scheme }, 
+			set_rating);
 	}
 }
 
@@ -599,11 +613,15 @@ function load_sources() {
 
 function add_play_entry_action(line_id, container_id, entry) {
 	var action_id = container_id + '_play';
-	var play_entry = '<div id="' + action_id + '" class="link play" alt="Play entry" title="Play directly">&nbsp;</div>';
+	var play_entry = '<div id="' + action_id + 
+			'" class="link play" alt="Play entry" ' + 
+			'title="Play directly">&nbsp;</div>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(play_entry);
 	$('#' + action_id).click(function() {
-		$.post("rest/player", { action: "play_entry", "entry_id" : entry_id }, function(data) {
+		$.post("rest/player", 
+				{ action: "play_entry", "entry_id" : entry_id }, 
+				function(data) {
 			info('\"' + entry.title + '\" <i>started playing</i>');
 			timers.push(setTimeout('update_status()', 500));
 		});
@@ -613,28 +631,61 @@ function add_play_entry_action(line_id, container_id, entry) {
 
 function add_source(container, source) {
 	var play_source_action = 'play_source_' + source.id;
-	var play_source = '<div id="' + play_source_action + '" class="link play" alt="Play source" title="Play source">&nbsp;</div>';
+	var play_source = '<div id="' + play_source_action + 
+			'" class="link play" alt="Play source" ' + 
+			'title="Play source">&nbsp;</div>';
+	
+	var pl_entries_id = 'pl_entries_' + source.id;
+	var pl_load_source_id = 'pl_load_' + source.id;
+	var pl_entries = '<div id="' + pl_entries_id + '" class="pl_entries">' + 
+			'<img id="' + pl_load_source_id + '" src="img/add.png" ' + 
+					'class="link pl_load" width="24" height="24" ' + 
+					'alt="Show" title="Show entries" />' + 
+		'</div>';
+
 	row = '<div class="pl_row">' +
-			'<div id="playlist_' + source.id + '" class="pl_name" title="Enqueue source">' + 
-				'<img id="do_source_' + source.id + '" src="img/apply.png" width="24" height="24" alt="Enqueue source" title="Enqueue source" class="enqueue"/>' +
+			'<div id="playlist_' + source.id + 
+						'" class="pl_name" title="Enqueue source">' + 
+				'<img id="do_source_' + source.id + 
+						'" src="img/apply.png" width="24" height="24" ' + 
+						'alt="Enqueue source" title="Enqueue source" class="enqueue"/>' +
 				play_source + 
 			'</div>' +
-			'<div id="pl_source_name_' + source.id + '" class="link pl_name" title="Show entries">' + source.name + '</div>' +
-			'<div id="pl_entries_' + source.id + '" class="pl_entries">' + 
-				'<img id="pl_load_' + source.id + '" src="img/add.png" class="link pl_load" width="24" height="24" alt="Show" title="Show entries">' + 
-			'</div>' +
-		'</div>';
+			'<div id="pl_source_name_' + source.id + 
+						'" class="link pl_name" ' + 
+						'title="Show entries">' + 
+						(source.is_playing ? '<i>[' + source.name + ']</i>' : source.name ) + '</div>' +
+				pl_entries +
+			'</div>';
 	$('#' + container).append(row);
-	$('#source_' + source.id).click(function () {
-		$.post("rest/playlists", { action: "enqueue", "source" : source.id }, function (data) {
+	$('#do_source_' + source.id).click(function () {
+		$.post("rest/playlists", 
+				{ action: "enqueue", "source" : source.id }, 
+				function (data) {
 			info('<i>Source <b>' + source.name + '</b> added to play queue</i>');
+			$('#' + pl_entries_id).fadeOut('fast');
+			$('#' + pl_entries_id).html(pl_entries);
+			$('#' + pl_entries_id).fadeIn('fast');
+			$('#' + pl_load_source_id).bind(
+					'click', 
+					{ id : source.id  }, 
+					load_source);
 		});
 	});
-	$('#pl_load_' + source.id).bind('click', { id : source.id  }, load_source);
-	$('#pl_source_name_' + source.id).bind('click', { id : source.id  }, load_source);
+	$('#' + pl_load_source_id).bind(
+			'click', 
+			{ id : source.id  }, 
+			load_source);
+
+	$('#pl_source_name_' + source.id).bind(
+			'click', 
+			{ id : source.id  }, 
+			load_source);
 	
 	$('#' + play_source_action).click(function() {
-		$.post("rest/playlists", { action: "play_source", "source" : source.id }, function(data) {
+		$.post("rest/playlists", 
+				{ action: "play_source", "source" : source.id }, 
+				function(data) {
 			info('Source <b>' + source.name + '</b> <i>started playing</i>');
 			timers.push(setTimeout('update_status()', 500));
 		});
@@ -647,7 +698,8 @@ function load_source(event) {
 	var url = 'rest/playlists/' + source.id;
 	var entries_id = 'pl_entries_' + source.id;
 	$('#' + entries_id).html(
-			'<img id="img_searching" src="img/loading.gif" width="16" height="16" alt="Fetching source..." title="Fetching source..." />');
+			'<img id="img_searching" src="img/loading.gif" width="16" height="16" ' + 
+					'alt="Fetching source..." title="Fetching source..." />');
 	$.getJSON(url, function(json) {
 		var header_actions = 'source_' + source.id + '_header_actions';
 		$('#' + entries_id).html('');
@@ -660,17 +712,6 @@ function load_source(event) {
 	
 }
 
-/*
-function add_source_entries(source) {
-	var url = 'rest/playlists/' + source.id;
-	$.getJSON(url, function(json) {
-		var container_id = '#' + 'pl_entries_' + json.id;
-		$.each(json.entries, function(index, entry) {
-			$(container_id).append( entry.title + ' by ' + entry.artist + ' ');
-		});
-	});
-}
-*/
 
 function cloud_search(event) {
 	data = event.data;
@@ -811,21 +852,5 @@ function parse_search_parameters() {
 	return query_parameters;
 	
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
