@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1;" />
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<link rel="apple-touch-icon-precomposed" href="icon.png"/>
+        <title>Mobile Rhythm</title>
+<!--
+This project (C) 2010 Håvard Gulldahl <havard@gulldahl.no>
+https://github.com/havardgulldahl/Mobile-Rhythm
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+-->
+
+        <!--link rel="stylesheet" href="http://code.jquery.com/mobile/1.0a2/jquery.mobile-1.0a2.min.css"-->
+        <link rel="stylesheet" href="style.css">
+        <!--script src="http://code.jquery.com/jquery-1.4.4.min.js"></script-->
+        <script src="jquery-1.4.4.min.js"></script>
+        <script>
+           $(document).bind("mobileinit", function(){
+               // so that jquerymobile doesn't meddle with our forms
+               $.extend(  $.mobile, { ajaxFormsEnabled: false });
+           });
+        </script>
+        <!--script src="http://code.jquery.com/mobile/1.0a2/jquery.mobile-1.0a2.min.js"></script-->
+        <script src="jquery.mobile-1.0a2.min.js"></script>
+        <script>
+
+$(function() {
+    function sec2time(sec) {
+        var mins = Math.floor(sec / 60);
+        var secs = sec % 60;
+        if(secs < 10) secs = "0" + secs;
+        return mins + ":" + secs;
+    }
+
+    function update_icon(obj, icon_class) {
+        // utility function to update icon changes in
+        // jquery mobile (the framework doesn't have
+        // any api for this, per alpha 2)
+        var o = $(obj + " span.ui-icon");
+        o.removeClass(function(i, className) {
+            var r = [];
+            $.each(className.split(" "), function(i, val) {
+                if(val.substring(0, 8) == "ui-icon-")
+                    r.push(val);
+            });
+            return r.join(" ");
+        }).addClass("ui-icon-" + icon_class);
+    }
+
+var playlist = {
+    // everything playlist related
+    get : function() { 
+            $.getJSON("rest/playlists", function(data) { playlist.update_playlists(data); });   
+    },
+    set : function(plid) { 
+        $.post("rest/player", {action:"clear_queue"}, function(data) {
+            $.post("rest/playlists", {action:"enqueue", playlist:plid});
+        });
+    },
+    update_playlists : function(data) {
+        //console.debug("update playlists: %o", data);
+        if(!(data && data.playlists)) return false;
+        $("#playlist-browser").empty();
+        $.each(data.playlists, function(i, item) {
+            $("<li><a href='#'/></li>")
+                .appendTo("#playlist-browser")
+                .find("a")
+                .data("plid", item.id)
+                .data("is_playing", item.is_playing)
+                //.bind("tap", function(ev) { 
+                .click(function(ev) { 
+                    //console.debug("setting new playlist from tap: %o", this);
+                    return playlist.set($(this).data("plid"));
+                })
+                .text(item.name);
+
+            // TODO: add sub-menu of songs from item.entries
+        });
+        $("#playlist-browser").listview('refresh');
+    }
+};
+
+var library = {
+    // everything library related
+    search_clock:null,
+    search : function(inputelement) {
+        var val = $(inputelement).val();
+        if(val.length < 3) return;
+        if(this.search_clock) window.clearTimeout(this.search_clock);
+        this.search_clock = window.setTimeout(function() {
+            $.post("/rest/search", {'all':val, 'type':'song'}, function(data) { library.parse_search(data); });   
+        }, 250);
+    },
+    parse_search : function(reply) {
+        $("#search-result").empty();
+        var current = "";
+        if(!(reply && reply.entries)) return false;
+        $.each(reply.entries, function(i, item) {
+            if(item.artist != current) {
+                current = item.artist;
+                $("<li data-role='list-divider'/>")
+                    .text(current.substr(0, 1).toUpperCase() + current.substr(1))
+                    .appendTo("#search-result");
+            }
+            var playnow = function(entry) { player.play_entry(entry.id); }
+            var enqueue = function(entry) { player.enqueue(entry.id); }
+            $("<li><a class='playnow' href='#'></a><a class='queue' href='#' data-icon='plus'></a></li>")
+                .data("entry", item)
+                .appendTo("#search-result")
+                .find("a.playnow")
+                .text(item.title + " (" + item.album + ")")
+                .click(function(ev) { playnow(item) })
+                .parent().find("a.queue")
+                .click(function(ev) { enqueue(item) });
+
+        });
+        $("#search-result").listview("refresh");
+    }
+};
+
+var player = {
+    // everything player related
+    mute_state:false,
+    playing_state:false,
+    current_entry_id:false,
+    current_volume:false,
+    current_seek:false,
+    play_clock:null,
+    volume_clock:null,
+    seek_clock:null,
+    ping_clock:null,
+    playlist_clock:null,
+    play: function() { ws.sendcmd('player','play'); },
+    pause: function() { ws.sendcmd('player','pause'); },
+    start_loop: function() {
+        player.get_state();
+        this.ping_clock = window.setInterval(function() {
+            player.get_state();
+        }, 5000);
+        playlist.get();
+        this.playlist_clock = window.setInterval(function() {
+            playlist.get();
+        }, 60000*5); // every 5 minutes
+    },
+    playpause: function() { 
+        $.post("rest/player", { action: "play_pause" }, function (data) {
+            window.setTimeout(function() { player.get_state(); }, 200);
+        });
+    },
+    previous: function() { 
+        $.post("rest/player", { action: "previous" }, function (data) {
+            window.setTimeout(function() { player.get_state(); }, 500);
+        });
+    },
+    next: function() { 
+        $.post("rest/player", { action: "next" }, function (data) {
+            window.setTimeout(function() { player.get_state(); }, 500);
+        });
+    },
+    seek: function(new_seek) { 
+        var _new_seek = parseInt(new_seek, 10);
+        if(_new_seek != this.current_seek) {
+            if(this.seek_clock) window.clearTimeout(this.seek_clock);
+            var offset = _new_seek - this.current_seek;
+            this.seek_clock = window.setTimeout(function() { 
+                //ws.sendcmd('player','set-playingtime', parseInt(offset, 10)); 
+                $.post("rest/player", { action: "seek", "time" : offset }, function (data) {
+                    window.setTimeout(function() { player.get_state(); }, 200);
+                });
+            }, 500);
+        }
+    },
+    update_seek: function(seek) { 
+        //seek is in seconds since start of song
+        this.current_seek = seek;
+        $("#control-seek").val(seek).trigger("keyup"); 
+        $("#control-position").text(sec2time(seek));
+		$('#control-position').css('width', $('#progress .ui-slider-handle').css('left'));
+    },
+    volume: function(offset) { 
+        if(offset != this.current_volume) {
+            if(this.volume_clock) window.clearTimeout(this.volume_clock);
+            this.volume_clock = window.setTimeout(function() { 
+                $.post("/rest/player", 
+                {action:"set_volume", volume:parseFloat(offset/100)}); 
+            }, 500);
+        }
+    },
+    update_volume: function(volume, muted) { 
+        //volume is a float 0 < v < 1, muted is bool
+        this.current_volume = parseInt(volume*100, 10);
+        $("#control-volume").val(parseInt(volume*100, 10)).trigger('keyup'); 
+        $("#control-mute span.ui-btn-text").text((muted) ? "Unmute" : "Mute");
+        update_icon("#control-mute", (muted) ? "forward" : "back"); 
+        this.mute_state = muted;
+    },
+    toggle_mute: function() { 
+        $.post("/rest/player", {action:"mute"}, function(data) { 
+            // TODO: check return value 
+            window.setTimeout(function() { player.get_state(); }, 500);
+        });
+    },
+    update_playing: function(args) { 
+        if(args == null) return this.update_paused(args);
+        $("#now-playing em")
+            .html( '<strong>'+args.artist + "</strong> <big>" + args.title + "</big> <span>" + args.album+'</span>')
+            .data("id", args.id);
+        $("#control-length").text(sec2time(args.duration));
+        $("#control-seek").attr("max", args.duration);
+        $("#control-playpause span.ui-btn-text").text("Pause");
+        update_icon("#control-playpause", "minus");        
+    },
+    update_paused: function(args) { 
+        var s = "Paused";
+        try {
+            s += ": " + args.artist + " - " + args.album + " - " + args.title;
+            $("#control-length").text(sec2time(args.duration));
+            $("#control-seek").attr("max", args.duration);
+        } catch(e) {
+            $("#control-length").text("0:00");
+            //$("#control-seek").attr("max", 100);
+        }
+        $("#now-playing em")
+            .text(s);
+        $("#control-playpause span.ui-btn-text").text("Play");
+        update_icon("#control-playpause", "plus");
+        //player.get_playingtime();       
+    },
+    update_stopped: function(args) {
+        $("#now-playing em")
+            .data("id", "")
+            .text("Stopped");
+        $("#control-length").text("0:00");
+        //$("#control-seek").attr("max", 100);
+        $("#control-playpause span.ui-btn-text").text("Play");
+        update_icon("#control-playpause", "plus");
+        $("#control-playpause").addClass('pp');
+    },
+    get_state: function() {
+        $.getJSON('rest/status', function(json) {
+            if(json) {
+                player.update_volume(json.volume, json.muted);
+                if(json.playing) {
+                    player.update_playing(json.playing_entry);
+                    player.update_seek(json.playing_time);
+                } else {
+                    player.update_stopped();
+                }
+            }
+            player.get_playqueue();
+        });
+    },
+    get_playqueue: function() { 
+        $.getJSON('rest/queue', function(json) { player.set_playqueue(json); });
+    },
+    clear_playqueue: function() { $("#play-queue ol").empty(); },
+    set_playqueue: function(data) {
+        this.clear_playqueue();
+        var current = "";
+        $.each(data.entries, function(i, item) {
+            if(item.artist != current) {
+                current = item.artist;
+                $("<li data-role='list-divider'/>")
+                    .text(current.substr(0, 1).toUpperCase() + current.substr(1))
+                    .appendTo("#play-queue ol");
+            }
+            var playnow = function(entry) { player.play_entry(entry.id); }
+            var dequeue = function(entry) { player.dequeue(entry.id); }
+            $("<li><a class='playnow' title='Play this song now' href='#'></a><a class='dequeue' title='Remove from play queue' href='#' data-icon='minus'>Remove</a></li>")
+                .appendTo("#play-queue ol")
+                .find("a.playnow")
+                .data("entry", item)
+                .text(item.title + " (" + item.album + ")")
+                .click(function(ev) { playnow(item); })
+                .parent().find("a.dequeue")
+                .click(function(ev) { dequeue(item); $(this).parent().parent().fadeOut();});
+
+        });
+        $("#play-queue ol").listview("refresh");
+
+    },
+    enqueue : function(entry_id) {
+        $.post("/rest/player", {"action": "enqueue", "entry_id": entry_id});
+    },
+    dequeue : function(entry_id) {
+        $.post("/rest/player", {"action": "dequeue", "entry_id": entry_id});
+    },
+    play_entry : function(entry_id) {
+        $.post("/rest/player", {"action": "play_entry", "entry_id": entry_id});
+    }
+};
+
+$("#control-playpause").click(function(playev) {
+    player.playpause();
+    $(this).toggleClass('pp');
+});
+$("#control-prev").click(function(ev) { player.previous(); });
+$("#control-next").click(function(ev) { player.next(); });
+$("#control-seek").change(function(ev) { player.seek(this.value); });
+// with newer jquerymobile, connect to the touchend event, it's much cleaner:
+//$("#control-seek").touchend(function(ev) { player.seek(this.value); });
+$("#control-volume").hide().change(function(ev) { player.volume(this.value); $('#vol-bar').css('width',Math.round(this.value)+'%')});
+$("#control-mute").click(function(ev) { player.toggle_mute(); });
+$("#search-input").bind("search", function(ev) {  library.search(this); });
+$("#search-submit").click(function(ev) {  library.search(document.getElementById('search-input')); })
+
+player.start_loop();
+
+
+$("#navbar li").click(function(ev) { $("#navbar li").removeClass('cur'); $(this).addClass('cur') });
+
+});
+
+        </script>
+    </head>
+<body>
+<div id="wrap">
+<div id="header">
+	<ul id="navbar"><li class="cur"
+	id="tab-playing" class="cur"><a data-icon="grid" data-transition="slideup" href="#player">Playing</a></li><li
+	id="tab-queue"><a data-icon="pin" data-transition="slideup" href="#queue">Queue</a></li><li
+	id="tab-playlists"><a data-icon="star" data-transition="slideup" href="#playlists">Playlists</a></li><li
+	id="tab-search"><a data-icon="search" data-transition="slideup" href="#search">Search</a></li></ul>
+</div><!-- /header -->
+    
+<div id="player" data-role="page" class="page">
+    
+
+    <div data-role="content">   
+        <p>
+            <div id="now-playing">
+				<fieldset data-role="fieldcontain" id="progress">
+                    <label for="control-seek">
+                    <span id="control-position">2:44</span> <span id="control-length">3:55</span>
+                    </label>
+                    <input type="range" id="control-seek" class="hide" value="0" min="0" max="500">
+               </fieldset>
+				
+               <em>Stopped</em>
+               <div id="control-coverart">
+               </div>
+               
+               
+               
+               <fieldset data-role="fieldcontain" id="controls"> 
+                    <div data-role="controlgroup" data-type="horizontal">
+                        <a id="control-prev" data-role="button" data-icon="arrow-l" href="#" >Previous</a>
+                        <a id="control-playpause" data-role="button"
+                        data-icon="minus" href="#">Pause</a>
+                        <a id="control-next" data-role="button" data-icon="arrow-r" href="#">Next</a>
+                    </div>
+               </fieldset>
+               
+               <div data-role="fieldcontain" id="vol"> <b id="vol-bar"></b>
+                    <label for="control-volume" title="Volume"></label>
+                    <input type="range" id="control-volume" value="0" min="0" max="100">
+                    <a id="control-mute" class="hide" data-role="button" data-icon="delete" data-inline="true" href="#">Mute</a>
+               </div>
+               
+            </div>
+            
+        </p>      
+    </div><!-- /content -->
+
+    
+</div><!-- /page -->
+
+<div id="library" data-role="page" class="page">
+    <div data-role="header">
+        <h1>Library</h1>
+    </div><!-- /header -->
+
+    <div data-role="content">   
+        <ul data-role="listview">
+            <li><a href="#genres">Genres</a></li>
+            <li><a href="#artists">Artists</a></li>
+            <li><a href="#albums">Albums</a></li>
+        </ul>
+    </div><!-- /content -->
+
+    
+</div><!-- /page -->
+
+<div id="genres" data-role="page" class="page">
+    <div data-role="header">
+        <h1>Genres</h1>
+    </div><!-- /header -->
+
+    <ul data-role="listview" data-filter="true">
+    </ul>
+</div>
+
+<div id="artists" data-role="page" class="page">
+    <div data-role="header">
+        <h1>Artists</h1>
+    </div><!-- /header -->
+
+    <ul data-role="listview" data-filter="true">
+    </ul>
+</div>
+
+<div id="albums" data-role="page" class="page">
+    <div data-role="header">
+        <h1>Albums</h1>
+    </div><!-- /header -->
+
+    <ul data-role="listview" data-filter="true">
+    </ul>
+</div>
+
+<div id="playlists" data-role="page" class="page">
+    <div data-role="header">
+        <h1>Playlists</h1>
+    </div><!-- /header -->
+
+    <div data-role="content"> 
+    <h4 class="alignl">Playlists</h4>  
+        <ul id="playlist-browser" data-role="listview" data-filter="true">
+        </ul>
+    </div><!-- /content -->
+
+   
+</div><!-- /page -->
+
+<div id="search" data-role="page" class="page">
+    <div data-role="header">
+        <h1>Find </h1>
+    </div><!-- /header -->
+
+    <div data-role="content">   
+    
+        <form>
+         <h4 class="alignl">Find </h4>
+        <a id="search-submit" href="#" data-role="button" data-inline="true">Search</a>
+            <input type="hidden" name="type" value="song">
+            <input id="search-input" type="search" name="search" incremental="true"
+                placeholder="Search for music by genre, artist, album or song title">
+            
+            <ul id="search-result" data-role="listview" data-inset="true">
+            </ul>
+        </form>
+    </div><!-- /content -->
+
+  
+</div><!-- /page -->
+
+<div id="queue" data-role="page" class="page">
+    <div id="play-queue">
+                <h4>Upcoming:</h4>
+                <ol data-role="listview" data-inset="true">
+                </ol>
+            </div>
+</div><!-- /page -->
+</div>
+</body>
+</html>

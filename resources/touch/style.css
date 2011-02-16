@@ -1,0 +1,859 @@
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	font-weight: inherit;
+	font-style: inherit;
+	font-size: 100%;
+	font-family: inherit;
+	vertical-align: baseline;
+}
+ol, ul {
+	list-style: none;
+}
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+caption, th, td {
+	text-align: left;
+	font-weight: normal;
+}
+
+/*
+# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
+# Copyright (C) 2010  Pablo Carranza
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+html, body {
+  color: #fff;
+  background: #000;
+  font: caption;
+  font-family: Helvetica,'Lucida Grande', Verdana, Geneva, Lucida, Arial, sans-serif;
+  margin:0;
+  padding:0;
+height: 100%;
+}
+img {
+	border: 0px;
+}
+h4{
+text-align:left;
+font-weight:bold;
+font-size:18px;
+color:#888;
+padding:10px 0 0;
+}
+input{font-size:larger;max-width:200px}
+a{text-decoration:none;color:#357fd2}
+.link {
+	cursor: pointer;
+}
+.hide {
+	display: none;
+}
+.ui-content{padding:0 3px}
+.ui-header{display:none}
+fieldset{border:0}
+
+#wrap .page{display:none}
+.ui-page-active{display:block !important}
+
+.ui-page { position: relative;} 
+
+
+
+#wrap{
+max-width:500px;
+margin:0 auto;
+text-align:center;
+font-size:14px
+}
+/*************************************** NAVBAR */
+#navbar{
+border-bottom:2px solid #333;
+background: -webkit-gradient(linear, left top, left bottom, from(#333), to(#000)); /* for webkit browsers */
+background: -moz-linear-gradient(top,  #333,  #000); /* for firefox 3.6+ */
+}
+#navbar li{
+list-style:none;
+display:inline-block;
+text-align:center;
+width:25%;
+}
+#navbar a{
+display:inline-block;
+width:100%;
+color:#aaa;
+text-shadow:0 1px 0 #000;
+border-right:1px solid #222;
+background-image:url(img/tabs.png);
+background-repeat: no-repeat ;
+padding:50px 0 5px
+}
+#navbar li:last-child a{border:0}
+#navbar li a:hover{
+background-color: -webkit-gradient(linear, left top, left bottom, from(#666), to(#333)); /* for webkit browsers */
+background-color: -moz-linear-gradient(top,  #666,  #333); /* for firefox 3.6+ */
+color:#fff
+}
+
+
+#tab-playing a{background-position: center 10px}
+#tab-queue a{background-position: center -52px}
+#tab-playlists a{background-position: center -120px}
+#tab-search a{background-position: center -190px}
+
+#tab-playing.cur a{background-position: center -264px}
+#tab-queue.cur a{background-position: center -325px}
+#tab-playlists.cur a{background-position: center -395px}
+#tab-search.cur a{background-position: center -465px}
+
+#navbar .cur a{
+background-color:#333;
+background-color: -webkit-gradient(linear, left top, left bottom, from(#666), to(#333)); /* for webkit browsers */
+background-color: -moz-linear-gradient(top,  #666,  #333); /* for firefox 3.6+ */
+}
+/*************************************** PLAYER */
+.ui-page-active #progress {
+background:#222 ;
+font-size:11px;
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+z-index:1
+}
+#progress .ui-slider-handle{
+position:absolute;
+width:20px;
+height:100%;
+}
+#progress .ui-slider{height:20px}
+#control-position{
+float:left;
+text-align:left;
+background:#357fd2;
+left:0;
+position:relative;
+padding:0 0 0 4px;
+}
+#control-length{
+float:right;
+padding:0 4px;
+position:absolute;
+right:0;
+top:2px
+}
+#now-playing em{
+color:white;
+font-style:normal;
+line-height:1.1;
+padding:40px 0 0;
+display:block;
+font-weight:bold;
+height:100px
+}
+#now-playing em strong{
+display:block;
+}
+#now-playing em big{
+display:block;
+font-size:22px
+}
+#now-playing em span{
+display:block;
+color:#999;
+}
+#player {
+}
+#controls a{
+display:inline-block;
+width:102px;
+height:102px;
+margin:0;
+}
+#controls a .ui-btn-inner{
+background:url(img/spr.png) no-repeat;
+display:inline-block;
+width:50px;
+height:50px;
+margin-top:25px;
+}
+#controls a .ui-btn-text{display:none}
+#controls #control-prev .ui-btn-inner{background-position:-32px -55px}
+#controls #control-next .ui-btn-inner{background-position:-32px -3px}
+#controls #control-playpause{background:url(img/spr.png) no-repeat -111px 0px;}
+#controls #control-playpause .ui-btn-inner{background-position:-227px -21px}
+#controls #control-playpause.pp .ui-btn-inner{background-position:-276px -21px}
+
+#vol {
+background:url(img/spr.png) no-repeat -14px -111px;
+width:312px;
+height:84px;
+margin:1em auto;
+position:relative;
+overflow:hidden;
+cursor:pointer
+}
+#vol .ui-slider-handle{
+position:absolute;
+}
+#vol .ui-btn-down-c{
+position:absolute;
+display:block;
+width:100%;
+height:80px
+}
+#vol #vol-bar{
+background:url(img/spr.png) no-repeat -14px -200px;
+height:84px;
+display:block;
+position:absolute;
+}
+
+.ui-listview-filter {
+padding:0px 2px 8px;
+text-align:right;
+border-bottom:1px solid #333;
+}
+.ui-listview-filter input{
+background-image: url(img/tabs.png);
+background-repeat: no-repeat;
+background-position: -4px -540px;
+padding-left:23px
+}
+/* clear text */
+.ui-listview-filter .ui-btn-text,
+.ui-input-search .ui-btn-text{display:none}
+
+.ui-li .ui-icon-arrow-r, .queue{
+position:absolute;
+right:0;
+top:0;
+width:20px;
+height:100%;
+padding:0 6px;
+background:url(img/add.png) no-repeat 65% 50%
+}
+.alignl{float:left}
+
+.ui-input-search{text-align:right;padding:10px 3px 0}
+#search-submit{
+float:right;
+margin:10px 3px;
+padding:0 3px;
+color:#eee;
+background:#333;
+-moz-border-radius:7px;
+-webkit-border-radius:7px;
+border-radius:7px;
+}
+
+
+
+
+#player_buttons {
+	float: left;
+}
+#title {
+	float: left;
+	margin-left: 1em;
+	font-size: 1.7em;
+	font-weight: bold;
+}
+#artist {
+	float: left;
+	margin-left: 0.7em;
+	font-size: 1.1em;
+}
+#album {
+	float: left;
+	margin-left: 0.3em;
+	font-size: 1.1em;
+}
+#title {
+	float: left;
+	margin-left: 0.7em;
+}
+#time {
+	float: right;
+	clear: right;
+	margin-right: 1em;
+}
+/* ****************************************************** END PLAYER */
+.ui-li{
+text-align:left;
+border-bottom:1px solid #333;
+position:relative
+}
+.ui-li a{
+color:#eee;
+display:block;
+}
+.ui-listview .ui-link-inherit{
+padding:6px;
+font-size:larger
+}
+.ui-li a:hover{
+background-color:#333;
+background-color: -webkit-gradient(linear, left top, left bottom, from(#666), to(#333)); /* for webkit browsers */
+background-color: -moz-linear-gradient(top,  #666,  #333); /* for firefox 3.6+ */
+}
+
+.ui-listview .ui-li-divider{
+font-weight:bold;
+padding:13px 0 0;
+color:#666;
+border-bottom:2px solid #666;
+}
+.dequeue{
+position:absolute;
+right:0;
+top:0;
+width:20px;
+height:100%;
+border-left:1px solid #333;
+padding:0 6px;
+background:#000 url(img/remove.png) no-repeat center;
+}
+.dequeue:hover{background-color:#333}
+/* ****************************************************** QUEUE */
+
+.line {
+	clear: both;
+	width: 100%;
+	display: table;
+	background: white;
+	font-style: normal;
+}
+.line:focus, .line:hover { 
+	font-style: italic;
+	color: #f80; 
+}
+.track_actions {
+	width: 8%;
+	display: table-cell;
+	padding-right: 10px;
+	text-align: right;
+	vertical-align: middle;
+}
+.track_number {
+	width: 2%;
+	display: table-cell;
+	vertical-align: middle;
+}
+.track_title {
+	width: 20%;
+	display: table-cell;
+	vertical-align: middle;
+}
+.track_genre {
+	width: 10%;
+	display: table-cell;
+	vertical-align: middle;
+}
+.track_artist {
+	width: 15%;
+	display: table-cell;
+	vertical-align: middle;
+}
+.track_album {
+	width: 25%;
+	display: table-cell;
+	vertical-align: middle;
+}
+.track_duration {
+	width: 5%;
+	display: table-cell;
+	vertical-align: middle;
+}
+.track_rating {
+	width: 15%;
+	display: table-cell;
+	vertical-align: middle;
+}
+#clear_queue {
+	float: left;
+}
+
+.enqueue {
+	display:block;
+	float: left;
+}
+
+.dequeue {
+	display:block;
+	float: left;
+}
+
+.play {
+	background:url(img/play_grey.png) no-repeat center center;
+	height: 24px; 
+	width: 24px;
+	border: none;
+	display:block;
+	float: left;
+}
+
+.play span {
+	display: none;
+}
+
+.play:hover {
+	background:url(img/play.png) no-repeat center center;
+	border: none;
+}
+
+/* ****************************************************** END QUEUE */
+/* ****************************************************** TABS */
+#tabs_header {
+	width: 100%;
+	clear: both;
+}
+
+#status_feedback {
+	color: #f80;
+}
+
+#tabs ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	background: white;
+	float: left;
+}
+
+#tabs li {
+	float: left;
+	margin: 0 1em 0 0;	
+}
+#tabs li span {
+	text-decoration: none;
+	display: block;
+	width: 6em;
+	padding: 0 0.5em;
+	font-weight: bold;
+	color: black;
+	border-bottom: 0.5em solid #fc6;
+	color: #fc6;
+	cursor: pointer;
+}
+#tabs li span:hover {
+	color: #fa3;
+	border-color: #fa3;
+}
+#content {
+	border-top: 1px solid  #fc6;
+	clear: both;
+	padding: 0.7em;
+}
+#tabs .selected {
+	color: #f80;
+	border-color: #f80;
+	position: relative;
+	top: 1px;
+}
+/* ****************************************************** END TABS */
+/* ****************************************************** LIBRARY BROWSING */
+.library_previous {
+	float: left;
+	clear: left;
+	width: 10%;
+}
+.library_status {
+	position: relative;
+	float: left;
+	text-align: center;
+	width: 80%;
+}
+.library_next {
+	float: left;
+	clear: right;
+	width: 10%;
+}
+#go_next_top {
+	float: right;
+}
+#go_next {
+	float: right;
+}
+/* ****************************************************** END LIBRARY BROWSING */
+/* ****************************************************** SEARCH */
+#search {
+	float: left;
+	clear: both;
+	width: 100%;
+	line-height: 2em;
+}
+#search_filter {
+	border: 1px solid grey;
+	width: 70%;
+}
+#search_filter:hover {
+	border: 1px solid blue;
+}
+
+#img_searching {
+	margin-left: auto;
+	margin-right: auto;
+	vertical-align: middle;
+}
+
+#do_search {
+	vertical-align: middle;
+	cursor: pointer;
+}
+#search_add_all {
+	float: left;
+}
+.searchfor {
+	float: left;
+	font-weight: bolder;
+}
+.cell {
+	float: left;
+	margin-left: 1em;
+}
+.prop {
+	float: left;
+	font-weight: bold;
+}
+.value {
+	float: left;
+	font-style: italic;
+}
+/* ****************************************************** END SEARCH */
+
+/* ****************************************************** PLAYLISTS */
+.pl_row {
+	width: 100%;
+	float: left;
+	clear: both;
+	margin-bottom: 2em;
+}
+
+.pl_name img {
+	margin-right: 1em;
+	vertical-align: middle;
+}
+
+.pl_name {
+	float: left;
+	clear: right;
+	font-size: large;
+	color: 000033;
+	cursor: pointer;
+}
+
+.pl_load {
+	vertical-align: middle;
+}
+
+.pl_entries {
+	margin-left: 2em;
+	float: left;
+	font-size: medium;
+}
+/* ****************************************************** END PLAYLISTS */
+
+
+
+
+
+
+
+
+
+
+
+/*
+* jQuery Mobile Framework
+* Copyright (c) jQuery Project
+* Dual licensed under the MIT (MIT-LICENSE.txt) or GPL (GPL-LICENSE.txt) licenses.
+*/
+.spin  {
+	-webkit-transform: rotate(360deg);
+	-webkit-animation-name: spin;
+	-webkit-animation-duration: 1s;
+	-webkit-animation-iteration-count:  infinite;
+}
+@-webkit-keyframes spin {
+	from {-webkit-transform: rotate(0deg);}
+  	to {-webkit-transform: rotate(360deg);}
+}
+
+/* Transitions from jQtouch (with small modifications): http://www.jqtouch.com/
+Built by David Kaneda and maintained by Jonathan Stark.
+*/
+.in, .out {
+	-webkit-animation-timing-function: ease-in-out;
+	-webkit-animation-duration: 350ms;
+}
+
+.slide.in {
+	-webkit-transform: translateX(0);
+	-webkit-animation-name: slideinfromright;
+}
+
+.slide.out {
+	-webkit-transform: translateX(-100%);
+	-webkit-animation-name: slideouttoleft;
+}
+
+.slide.in.reverse {
+	-webkit-transform: translateX(0);
+	-webkit-animation-name: slideinfromleft;
+}
+
+.slide.out.reverse {
+	-webkit-transform: translateX(100%);
+	-webkit-animation-name: slideouttoright;
+}
+
+.slideup.in {
+	-webkit-transform: translateY(0);
+	-webkit-animation-name: slideinfrombottom;
+	z-index: 10;
+}
+
+.slideup.out {
+	-webkit-animation-name: dontmove;
+	z-index: 0;
+}
+
+.slideup.out.reverse {
+	-webkit-transform: translateY(100%);
+	z-index: 10;
+	-webkit-animation-name: slideouttobottom;
+}
+
+.slideup.in.reverse {
+	z-index: 0;
+	-webkit-animation-name: dontmove;
+}
+.slidedown.in {
+	-webkit-transform: translateY(0);
+	-webkit-animation-name: slideinfromtop;
+	z-index: 10;
+}
+
+.slidedown.out {
+	-webkit-animation-name: dontmove;
+	z-index: 0;
+}
+
+.slidedown.out.reverse {
+	-webkit-transform: translateY(-100%);
+	z-index: 10;
+	-webkit-animation-name: slideouttotop;
+}
+
+.slidedown.in.reverse {
+	z-index: 0;
+	-webkit-animation-name: dontmove;
+}
+
+@-webkit-keyframes slideinfromright {
+    from { -webkit-transform: translateX(100%); }
+    to { -webkit-transform: translateX(0); }
+}
+
+@-webkit-keyframes slideinfromleft {
+    from { -webkit-transform: translateX(-100%); }
+    to { -webkit-transform: translateX(0); }
+}
+
+@-webkit-keyframes slideouttoleft {
+    from { -webkit-transform: translateX(0); }
+    to { -webkit-transform: translateX(-100%); }
+}
+
+@-webkit-keyframes slideouttoright {
+    from { -webkit-transform: translateX(0); }
+    to { -webkit-transform: translateX(100%); }
+}
+
+
+@-webkit-keyframes slideinfromtop {
+    from { -webkit-transform: translateY(-100%); }
+    to { -webkit-transform: translateY(0); }
+}
+
+@-webkit-keyframes slideinfrombottom {
+    from { -webkit-transform: translateY(100%); }
+    to { -webkit-transform: translateY(0); }
+}
+
+@-webkit-keyframes slideouttobottom {
+    from { -webkit-transform: translateY(0); }
+    to { -webkit-transform: translateY(100%); }
+}
+
+@-webkit-keyframes slideouttotop {
+    from { -webkit-transform: translateY(0); }
+    to { -webkit-transform: translateY(-100%); }
+}
+@-webkit-keyframes fadein {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@-webkit-keyframes fadeout {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+.fade.in {
+	opacity: 1;
+	z-index: 10;
+	-webkit-animation-name: fadein;
+}
+.fade.out {
+	z-index: 0;
+}
+
+/* The properties in this body rule are only necessary for the 'flip' transition.
+ * We need specify the perspective to create a projection matrix. This will add
+ * some depth as the element flips. The depth number represents the distance of
+ * the viewer from the z-plane. According to the CSS3 spec, 1000 is a moderate
+ * value.
+ */
+.ui-mobile-viewport-transitioning {
+	-webkit-perspective: 1000;
+	position: absolute;
+}
+
+.ui-mobile-viewport-transitioning,
+.ui-mobile-viewport-transitioning .ui-page {
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+}
+
+.flip {
+	-webkit-animation-duration: .65s;
+	-webkit-backface-visibility:hidden;
+	-webkit-transform:translateX(0); /* Needed to work around an iOS 3.1 bug that causes listview thumbs to disappear when -webkit-visibility:hidden is used. */
+}
+
+.flip.in {
+	-webkit-transform: rotateY(0) scale(1);
+	-webkit-animation-name: flipinfromleft;
+}
+
+.flip.out {
+	-webkit-transform: rotateY(-180deg) scale(.8);
+	-webkit-animation-name: flipouttoleft;
+}
+
+/* Shake it all about */
+
+.flip.in.reverse {
+	-webkit-transform: rotateY(0) scale(1);
+	-webkit-animation-name: flipinfromright;
+}
+
+.flip.out.reverse {
+	-webkit-transform: rotateY(180deg) scale(.8);
+	-webkit-animation-name: flipouttoright;
+}
+
+@-webkit-keyframes flipinfromright {
+    from { -webkit-transform: rotateY(-180deg) scale(.8); }
+    to { -webkit-transform: rotateY(0) scale(1); }
+}
+
+@-webkit-keyframes flipinfromleft {
+    from { -webkit-transform: rotateY(180deg) scale(.8); }
+    to { -webkit-transform: rotateY(0) scale(1); }
+}
+
+@-webkit-keyframes flipouttoleft {
+    from { -webkit-transform: rotateY(0) scale(1); }
+    to { -webkit-transform: rotateY(-180deg) scale(.8); }
+}
+
+@-webkit-keyframes flipouttoright {
+    from { -webkit-transform: rotateY(0) scale(1); }
+    to { -webkit-transform: rotateY(180deg) scale(.8); }
+}
+
+
+/* Hackish, but reliable. */
+
+@-webkit-keyframes dontmove {
+    from { opacity: 1; }
+    to { opacity: 1; }
+}
+
+.pop {
+	-webkit-transform-origin: 50% 50%;
+}
+
+.pop.in {
+	-webkit-transform: scale(1);
+    opacity: 1;
+	-webkit-animation-name: popin;
+	z-index: 10;
+}
+
+.pop.out.reverse {
+	-webkit-transform: scale(.2);
+	opacity: 0;
+	-webkit-animation-name: popout;
+	z-index: 10;
+}
+
+.pop.in.reverse {
+	z-index: 0;
+	-webkit-animation-name: dontmove;
+}
+
+@-webkit-keyframes popin {
+    from {
+        -webkit-transform: scale(.2);
+        opacity: 0;
+    }
+    to {
+        -webkit-transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes popout {
+    from {
+        -webkit-transform: scale(1);
+        opacity: 1;
+    }
+    to {
+        -webkit-transform: scale(.2);
+        opacity: 0;
+    }
+}/*
+* jQuery Mobile Framework
+* Copyright (c) jQuery Project
+* Dual licensed under the MIT (MIT-LICENSE.txt) or GPL (GPL-LICENSE.txt) licenses.
+*/
