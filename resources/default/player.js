@@ -602,7 +602,7 @@ function load_tag_cloud() {
 
 function load_sources() {
 	$('#sources').html('')
-	$.getJSON('/rest/playlists', function(json) {
+	$.getJSON('rest/playlists', function(json) {
 		$.each(json.playlists, function(index, source) {
 			add_source('sources', source);
 		});
