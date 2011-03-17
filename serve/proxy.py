@@ -57,7 +57,7 @@ class BufferProxyServer(TCPServer, Loggable):
                     if self in r:
                         self._handle_request_noblock()
                 except Exception, e:
-                    self.debug('Exception handling request: %s' % e)
+                    self.error('Exception handling request: %s' % e)
         finally:
             self.__shutdown_request = False
             self.__is_shut_down.set()
