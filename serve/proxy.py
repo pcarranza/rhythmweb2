@@ -52,9 +52,12 @@ class BufferProxyServer(TCPServer, Loggable):
         self.__is_shut_down.clear()
         try:
             while not self.__shutdown_request:
-                r, w, e = select.select([self], [], [], poll_interval)
-                if self in r:
-                    self._handle_request_noblock()
+                try:
+                    r, w, e = select.select([self], [], [], poll_interval)
+                    if self in r:
+                        self._handle_request_noblock()
+                except Exception, e:
+                    self.debug('Exception handling request: %s' % e)
         finally:
             self.__shutdown_request = False
             self.__is_shut_down.set()
