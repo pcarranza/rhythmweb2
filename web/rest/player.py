@@ -64,6 +64,10 @@ class Page(RBRest):
             handler.dequeue(entry_ids)
             
             
+        elif action == 'shuffle_queue':
+            handler.shuffle_queue()
+            
+            
         elif action == 'clear_queue':
             handler.clear_play_queue()
         

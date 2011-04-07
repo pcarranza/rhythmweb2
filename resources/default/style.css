@@ -146,8 +146,13 @@ img {
     font-weight: bold;
     font-style: normal;
 }
+
 #clear_queue {
 	float: left;
+}
+#shuffle_queue {
+	float: left;
+	margin-left: 1em;
 }
 
 .enqueue {

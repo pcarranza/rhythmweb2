@@ -19,6 +19,7 @@ import rb, rhythmdb
 import os.path, urllib
 
 from serve.log.loggable import Loggable
+import random
 
 TYPE_SONG = 'song'
 TYPE_RADIO = 'iradio'
@@ -670,6 +671,23 @@ class RBHandler(Loggable):
                                    query_model=source.query_model, \
                                    limit=limit)
         return entries
+    
+    
+    def shuffle_queue(self):
+        self.debug('shuffling queue')
+        entries = self.get_play_queue()
+        if entries:
+            self.debug('There are entries, actually shuffling the queue')
+            random.shuffle(entries)
+            
+            for i in range(0, len(entries) - 1):
+                entry = self.__get_entry(entries[i])
+                self.move_entry_in_queue(entry, i)
+    
+    
+    def move_entry_in_queue(self, entry, index):
+        queue = self.__shell.props.queue_source
+        queue.move_entry(entry, index)
         
     
     def __append_entry_to_cache(self, db, entry):

@@ -47,7 +47,8 @@ $(document).ready(function() {
 			info('<i>next...</i>');
 		});
 	});
-
+	
+	
 	$('#seek_back').click(function() {
 		$.post("rest/player", { action: "seek", "time" : "-10" }, function (data) {
 			timers.push(setTimeout('update_status()', 200));
@@ -210,6 +211,10 @@ function create_remove_all(id) {
 	return '<img id="' + id + '" src="img/clear.png" width="24" height="24" class="link" alt="Clear queue" title="Remove all from queue"/>'
 }
 
+function create_shuffle_queue(id) {
+	return '<img id="' + id + '" src="img/shuffle.png" width="24" height="24" class="link" alt="Shuffle queue" title="Shuffle playing queue"/>'
+}
+
 
 function search_parameters_to_html(parameters) {
 	var component = '<div id="search_parameters" class="line"><span class="searchfor">Searching for: </span>';
@@ -353,17 +358,28 @@ function load_queue() {
 		$('#queue').html('');
 		$('#queue').append(create_header('queue_header_actions'));
 		$('#queue_header_actions').append(create_remove_all('clear_queue'));
+		$('#queue_header_actions').append(create_shuffle_queue('shuffle_queue'));
 		if (json && json.entries) {
 			$.each(json.entries, function(index, entry) {
 				add_queue_entry(index, entry);
 			});
 		}
+		
 		$('#clear_queue').click(function() {
 			$.post("rest/player", {action : "clear_queue"}, function(data) {
 				info('<i>play queue cleared</i>');
 				$('#queue').html('');
 			});
 		});
+		
+		$('#shuffle_queue').click(function() {
+			$.post("rest/player", { action: "shuffle_queue" }, function (data) {
+				timers.push(setTimeout('load_queue()', 500));
+				timers.push(setTimeout('update_status()', 500));
+				info('<i>playing queue shuffled</i>');
+			});
+		});
+
 	});
 }
 
