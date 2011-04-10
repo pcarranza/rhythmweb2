@@ -539,46 +539,46 @@ class RBHandler(Loggable):
         Appends the given entry id or ids to the playing queue 
         '''
         self.info('Adding entries %s to queue' % entry_ids)
+        queue = self.__shell.props.queue_source
         if type(entry_ids) is list:
             for entry_id in entry_ids:
-                entry = self.load_entry(entry_id)
+                entry = self.__get_entry(entry_id)
                 if entry is None:
                     continue
-                location = str(entry.location)
-                self.debug('Enqueuing entry %s' % location)
-                self.__shell.add_to_queue(location)
-        elif type(entry_ids) is int:
-            entry = self.load_entry(entry_ids)
-            if not entry is None:
-                location = str(entry.location)
-                self.debug('Enqueuing entry %s' % location)
-                self.__shell.add_to_queue(location)
+                self.debug('Enqueuing entry %s' % entry_id)
+                queue.add_entry(entry, -1)
                 
-        self.__shell.props.queue_source.queue_draw()
+        elif type(entry_ids) is int:
+            entry = self.__get_entry(entry_id)
+            if not entry is None:
+                self.debug('Enqueuing entry %s' % entry_id)
+                queue.add_entry(entry, -1)
+                
+        queue.queue_draw()
         
         
     def dequeue(self, entry_ids):
         '''
         Removes the given entry id or ids from the playing queue 
         '''
+        queue = self.__shell.props.queue_source
         if type(entry_ids) is list:
             self.info('Removing entries %s from queue' % entry_ids)
             for entry_id in entry_ids:
-                entry = self.load_entry(entry_id)
+                entry = self.__get_entry(entry_id)
                 if entry is None:
                     continue
-                location = str(entry.location)
-                self.trace('Dequeuing entry %s' % location)
-                self.__shell.remove_from_queue(location)
+                self.trace('Dequeuing entry %s' % entry_id)
+                queue.remove_entry(entry)
+                
         elif type(entry_ids) is int:
             self.info('Removing entry %d from queue' % entry_ids)
             entry = self.load_entry(entry_ids)
             if not entry is None:
-                location = str(entry.location)
-                self.trace('Dequeuing entry %s' % location)
-                self.__shell.remove_from_queue(location)
+                self.trace('Dequeuing entry %s' % entry_ids)
+                queue.remove_entry(entry)
                 
-        self.__shell.props.queue_source.queue_draw()
+        queue.queue_draw()
         
     
     def clear_play_queue(self):
