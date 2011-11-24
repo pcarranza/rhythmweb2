@@ -23,29 +23,30 @@
 # OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
-import rb, os, sys
+import os
+import serve.log
 
-import rbhandle
+from gi.repository import GObject, Peas
 from rbhandle import RBHandler
 
 from serve import CGIServer
 from serve.conf import Configuration
 from serve.log.loggable import Loggable
 
-import serve.log
-import logging
 from serve.app import CGIApplication
-from preferences import Preferences
 
-class RhythmWeb(rb.Plugin, Loggable):
+class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
     
-    config = None
-    preferences = None
+    __gtype_name__ = 'RhythmWeb'
+    object = GObject.property(type=GObject.GObject)
+    
     
     def __init__(self):
+        GObject.Object.__init__(self)
         base_path = os.path.dirname(__file__)
         
         config_path = os.path.join(base_path, 'cfg', 'rb-serve.conf')
+        
         config = Configuration()
         config.load_configuration(config_path)
         serve.log.get_factory().configure(config)
@@ -57,9 +58,11 @@ class RhythmWeb(rb.Plugin, Loggable):
         resource_path = os.path.join(base_path, 'resources')
         config.put('*resources', resource_path)
 
-        
-    def activate(self, shell):
+    
+    def do_activate(self):
+        shell = self.object
         config = self.config
+
         config.print_configuration(self)
         rbhandler = RBHandler(shell)
         
@@ -71,11 +74,11 @@ class RhythmWeb(rb.Plugin, Loggable):
         server.start()
         shell.server = server
         
-        self.preferences = Preferences(config, self.config_path)
-
+#        self.preferences = Preferences(config, self.config_path)
         
         
-    def deactivate(self, shell):
+    def do_deactivate(self):
+        shell = self.object
         if not shell.server is None:
             shell.server.stop()
         
@@ -84,13 +87,13 @@ class RhythmWeb(rb.Plugin, Loggable):
         del self.config_path
         del self.base_path
 
-        if not self.preferences.button == None:
-            self.preferences.button.disconnect(self.connect_id_pref2)
-        del self.preferences 
+#        if not self.preferences.button == None:
+#            self.preferences.button.disconnect(self.connect_id_pref2)
+#        del self.preferences 
 
 
-    def create_configure_dialog(self, dialog=None):
-        dialog = self.preferences.show_dialog()
-        self.connect_id_pref2 = self.preferences.button.connect('clicked', lambda x: dialog.destroy() )
-        return dialog
+#    def create_configure_dialog(self, dialog=None):
+#        dialog = self.preferences.show_dialog()
+#        self.connect_id_pref2 = self.preferences.button.connect('clicked', lambda x: dialog.destroy() )
+#        return dialog
 

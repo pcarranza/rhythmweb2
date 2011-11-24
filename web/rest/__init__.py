@@ -50,7 +50,7 @@ class RBRest(BaseRest, Loggable):
     
     def get_status_as_json(self):
         self.trace('Loading status as json object')
-        return Status.get_status_as_JSon(self.get_rb_handler())    
+        return Status.get_status_as_JSon(self.get_rb_handler())
     
     
     def get_library_as_json_list(self, library):
@@ -78,7 +78,7 @@ class Song:
     
     @staticmethod
     def get_song_as_JSon(rbhandler, entry_id):
-        entry = rbhandler.load_entry(entry_id)
+        entry = rbhandler.load_rb_entry(entry_id)
         
         if entry is None:
             return None

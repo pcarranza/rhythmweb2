@@ -1,4 +1,4 @@
-[RB Plugin]
+[Plugin]
 Loader=python
 Module=rhythmweb
 IAge=1

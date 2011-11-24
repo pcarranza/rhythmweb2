@@ -14,19 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import gobject
-import cgi
-
+from gi.repository import GObject
 from wsgiref.simple_server import WSGIRequestHandler
 from wsgiref.simple_server import make_server
 from serve.log.loggable import Loggable
-from SocketServer import ThreadingTCPServer, TCPServer
 
-import SocketServer
-import socket
-import time
-import threading
 from serve.proxy import BufferProxyServer
 
 
@@ -72,18 +64,18 @@ class CGIServer(Loggable):
                               handle_request,
                               handler_class=LoggingWSGIRequestHandler)
             
-        self.__watch_request_loop_id = gobject.io_add_watch(self.__internal_server.socket,
-                                                 gobject.IO_IN,
+        self.__watch_request_loop_id = GObject.io_add_watch(self.__internal_server.socket,
+                                                 GObject.IO_IN,
                                                  self.__idle_request_loop)
         
         self.__running = True
         self.info('   SERVER STARTED')
         
         if use_proxy == True:
-            self.info('   STARTING PROXY')
             self.info('   PROXY_HOSTNAME %s' % proxy_hostname)
             self.info('   PROXY_PORT     %d' % proxy_port)
             
+            self.info('   STARTING PROXY')
             self.__proxy_server = BufferProxyServer(proxy_hostname, proxy_port, hostname, port)
             self.__proxy_server.start()
             
@@ -93,7 +85,7 @@ class CGIServer(Loggable):
 
     def stop(self):
         self.info('   STOPPING SERVER')
-        gobject.source_remove(self.__watch_request_loop_id)
+        GObject.source_remove(self.__watch_request_loop_id)
         if self.__internal_server is None:
             return
         
@@ -108,7 +100,9 @@ class CGIServer(Loggable):
     
     
     def __idle_request_loop(self, source, cb_condition):
+        self.debug('Handling request')
         if not self.__running:
+            self.debug('NOT RUNNING')
             return False
         self.__internal_server.handle_request()
         return True
@@ -138,10 +132,4 @@ class LoggingWSGIRequestHandler(WSGIRequestHandler, Loggable):
 
 
 
-    
-    
-    
-    
-        
-    
-    
+

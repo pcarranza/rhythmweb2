@@ -75,7 +75,7 @@ class CGIApplication(Loggable):
             
             
     def parse_post(self, environ):
-        self.debug('Parsing post parameters')
+        self.trace('Parsing post parameters')
         
         if 'CONTENT_TYPE' in environ:
             length = -1
@@ -147,7 +147,7 @@ class CGIApplication(Loggable):
         if not request_path.startswith('/'):
             request_path = '/' + request_path
             
-        self.debug('%s method - path: %s' % (request_method.upper(), request_path))
+        self.debug('handling %s method - path: %s' % (request_method.upper(), request_path))
  
         resource_path = self.__get_resource_path(environ)
         web_path = self.__web_path
@@ -164,7 +164,7 @@ class CGIApplication(Loggable):
                 web_path = os.path.join(web_path, name)
                 
                 if self.is_python_file(web_path):
-                    self.trace('Found file %s, loading "Page" class' % web_path)
+                    self.debug('Found file %s, loading "Page" class' % web_path)
                     
                     path_params = request_path.replace(walked_path, '')
                     environ['PATH_PARAMS'] = path_params
@@ -189,18 +189,19 @@ class CGIApplication(Loggable):
                                               (request_method, e.message))
                 
                 elif self.is_resource_file(web_path):
-                    self.trace('Handling resource %s' % web_path)
+                    self.debug('Handling web resource %s' % web_path)
                     resource = self.get_resource_handler(web_path)
                     return resource.handle(response, environ)
 
                 elif self.is_resource_file(resource_path):
-                    self.trace('Handling resource %s' % resource_path)
+                    self.debug('Handling file resource %s' % resource_path)
                     resource = self.get_resource_handler(resource_path)
                     return resource.handle(response, environ)
                     
                 else:
                     continue
-                        
+            
+            self.debug('404 - Could not find resource %s' % request_path)
             raise ServerException(404, 'Could not find resource %s' % request_path)
             # NOT FOUND
         
