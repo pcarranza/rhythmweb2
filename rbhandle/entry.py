@@ -1,12 +1,28 @@
+# -*- coding: utf-8 -
+# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
+# Copyright (C) 2010  Pablo Carranza
+# 
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from serve.log.loggable import Loggable
-from gi.repository import RB, GObject
-
+from gi.repository import RB
 
 class EntryHandler(Loggable):
     
     def __init__(self, shell):
-        self.__db = shell.props.db
+        self.db = shell.props.db
+        
         
     def get_entry(self, entry_id):
         '''
@@ -18,7 +34,7 @@ class EntryHandler(Loggable):
         entry_id = int(entry_id)
         
         self.trace('Getting entry %d' % entry_id)
-        return self.__db.entry_lookup_by_id(entry_id)
+        return self.db.entry_lookup_by_id(entry_id)
         
         
     def load_rb_entry(self, entry_id):
@@ -32,19 +48,19 @@ class EntryHandler(Loggable):
             return None
         
         rbentry = RBEntry()
-        rbentry.id = self.get_value(entry, RB.RhythmDBPropType.ENTRY_ID)
-        rbentry.title = self.get_value(entry, RB.RhythmDBPropType.TITLE)
-        rbentry.artist = self.get_value(entry, RB.RhythmDBPropType.ARTIST)
-        rbentry.album = self.get_value(entry, RB.RhythmDBPropType.ALBUM)
-        rbentry.track_number = self.get_value(entry, RB.RhythmDBPropType.TRACK_NUMBER)
-        rbentry.duration = self.get_value(entry, RB.RhythmDBPropType.DURATION)
-        rbentry.rating = self.get_value(entry, RB.RhythmDBPropType.RATING)
-        rbentry.year = self.get_value(entry, RB.RhythmDBPropType.YEAR)
-        rbentry.genre = self.get_value(entry, RB.RhythmDBPropType.GENRE)
-        rbentry.play_count = self.get_value(entry, RB.RhythmDBPropType.PLAY_COUNT)
-        rbentry.location = self.get_value(entry, RB.RhythmDBPropType.LOCATION)
-        rbentry.bitrate = self.get_value(entry, RB.RhythmDBPropType.BITRATE)
-        rbentry.last_played = self.get_value(entry, RB.RhythmDBPropType.LAST_PLAYED)
+        rbentry.id = self.get_entry_id(entry)
+        rbentry.title = entry.get_string(RB.RhythmDBPropType.TITLE) # self.get_value(entry, RB.RhythmDBPropType.TITLE)
+        rbentry.artist = entry.get_string(RB.RhythmDBPropType.ARTIST) # self.get_value(entry, RB.RhythmDBPropType.ARTIST)
+        rbentry.album = entry.get_string(RB.RhythmDBPropType.ALBUM)
+        rbentry.track_number = entry.get_ulong(RB.RhythmDBPropType.TRACK_NUMBER)
+        rbentry.duration = entry.get_ulong(RB.RhythmDBPropType.DURATION)
+        rbentry.rating = entry.get_double(RB.RhythmDBPropType.RATING)
+        rbentry.year = entry.get_ulong(RB.RhythmDBPropType.YEAR)
+        rbentry.genre = entry.get_string(RB.RhythmDBPropType.GENRE)
+        rbentry.play_count = entry.get_ulong(RB.RhythmDBPropType.PLAY_COUNT)
+        rbentry.location = entry.get_string(RB.RhythmDBPropType.LOCATION)
+        rbentry.bitrate = entry.get_ulong(RB.RhythmDBPropType.BITRATE)
+        rbentry.last_played = entry.get_ulong(RB.RhythmDBPropType.LAST_PLAYED)
         
         return rbentry
     
@@ -59,86 +75,88 @@ class EntryHandler(Loggable):
         self.info('Setting rating %d to entry %s' % (rating, entry_id))
         entry = self.get_entry(entry_id)
         if not entry is None:
-            self.__db.set(entry, RB.RhythmDBPropType.RATING, rating)
-
+            self.db.entry_set(entry, RB.RhythmDBPropType.RATING, rating)
     
     
     def get_entry_id(self, entry):
-        return self.get_value(entry, RB.RhythmDBPropType.ENTRY_ID)
+        return entry.get_ulong(RB.RhythmDBPropType.ENTRY_ID)
     
     
-    def get_value(self, entry, property_type):
-        self.trace('Loading value %s' % str(property_type))
-        
-        t = self.__db.get_property_type(property_type)
-        value = GObject.Value()
-        value.init(t)
-        
-        self.__db.entry_get(entry, property_type, value)
-        
-        if t.name == 'gulong':
-            return value.get_ulong()
-            
-        elif t.name == 'gchararray':
-            return value.get_string()
-            
-        elif t.name == 'gboolean':
-            return value.get_boolean()
-            
-        elif t.name == 'gboxed':
-            return value.get_boxed()
-            
-        elif t.name == 'gchar':
-            return value.get_char()
-            
-        elif t.name == 'gdouble':
-            return value.get_double()
-            
-        elif t.name == 'genum':
-            return value.get_enum()
-            
-        elif t.name == 'gflags':
-            return value.get_flags()
-            
-        elif t.name == 'gfloat':
-            return value.get_float()
-            
-        elif t.name == 'gint':
-            return value.get_int()
-            
-        elif t.name == 'gint64':
-            return value.get_int64()
-            
-        elif t.name == 'glong':
-            return value.get_long()
-            
-        elif t.name == 'gobject':
-            return value.get_object()
-            
-        elif t.name == 'gparam':
-            return value.get_param()
-            
-        elif t.name == 'gpointer':
-            return value.get_pointer()
-            
-        elif t.name == 'gstring':
-            return value.get_string()
-            
-        elif t.name == 'guchar':
-            return value.get_uchar()
-            
-        elif t.name == 'guint':
-            return value.get_uint()
-            
-        elif t.name == 'guint64':
-            return value.get_uint64()
-            
-        elif t.name == 'gvariant':
-            return value.get_variant()
-            
-        else:
-            self.warning('Unknown type %s' % t.name)
-            return None
+#    def get_value(self, entry, property_type):
+#        return entry.get_string(property_type)
+#        
+##
+##        t = self.db.get_property_type(property_type)
+##        value = GObject.Value()
+##        value.init(t)
+##        
+##        self.db.entry_get(entry, property_type, value)
+##        
+##        entry.get_string(property_type)
+##        
+##        if t.name == 'gulong':
+##            return value.get_ulong()
+##            
+##        elif t.name == 'gchararray':
+##            return value.get_string()
+##            
+##        elif t.name == 'gboolean':
+##            return value.get_boolean()
+##            
+##        elif t.name == 'gboxed':
+##            return value.get_boxed()
+##            
+##        elif t.name == 'gchar':
+##            return value.get_char()
+##            
+##        elif t.name == 'gdouble':
+##            return value.get_double()
+##            
+##        elif t.name == 'genum':
+##            return value.get_enum()
+##            
+##        elif t.name == 'gflags':
+##            return value.get_flags()
+##            
+##        elif t.name == 'gfloat':
+##            return value.get_float()
+##            
+##        elif t.name == 'gint':
+##            return value.get_int()
+##            
+##        elif t.name == 'gint64':
+##            return value.get_int64()
+##            
+##        elif t.name == 'glong':
+##            return value.get_long()
+##            
+##        elif t.name == 'gobject':
+##            return value.get_object()
+##            
+##        elif t.name == 'gparam':
+##            return value.get_param()
+##            
+##        elif t.name == 'gpointer':
+##            return value.get_pointer()
+##            
+##        elif t.name == 'gstring':
+##            return value.get_string()
+##            
+##        elif t.name == 'guchar':
+##            return value.get_uchar()
+##            
+##        elif t.name == 'guint':
+##            return value.get_uint()
+##            
+##        elif t.name == 'guint64':
+##            return value.get_uint64()
+##            
+##        elif t.name == 'gvariant':
+##            return value.get_variant()
+##            
+##        else:
+##            self.warning('Unknown type %s' % t.name)
+##            return None
 
 
 class RBEntry():

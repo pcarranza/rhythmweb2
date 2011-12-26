@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -
 # Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
 # Copyright (C) 2010  Pablo Carranza
 # 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -
 # Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
 # Copyright (C) 2010  Pablo Carranza
 # 
@@ -14,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 from serve.rest.json import JSon
 from web.rest import RBRest
-from rbhandle import InvalidQueryException
+from rbhandle.query import InvalidQueryException
 from serve.request import ServerException
 
 
@@ -157,3 +159,4 @@ class Page(RBRest):
     
     def get_logname(self):
         return 'SEARCH'
+    

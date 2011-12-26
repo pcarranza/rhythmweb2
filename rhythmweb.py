@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -
 # Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
 # Copyright (C) 2010  Pablo Carranza
 # 
@@ -38,7 +39,7 @@ from serve.app import CGIApplication
 class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
     
     __gtype_name__ = 'RhythmWeb'
-    object = GObject.property(type=GObject.GObject)
+#    object = GObject.property(type=GObject.GObject)
     
     
     def __init__(self):
@@ -57,6 +58,7 @@ class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
         
         resource_path = os.path.join(base_path, 'resources')
         config.put('*resources', resource_path)
+        self.info('RhythmWeb loaded')
 
     
     def do_activate(self):

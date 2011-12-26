@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -
 # Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
 # Copyright (C) 2010  Pablo Carranza
 # 
@@ -13,3 +14,5 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+

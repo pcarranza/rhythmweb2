@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -
 # Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
 # Copyright (C) 2010  Pablo Carranza
 # 
@@ -14,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import logging
 import serve.log
+import sys
 from serve.log import LEVEL_TRACE
 
 
@@ -45,11 +48,15 @@ class Loggable(object):
     def error(self, message):
         self.__print(message, logging.ERROR)
         
-
+    
     def critical(self, message):
         self.__print(message, logging.CRITICAL)
         
-
+    
+    def warn(self, message):
+        self.warning(message)
+    
+    
     def warning(self, message):
         self.__print(message, logging.WARNING)
         
@@ -57,6 +64,8 @@ class Loggable(object):
     def __print(self, message, level):
         log = self.get_logger_factory().get_logger(self.get_logname())
         log.log(level, message)
+        if level >= log.level:
+            print >> sys.stdout, message
         
         
     def get_logname(self):
