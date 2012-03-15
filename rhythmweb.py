@@ -39,7 +39,7 @@ from serve.app import CGIApplication
 class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
     
     __gtype_name__ = 'RhythmWeb'
-#    object = GObject.property(type=GObject.GObject)
+    object = GObject.property(type=GObject.GObject)
     
     
     def __init__(self):
