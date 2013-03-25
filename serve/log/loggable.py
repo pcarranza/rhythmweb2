@@ -15,10 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
+import io
+import traceback
+import sys
 import logging
 import serve.log
-import sys
 from serve.log import LEVEL_TRACE
 
 
@@ -63,6 +64,11 @@ class Loggable(object):
     
     def __print(self, message, level):
         log = self.get_logger_factory().get_logger(self.get_logname())
+        (_, exc, trc) = sys.exc_info()
+        if exc:
+            trace = io.BytesIO()
+            traceback.print_exc(file=trace)
+            message = '%s\n%s' % (message, trace.getvalue())
         log.log(level, message)
         if level >= log.level:
             print >> sys.stdout, message

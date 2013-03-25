@@ -25,8 +25,12 @@
 
 
 import os
+import sys
+import traceback
+
 import serve.log
 
+from io import StringIO
 from gi.repository import GObject, Peas
 from rbhandle import RBHandler
 
@@ -62,21 +66,27 @@ class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
 
     
     def do_activate(self):
-        shell = self.object
-        config = self.config
+        try:
+            shell = self.object
+            config = self.config
+    
+            config.print_configuration(self)
+            rbhandler = RBHandler(shell)
+            
+            components = {'config' : config, 'RB' : rbhandler}
+            
+            application = CGIApplication('RhythmWeb', self.base_path, components)
+            
+            server = CGIServer(application, config)
+            server.start()
+            shell.server = server
+        except:
+            myerr = StringIO()
+            traceback.print_last(file=myerr)
+            self.error('Could not load plugin: %s' % myerr.get_value())
+            (_, exc, trc) = sys.sys.exc_info()
+            raise exc, None, trc
 
-        config.print_configuration(self)
-        rbhandler = RBHandler(shell)
-        
-        components = {'config' : config, 'RB' : rbhandler}
-        
-        application = CGIApplication('RhythmWeb', self.base_path, components)
-        
-        server = CGIServer(application, config)
-        server.start()
-        shell.server = server
-        
-#        self.preferences = Preferences(config, self.config_path)
         
         
     def do_deactivate(self):

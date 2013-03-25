@@ -31,14 +31,17 @@ class CGIApplication(Loggable):
 
     
     def __init__(self, app_name, path, components):
-        self.debug('%s CGI Application started' % app_name)
+        try:
+            self.debug('%s CGI Application started' % app_name)
+            
+            self.__web_path = os.path.join(path, 'web')
+            self.__components = components
+            self.__app_name = app_name
         
-        self.__web_path = os.path.join(path, 'web')
-        self.__components = components
-        self.__app_name = app_name
-    
-        resource_path = os.path.join(path, 'resources')
-        self.__resource_path = resource_path
+            resource_path = os.path.join(path, 'resources')
+            self.__resource_path = resource_path
+        except:
+            self.error('Exception intializing application')
         
     
     def handle_request(self, environ, response):
@@ -67,6 +70,7 @@ class CGIApplication(Loggable):
                  response)
             
         except Exception, e:
+            self.error('Exception handling request')
             return self.send_error(
                  500, 
                  '%s Unknown exception' % e, 
@@ -208,9 +212,11 @@ class CGIApplication(Loggable):
             # NOT FOUND
         
         except ServerException, e:
+            self.error('Exception handling method %s' % request_method)
             return self.send_error(e.code, e.message, response)
         
         except Exception, e:
+            self.error('Exception handling method %s' % request_method)
             return self.send_error(500, e.message, response)
             # UNKNOWN ERROR
 

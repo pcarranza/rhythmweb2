@@ -105,40 +105,47 @@ class ResourceHandler(Loggable):
     __extension = None
     
     def __init__(self, resource, content_type=None, open_as=''):
-        self.trace('Creating ResourceHandler Instance for resource %s' % resource)
-        
-        self._content_type = content_type
-        self.__open_as = open_as
-        
-        self.__file = resource
-        self.__extension = str(os.path.splitext(self.__file)[1]).lower()
+        try:
+            self.trace('Creating ResourceHandler Instance for resource %s' % resource)
+            
+            self._content_type = content_type
+            self.__open_as = open_as
+            
+            self.__file = resource
+            self.__extension = str(os.path.splitext(self.__file)[1]).lower()
 
-        self.trace('Resource %s file is %s' % (resource, self.__file))
+            self.trace('Resource %s file is %s' % (resource, self.__file))
+        except:
+            self.error('Exception initializing resource handler')
         
         
     def handle(self, response, accept_gzip=False):
-        self.debug('Handling resource %s' % self.__file)
-        
-        (content_type, open_as) = self.__get_content_type()
-        if not content_type:
-            raise UnknownContentTypeException(self.__extension)
-        
-        mtime = os.path.getmtime(self.__file)
-        mtime = datetime.fromtimestamp(mtime)
-        expiration = datetime.now() + timedelta(days=365)
+        try:
+            self.debug('Handling resource %s' % self.__file)
+            
+            (content_type, open_as) = self.__get_content_type()
+            if not content_type:
+                raise UnknownContentTypeException(self.__extension)
+            
+            mtime = os.path.getmtime(self.__file)
+            mtime = datetime.fromtimestamp(mtime)
+            expiration = datetime.now() + timedelta(days=365)
 
-        headers = [("Content-type", content_type), \
-                   ('Cache-Control', 'public'), \
-                   ('Last-Modified', mtime.ctime()), \
-                   ('Expires', expiration.ctime())]
-        
-        response('200 OK', headers)
+            headers = [("Content-type", content_type), \
+                       ('Cache-Control', 'public'), \
+                       ('Last-Modified', mtime.ctime()), \
+                       ('Expires', expiration.ctime())]
+            
+            open_mode = 'r%s' % open_as
+            
+            file = open(self.__file, open_mode)
+            
+            response('200 OK', headers)
 
-        open_mode = 'r%s' % open_as
-        
-        file = open(self.__file, open_mode)
-        
-        return ''.join(file.readlines())
+            return ''.join(file.readlines())
+        except:
+            self.error('Exception handling resource %s' % self.__file)
+            return ''
     
 
     def __get_content_type(self):

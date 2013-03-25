@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from types import NoneType
 
 class JSon():
     
@@ -73,6 +74,9 @@ class JSon():
             return_value.append("\"")
             return_value.append(self.__encode_str(value))
             return_value.append("\" ")
+
+        elif type(value) is NoneType:
+            return_value.append('null')
         
         elif type(value) is bool:
             if value:

@@ -18,7 +18,6 @@
 
 from serve.log.loggable import Loggable
 #from gi.repository import RB
-import gconf
 
 ORDER_LINEAR = 'linear'
 ORDER_SHUFFLE = 'shuffle'
@@ -34,7 +33,7 @@ class PlayerHandler(Loggable):
     
     def __init__(self, shell):
         self.shell = shell
-        self.player = shell.get_player()
+        self.player = shell.props.shell_player
         
         LINEAR_LOOP = "%s%s" % (ORDER_LINEAR, PLAY_LOOP)
         SHUFFLE_LOOP = "%s%s" % (ORDER_SHUFFLE, PLAY_LOOP)
@@ -65,7 +64,7 @@ class PlayerHandler(Loggable):
             ORDER_SHUFFLE_BY_RATING : ORDER_LINEAR,
             ORDER_SHUFFLE_BY_AGE_AND_RATING : ORDER_LINEAR}
         
-        self.__gconf = gconf.client_get_default()
+#        self.__gconf = gconf.client_get_default()
 #        self.__playing_song = None
 #        self.player.connect('playing-song-changed', self.__playing_song_changed)
     
@@ -212,14 +211,14 @@ class PlayerHandler(Loggable):
         '''
         Returns the play order
         '''
-        return self.__gconf.get_string(PLAY_ORDER_KEY)
+        return self.player.props.play_order
     
     
     def set_play_order(self, play_order):
         '''
         Sets the play order
         '''
-        self.__gconf.set_string(PLAY_ORDER_KEY, play_order)
+        self.player.props.play_order = play_order
     
     
     def toggle_shuffle(self):

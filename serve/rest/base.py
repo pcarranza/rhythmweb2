@@ -48,6 +48,7 @@ class BaseRest(Loggable):
             return self.__return_ok(return_value, response)
         
         except ServerException, e:
+            self.error('ServerException handling rest get')
             response('%d %s' % (e.code, e.message), self.__do_headers())
             return e.message
     
@@ -68,6 +69,7 @@ class BaseRest(Loggable):
             return self.__return_ok(return_value, response)
             
         except ServerException, e:
+            self.error('ServerException handling rest get')
             response('%d %s' % (e.code, e.message), self.__do_headers())
             return e.message
     
@@ -79,20 +81,24 @@ class BaseRest(Loggable):
     
     
     def __return_ok(self, value, response):
-        if value is None:
-            return self.__do_page_not_found(response)
-        
-        if isinstance(value, JSon):
-            headers = []
-            headers.append(('Content-type','application/json; charset=UTF-8'))
-            headers.append(('Cache-Control: ', 'no-cache; must-revalidate'))
-            json = value.parse()
-            response('200 OK', self.__do_headers(headers))
-            self.debug('Returning JSON: %s' % json)
-            return json
-        
-        response('200 OK', self.__do_headers())
-        return str(value)
+        try:
+            if value is None:
+                return self.__do_page_not_found(response)
+            
+            if isinstance(value, JSon):
+                headers = []
+                headers.append(('Content-type','application/json; charset=UTF-8'))
+                headers.append(('Cache-Control: ', 'no-cache; must-revalidate'))
+                json = value.parse()
+                response('200 OK', self.__do_headers(headers))
+                self.debug('Returning JSON: %s' % json)
+                return json
+            
+            response('200 OK', self.__do_headers())
+            return str(value)
+        except:
+            self.error('Exception sending OK Value: "%s"' % value)
+            return None
 
         
     def parse_path_parameters(self):
