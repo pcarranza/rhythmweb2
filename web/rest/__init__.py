@@ -123,9 +123,10 @@ class Status:
         status = JSon()
         status.put('playing', is_playing)
         if is_playing:
-            playing_entry_id = handler.get_playing_entry_id()
-            if playing_entry_id:
-                status.put('playing_entry', Song.get_song_as_JSon(handler, playing_entry_id))
+            playing_entry = handler.get_playing_entry()
+            playing_entry = handler.load_entry(playing_entry)
+            if playing_entry:
+                status.put('playing_entry', Song.get_song_as_JSon(playing_entry))
                 status.put('playing_time', handler.get_playing_time())
             
         status.put('playing_order', handler.get_play_order())
