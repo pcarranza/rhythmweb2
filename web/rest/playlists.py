@@ -25,68 +25,80 @@ class Page(RBRest):
     def get(self):
         handler = self.get_rb_handler()
         
-#        if not self.has_path_parameters():
-        rbplaylists = handler.get_playlists()
-        sources = []
-        for source in rbplaylists:
-            jsource = self.get_source_as_json(source)
-            sources.append(jsource)
+        if not self.has_path_parameters():
+            rbplaylists = handler.get_playlists()
+            if rbplaylist is None:
+                raise ServerException(404, 'No playlists')
+
+            sources = []
+            for source in rbplaylists:
+                jsource = self.get_source_as_json(source)
+                sources.append(jsource)
+                
+            playlists = JSon()
+            playlists.put('playlists', sources)
             
-        playlists = JSon()
-        playlists.put('playlists', sources)
+            return playlists
         
-        return playlists
-        
-#        else:
-#            playlist_id = self.get_path_parameter(0)
-#            if not playlist_id.isdigit():
-#                raise ServerException(400, 'Bad request, path parameter must be an int')
-#
-#            playlist_id = int(playlist_id)
-#            
-#            self.trace('Loading playlist with id %d' % playlist_id)
-#            
-#            playlists = handler.get_playlists()
-#            if playlist is None:
-#                raise ServerException(400, 'Bad request, playlist id %d is not valid' % playlist_id)
-#            
-#            limit = 100
-#            if self.get_path_parameters_size() > 1:
-#                _limit = self.get_path_parameter(1)
-#                if str(limit).isdigit():
-#                    limit = int(_limit)
-#            
-#            jplaylist = self.get_source_as_json(playlist, self.get_source_entries(playlist, limit))
-#            
-#            return jplaylist
+        else:
+            playlist_id = self.get_path_parameter(0)
+            if not playlist_id.isdigit():
+                raise ServerException(400, 'Bad request, path parameter must be an int')
+
+            playlist_id = int(playlist_id)
+            
+            self.trace('Loading playlist with id %d' % playlist_id)
+            playlist = self.get_playlist_by_id(playlist_id) 
+            
+            if playlist is None:
+                raise ServerException(404, 'No playlists')
+            
+            return self.get_source_as_json(playlist)
             
     
     def post(self):
         action = self.get_parameter('action', True)
-        
-        json = JSon()
-        
-        if action == 'enqueue':
-            if self.has_parameter('playlist'):
-                source = self.get_parameter('playlist', True)
-            elif self.has_parameter('source'):
-                source = self.get_parameter('source', True)
-            else:
-                raise ServerException(400, 'Bad request, no "source" parameter')
 
-            count = self.get_rb_handler().enqueue_source(int(source))
+        if self.has_parameter('playlist'):
+            source_id = self.get_parameter('playlist', True)
+        elif self.has_parameter('source'):
+            source_id = self.get_parameter('source', True)
+        else:
+            raise ServerException(400, 'Bad request, no "source" parameter')
+
+        source_id = int(source_id)
+        handler = self.get_rb_handler()
+        
+        if not action:
+            raise ServerException(400, 'Bad request, no "action" parameter')
+
+        json = JSon()
+
+        playlist = self.get_playlist_by_id(source_id) 
+        if not playlist:
+            raise ServerException(400, 'Bad request, there is no playlist with id %d', source_id)
+
+        if action == 'enqueue':
+            count = handler.enqueue_source(playlist)
             json.put('count', count)
             if count > 0:
                 json.put('result', 'OK')
                 
-        if action == 'play_source':
-            source = self.get_parameter('source', True)
-            if self.get_rb_handler().play_source(int(source)):
+        elif action == 'play_source':
+            if handler.play_source(playlist):
                 json.put('result', 'OK')
             else:
                 json.put('result', 'BAD')
             
         return json
+
+    def get_playlist_by_id(self, playlist_id):
+        handler = self.get_rb_handler()
+        playlists = handler.get_playlists()
+        if len(playlists) < playlist_id:
+            raise ServerException(400, 'There is no playlist with id %d' % playlist_id)
+
+        return playlists[playlist_id]
 
 
     def get_source_entries(self, source, limit):

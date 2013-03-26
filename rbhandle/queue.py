@@ -83,7 +83,11 @@ class QueueHandler(Loggable):
             entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
             if not entry is None:
                 self.shell.props.queue_source.add_entry(entry, -1)
-                
+        else:
+            self.info('Plain RBEntry')
+            entry = self.shell.props.db.entry_lookup_by_id(entry_ids.id)
+            self.shell.props.queue_source.add_entry(entry, -1)
+
         self.shell.props.queue_source.queue_draw()
         
         

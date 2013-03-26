@@ -38,9 +38,8 @@ class SourceHandler(Loggable):
     def __init__(self, shell):
         self.shell = shell
     
-    def play_source(self, source_index):
+    def play_source(self, source):
         self.info('Set source playing')
-        source = self.get_source(source_index)
         if self.get_playing_status():
             self.play_pause()
         self.shell.props.shell_player.set_playing_source(source.source)
@@ -93,7 +92,7 @@ class SourceHandler(Loggable):
         m = ModelHandler(self.shell)
         if not source is None:
             m.loop_query_model(func=entries.append, \
-                                   query_model=source.props.query_model, \
+                                   query_model=source.query_model, \
                                    limit=limit)
         return entries
     
@@ -123,17 +122,13 @@ class SourceHandler(Loggable):
         return sources
     
     
-    def enqueue_source(self, source_index):
+    def enqueue_source(self, source):
         '''
         Enqueues in the play queue the given playlist 
         '''
-        self.info('Enqueuing playlist')
+        self.info('Enqueuing source')
         
-        if not type(source_index) is int:
-            raise Exception('playlist_index parameter must be an int')
-        
-        source = self.get_source(source_index)
-        if source is None:
+        if not source:
             return 0
         
         # playlist.add_to_queue(self.shell.props.queue_source)
