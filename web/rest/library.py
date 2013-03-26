@@ -67,6 +67,8 @@ class Page(RBRest):
             handler = self.get_rb_handler()
             
             entry_ids = handler.query(filter)
+            log.info('entry_ids')
+            log.info(entry_ids)
             entries = self.get_songs_as_json_list(entry_ids)
             library = JSon()
             library.put(SEARCH_TYPES[search_by], value)

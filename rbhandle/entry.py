@@ -23,19 +23,42 @@ class EntryHandler(Loggable):
     def __init__(self, shell):
         self.db = shell.props.db
         
+#     def get_entry(self, entry_id):
+#         '''
+#         Returns an entry by its id
+#         '''
+#         if not str(entry_id).isdigit():
+#             raise Exception('entry_id parameter must be an int')
+#         
+#         entry_id = int(entry_id)
+#         
+#         self.trace('Getting entry %d' % entry_id)
+#         return self.db.entry_lookup_by_id(entry_id)
         
-    def get_entry(self, entry_id):
+    def load_entry(self, entry):
         '''
-        Returns an entry by its id
+        Returns a RBEntry with the entry information fully loaded for the given id 
         '''
-        if not str(entry_id).isdigit():
-            raise Exception('entry_id parameter must be an int')
+        if entry is None:
+            self.info('Entry is None')
+            return None
         
-        entry_id = int(entry_id)
+        rbentry = RBEntry()
+        rbentry.id = entry.get_ulong(RB.RhythmDBPropType.ENTRY_ID)
+        rbentry.title = entry.get_string(RB.RhythmDBPropType.TITLE) # self.get_value(entry, RB.RhythmDBPropType.TITLE)
+        rbentry.artist = entry.get_string(RB.RhythmDBPropType.ARTIST) # self.get_value(entry, RB.RhythmDBPropType.ARTIST)
+        rbentry.album = entry.get_string(RB.RhythmDBPropType.ALBUM)
+        rbentry.track_number = entry.get_ulong(RB.RhythmDBPropType.TRACK_NUMBER)
+        rbentry.duration = entry.get_ulong(RB.RhythmDBPropType.DURATION)
+        rbentry.rating = entry.get_double(RB.RhythmDBPropType.RATING)
+        rbentry.year = entry.get_ulong(RB.RhythmDBPropType.YEAR)
+        rbentry.genre = entry.get_string(RB.RhythmDBPropType.GENRE)
+        rbentry.play_count = entry.get_ulong(RB.RhythmDBPropType.PLAY_COUNT)
+        rbentry.location = entry.get_string(RB.RhythmDBPropType.LOCATION)
+        rbentry.bitrate = entry.get_ulong(RB.RhythmDBPropType.BITRATE)
+        rbentry.last_played = entry.get_ulong(RB.RhythmDBPropType.LAST_PLAYED)
         
-        self.trace('Getting entry %d' % entry_id)
-        return self.db.entry_lookup_by_id(entry_id)
-        
+        return rbentry
         
     def load_rb_entry(self, entry_id):
         '''
@@ -81,83 +104,6 @@ class EntryHandler(Loggable):
     def get_entry_id(self, entry):
         return entry.get_ulong(RB.RhythmDBPropType.ENTRY_ID)
     
-    
-#    def get_value(self, entry, property_type):
-#        return entry.get_string(property_type)
-#        
-##
-##        t = self.db.get_property_type(property_type)
-##        value = GObject.Value()
-##        value.init(t)
-##        
-##        self.db.entry_get(entry, property_type, value)
-##        
-##        entry.get_string(property_type)
-##        
-##        if t.name == 'gulong':
-##            return value.get_ulong()
-##            
-##        elif t.name == 'gchararray':
-##            return value.get_string()
-##            
-##        elif t.name == 'gboolean':
-##            return value.get_boolean()
-##            
-##        elif t.name == 'gboxed':
-##            return value.get_boxed()
-##            
-##        elif t.name == 'gchar':
-##            return value.get_char()
-##            
-##        elif t.name == 'gdouble':
-##            return value.get_double()
-##            
-##        elif t.name == 'genum':
-##            return value.get_enum()
-##            
-##        elif t.name == 'gflags':
-##            return value.get_flags()
-##            
-##        elif t.name == 'gfloat':
-##            return value.get_float()
-##            
-##        elif t.name == 'gint':
-##            return value.get_int()
-##            
-##        elif t.name == 'gint64':
-##            return value.get_int64()
-##            
-##        elif t.name == 'glong':
-##            return value.get_long()
-##            
-##        elif t.name == 'gobject':
-##            return value.get_object()
-##            
-##        elif t.name == 'gparam':
-##            return value.get_param()
-##            
-##        elif t.name == 'gpointer':
-##            return value.get_pointer()
-##            
-##        elif t.name == 'gstring':
-##            return value.get_string()
-##            
-##        elif t.name == 'guchar':
-##            return value.get_uchar()
-##            
-##        elif t.name == 'guint':
-##            return value.get_uint()
-##            
-##        elif t.name == 'guint64':
-##            return value.get_uint64()
-##            
-##        elif t.name == 'gvariant':
-##            return value.get_variant()
-##            
-##        else:
-##            self.warning('Unknown type %s' % t.name)
-##            return None
-
 
 class RBEntry():
     '''

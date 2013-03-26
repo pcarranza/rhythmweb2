@@ -73,25 +73,25 @@ $(document).ready(function() {
 	});
 	
 	
-	$('#tab_tags').click(function () {
-		clear_tabs();
-		hide_all();
-		$(this).addClass('selected');
-
-		load_tag_cloud();
-		
-		$('#tags').removeClass('hide');
-	});
-	
-	$('#tab_sources').click(function() {
-		clear_tabs();
-		hide_all()
-		$(this).addClass('selected');
-		
-		load_sources();
-		
-		$('#sources').removeClass('hide');
-	});
+//	$('#tab_tags').click(function () {
+//		clear_tabs();
+//		hide_all();
+//		$(this).addClass('selected');
+//
+//		load_tag_cloud();
+//		
+//		$('#tags').removeClass('hide');
+//	});
+//	
+//	$('#tab_sources').click(function() {
+//		clear_tabs();
+//		hide_all()
+//		$(this).addClass('selected');
+//		
+//		load_sources();
+//		
+//		$('#sources').removeClass('hide');
+//	});
 
 	
 	$('#tab_search').click(function () {
@@ -325,7 +325,7 @@ function update_status() {
 			
 			countdown();
 		}
-	});
+	}).fail(handle_jquery_failure);
 	timers.push(setTimeout('update_status()', 10000));
 }
 
@@ -380,7 +380,7 @@ function load_queue() {
 			});
 		});
 
-	});
+	}).fail(handle_jquery_failure);
 }
 
 
@@ -541,16 +541,16 @@ function set_rating(event) {
 function clear_tabs() {
 	$('#tab_queue').removeClass('selected');
 	$('#tab_search').removeClass('selected');
-	$('#tab_tags').removeClass('selected');
-	$('#tab_sources').removeClass('selected');
+//	$('#tab_tags').removeClass('selected');
+//	$('#tab_sources').removeClass('selected');
 }
 
 
 function hide_all() {
 	$('#queue').addClass('hide');
 	$('#search').addClass('hide');
-	$('#tags').addClass('hide');
-	$('#sources').addClass('hide');
+//	$('#tags').addClass('hide');
+//	$('#sources').addClass('hide');
 }
 
 function load_tag_cloud() {
@@ -574,7 +574,7 @@ function load_tag_cloud() {
 			$('#' + id).bind('click', { type : 'artist', 'name' : name }, cloud_search);
 		});
 		
-	});
+	}).fail(handle_jquery_failure);
 	
 
 	$.getJSON('rest/library/albums', function(json) {
@@ -593,7 +593,7 @@ function load_tag_cloud() {
 			$('#' + id).bind('click', { type : 'album', 'name' : name }, cloud_search);			
 		});
 		
-	});
+	}).fail(handle_jquery_failure);
 
 	$.getJSON('rest/library/genres', function(json) {
 		bigger = json.biggest_genre;
@@ -611,7 +611,7 @@ function load_tag_cloud() {
 			$('#' + id).bind('click', { type : 'genre', 'name' : name }, cloud_search);			
 		});
 		
-	});
+	}).fail(handle_jquery_failure);
 
 }
 
@@ -622,7 +622,7 @@ function load_sources() {
 		$.each(json.playlists, function(index, source) {
 			add_source('sources', source);
 		});
-	});
+	}).fail(handle_jquery_failure);
 }
 
 
@@ -724,7 +724,7 @@ function load_source(event) {
 			add_search_entry(index, entry, entries_id, true);
 		});
 		
-	});
+	}).fail(handle_jquery_failure);
 	
 }
 
@@ -869,4 +869,9 @@ function parse_search_parameters() {
 	
 }
 
-
+function handle_jquery_failure(jqxhr, textStatus, error) {
+    console.log('Error');
+    console.log(jqxhr);
+    console.log(textStatus);
+    console.log(error);
+}

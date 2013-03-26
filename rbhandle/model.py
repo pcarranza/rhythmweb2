@@ -52,8 +52,8 @@ class ModelHandler(Loggable):
                 self.trace('Skipping row ')
                 continue
             
-            entry = entry_handler.get_entry_from_row(row)
-            entry_id = entry_handler.get_entry_id(entry)
+            entry = self.get_entry_from_row(row)
+            entry_id = entry_handler.load_entry(entry)
             
             func(entry_id)
             count += 1

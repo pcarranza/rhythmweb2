@@ -59,7 +59,7 @@ class QueueHandler(Loggable):
             random.shuffle(entries)
             
             for i in range(0, len(entries) - 1):
-                entry = self.get_entry(entries[i])
+                entry = self.load_entry(entries[i])
                 self.move_entry_in_queue(entry, i)
     
     

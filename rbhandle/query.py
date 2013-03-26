@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from serve.log.loggable import Loggable
-from gi.repository import RB
+from gi.repository import RB, GLib
 from model import ModelHandler
 
 TYPE_SONG = 'song'
@@ -76,53 +76,58 @@ class QueryHandler(Loggable):
         '''
         db = self.db
         self.info('Querying...')
+        query = GLib.PtrArray()
+        query_model = RB.RhythmDBQueryModel.new_empty(db)
         if mtype == TYPE_SONG:
-            query = gi.repository.GLib.PtrArray()
+            query = GLib.PtrArray()
             db.query_append_params(query, RB.RhythmDBQueryType.FUZZY_MATCH, RB.RhythmDBPropType.TITLE_FOLDED, 'a')
-            sort_func = RB.RhythmDBQueryModel.album_sort_func
-            model = RB.RhythmDBQueryModel.new(db, query, sort_func, '', True)
+#            query = GLib.PtrArray()
+#            db.query_append_params(query, RB.RhythmDBQueryType.FUZZY_MATCH, RB.RhythmDBPropType.TITLE_FOLDED, 'a')
+#            sort_func = RB.RhythmDBQueryModel.album_sort_func
+#            model = RB.RhythmDBQueryModel.new(db, query, sort_func, '', True)
             
 #            db.query_model_new(\
 #                     db.query_new(), \
 #                     RB.rhythmdb_query_model_track_sort_func, \
 #                     0, \
 #                     db.query_model_new_empty())
-        else:
-            query_model = db.query_model_new_empty()
-        
-        if mtype is None:
-            type = None
-        else:
-            type = (RB.RhythmDBQueryType.EQUALS, \
-                RB.RhythmDBPropType.TYPE, \
-                self.db.entry_type_get_by_name(mtype))
-        
-        
-        if query_for_all: # equivalent to use an OR (many queries)
-            self.info('Query for all parameters separatedly')
-            for parameter in parameters:
-                self.info('Appending Query for parameter...')
-                query = db.query_new()
-                if not type is None:
-                    self.info('Appending Query for type \"%s\"...' % mtype)
-                    db.query_append(query, type)
-                self.__append_rating_query(query, min_rating)
-                self.__append_play_count_query(query, min_play_count)
-                db.query_append(query, parameter)
-                db.do_full_query_parsed(query_model, query)
-        else:
-            self.info('Query for all parameters in one only full search')
-            query = db.query_new()
-            if not type is None:
-                self.info('Appending Query for type \"%s\"...' % mtype)
-                db.query_append(query, type)
-            self.__append_rating_query(query, min_rating)
-            self.__append_play_count_query(query, min_play_count)
-            for parameter in parameters:
-                self.info('Appending Query for parameter...')
-                db.query_append(query, parameter)
-            db.do_full_query_parsed(query_model, query)
-            
+#        else:
+#            query_model = db.query_model_new_empty()
+
+
+
+
+#        if mtype is None:
+#            type = None
+#        else:
+#            type = (RB.RhythmDBQueryType.EQUALS, \
+#                RB.RhythmDBPropType.TYPE, \
+#                self.db.entry_type_get_by_name(mtype))
+#        
+#        
+#        if query_for_all: # equivalent to use an OR (many queries)
+#            self.info('Query for all parameters separatedly')
+#            for parameter in parameters:
+#                self.info('Appending Query for parameter...')
+#                if not type is None:
+#                    self.info('Appending Query for type \"%s\"...' % mtype)
+#                    db.query_append(query, type)
+#                self.__append_rating_query(query, min_rating)
+#                self.__append_play_count_query(query, min_play_count)
+#                db.query_append(query, parameter)
+#        else:
+#            self.info('Query for all parameters in one only full search')
+#            if not type is None:
+#                self.info('Appending Query for type \"%s\"...' % mtype)
+#                db.query_append(query, type)
+#            self.__append_rating_query(query, min_rating)
+#            self.__append_play_count_query(query, min_play_count)
+#            for parameter in parameters:
+#                self.info('Appending Query for parameter...')
+#                db.query_append(query, parameter)
+#            
+        db.do_full_query_parsed(query_model, query)
+
         return query_model
     
     

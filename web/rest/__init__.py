@@ -27,20 +27,17 @@ class RBRest(BaseRest, Loggable):
         return self.get_component('RB')
     
     
-    def get_song_as_json(self, entry_id):
-        self.trace('Obtaining entry_id %s as json object' % entry_id)
-        return Song.get_song_as_JSon(self.get_rb_handler(), entry_id)
+    def get_song_as_json(self, entry):
+        self.trace('Obtaining entry %s as json object' % entry)
+        return Song.get_song_as_JSon(entry)
     
     
     def get_songs_as_json_list(self, entries):
         self.trace('Loading entries list as json list')
         entries_list = []
-        for entry_id in entries:
-            if type(entry_id) is int:
-                entry = self.get_song_as_json(entry_id)
-                entries_list.append(entry)
-            else:
-                self.warning('Entry %s is not an int, skipping' % entry_id)
+        for entry in entries:
+            entry = self.get_song_as_json(entry)
+            entries_list.append(entry)
                 
         return entries_list
     
@@ -79,14 +76,12 @@ class RBRest(BaseRest, Loggable):
 class Song:
     
     @staticmethod
-    def get_song_as_JSon(rbhandler, entry_id):
-        entry = rbhandler.load_rb_entry(entry_id)
-        
+    def get_song_as_JSon(entry):
         if entry is None:
             return None
         
         json = JSon()
-        json.put('id', entry_id)
+        json.put('id', entry.id)
         json.put('artist', entry.artist)
         json.put('album', entry.album)
         json.put('track_number', entry.track_number)
