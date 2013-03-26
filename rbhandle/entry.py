@@ -23,18 +23,18 @@ class EntryHandler(Loggable):
     def __init__(self, shell):
         self.db = shell.props.db
         
-#     def get_entry(self, entry_id):
-#         '''
-#         Returns an entry by its id
-#         '''
-#         if not str(entry_id).isdigit():
-#             raise Exception('entry_id parameter must be an int')
-#         
-#         entry_id = int(entry_id)
-#         
-#         self.trace('Getting entry %d' % entry_id)
-#         return self.db.entry_lookup_by_id(entry_id)
+    def get_entry(self, entry_id):
+        '''
+        Returns an entry by its id
+        '''
+        if not str(entry_id).isdigit():
+            raise Exception('entry_id parameter must be an int')
         
+        entry_id = int(entry_id)
+        
+        self.trace('Getting entry %d' % entry_id)
+        return self.db.entry_lookup_by_id(entry_id)
+       
     def load_entry(self, entry):
         '''
         Returns a RBEntry with the entry information fully loaded for the given id 
@@ -69,23 +69,8 @@ class EntryHandler(Loggable):
         if entry is None:
             self.info('Entry %s not found' % str(entry_id))
             return None
-        
-        rbentry = RBEntry()
-        rbentry.id = self.get_entry_id(entry)
-        rbentry.title = entry.get_string(RB.RhythmDBPropType.TITLE) # self.get_value(entry, RB.RhythmDBPropType.TITLE)
-        rbentry.artist = entry.get_string(RB.RhythmDBPropType.ARTIST) # self.get_value(entry, RB.RhythmDBPropType.ARTIST)
-        rbentry.album = entry.get_string(RB.RhythmDBPropType.ALBUM)
-        rbentry.track_number = entry.get_ulong(RB.RhythmDBPropType.TRACK_NUMBER)
-        rbentry.duration = entry.get_ulong(RB.RhythmDBPropType.DURATION)
-        rbentry.rating = entry.get_double(RB.RhythmDBPropType.RATING)
-        rbentry.year = entry.get_ulong(RB.RhythmDBPropType.YEAR)
-        rbentry.genre = entry.get_string(RB.RhythmDBPropType.GENRE)
-        rbentry.play_count = entry.get_ulong(RB.RhythmDBPropType.PLAY_COUNT)
-        rbentry.location = entry.get_string(RB.RhythmDBPropType.LOCATION)
-        rbentry.bitrate = entry.get_ulong(RB.RhythmDBPropType.BITRATE)
-        rbentry.last_played = entry.get_ulong(RB.RhythmDBPropType.LAST_PLAYED)
-        
-        return rbentry
+       
+        return self.load_entry(entry)
     
     
     def set_rating(self, entry_id, rating):

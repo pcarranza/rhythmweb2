@@ -75,18 +75,14 @@ class QueueHandler(Loggable):
         self.info('Adding entries %s to queue' % entry_ids)
         if type(entry_ids) is list:
             for entry_id in entry_ids:
-                entry = self.load_rb_entry(entry_id)
+                entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
                 if entry is None:
                     continue
-                location = str(entry.location)
-                self.debug('Enqueuing entry %s' % location)
-                self.shell.add_to_queue(location)
+                self.shell.props.queue_source.add_entry(entry, -1)
         elif type(entry_ids) is int:
-            entry = self.load_rb_entry(entry_ids)
+            entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
             if not entry is None:
-                location = str(entry.location)
-                self.debug('Enqueuing entry %s' % location)
-                self.shell.add_to_queue(location)
+                self.shell.props.queue_source.add_entry(entry, -1)
                 
         self.shell.props.queue_source.queue_draw()
         
@@ -98,19 +94,16 @@ class QueueHandler(Loggable):
         if type(entry_ids) is list:
             self.info('Removing entries %s from queue' % entry_ids)
             for entry_id in entry_ids:
-                entry = self.load_rb_entry(entry_id)
+                entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
                 if entry is None:
                     continue
-                location = str(entry.location)
-                self.trace('Dequeuing entry %s' % location)
-                self.shell.remove_from_queue(location)
+                self.shell.props.queue_source.remove_entry(entry)
         elif type(entry_ids) is int:
             self.info('Removing entry %d from queue' % entry_ids)
-            entry = self.load_rb_entry(entry_ids)
+            entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
             if not entry is None:
                 location = str(entry.location)
-                self.trace('Dequeuing entry %s' % location)
-                self.shell.remove_from_queue(location)
+                self.shell.props.queue_source.remove_entry(entry)
                 
         self.shell.props.queue_source.queue_draw()
 
