@@ -78,8 +78,9 @@ class QueryHandler(Loggable):
         self.info('Querying...')
         query = GLib.PtrArray()
         query_model = RB.RhythmDBQueryModel.new_empty(db)
+        query_model.set_sort_order(RB.RhythmDBQueryModel.album_sort_func, None, False)
+
         if mtype == TYPE_SONG:
-            query = GLib.PtrArray()
             db.query_append_params(query, RB.RhythmDBQueryType.FUZZY_MATCH, RB.RhythmDBPropType.TITLE_FOLDED, 'a')
 #            query = GLib.PtrArray()
 #            db.query_append_params(query, RB.RhythmDBQueryType.FUZZY_MATCH, RB.RhythmDBPropType.TITLE_FOLDED, 'a')
