@@ -67,7 +67,7 @@ class SourceHandler(Loggable):
 #                        sources.append(RBSource(index, source, SOURCETYPE_SOURCE))
 #                    index += 1
             
-        return sources
+        return self.get_sources()
     
     
     def get_source(self, source_index):
@@ -93,7 +93,7 @@ class SourceHandler(Loggable):
         m = ModelHandler(self.shell)
         if not source is None:
             m.loop_query_model(func=entries.append, \
-                                   query_model=source.query_model, \
+                                   query_model=source.props.query_model, \
                                    limit=limit)
         return entries
     
@@ -102,7 +102,7 @@ class SourceHandler(Loggable):
         '''
         Returns all registered playlists 
         '''
-        return self.__get_sources(False)
+        return self.__get_wrapped_sources(self.shell.props.playlist_manager.get_playlists())
     
     
     def get_sources(self):
@@ -151,17 +151,17 @@ class RBSource():
     Source wrapper, loads all data on initialization
     '''
     
-    def __init__(self, index, entry, source_type):
+    def __init__(self, index, entry, source_type='playlist'):
         self.id = index
         self.index = index
         self.source_type = source_type
-        self.is_playing = entry[RB_SOURCELIST_MODEL_COLUMN_PLAYING]
-        self.pixbuf = entry[RB_SOURCELIST_MODEL_COLUMN_PIXBUF]
-        self.name = entry[RB_SOURCELIST_MODEL_COLUMN_NAME]
-        self.source = entry[RB_SOURCELIST_MODEL_COLUMN_SOURCE]
-        self.attributes = entry[RB_SOURCELIST_MODEL_COLUMN_ATTRIBUTES]
-        self.visibility = entry[RB_SOURCELIST_MODEL_COLUMN_VISIBILITY]
-        self.is_group = entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]
-        self.group_category = entry[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
-        self.query_model = self.source.props.query_model
+        self.is_playing = False # entry[RB_SOURCELIST_MODEL_COLUMN_PLAYING] (Check agains shell.get_playing_source)
+        self.pixbuf = entry.props.pixbuf # entry[RB_SOURCELIST_MODEL_COLUMN_PIXBUF]
+        self.name = entry.props.name # entry[RB_SOURCELIST_MODEL_COLUMN_NAME]
+        self.source = entry
+        self.query_model = entry.props.query_model
+        self.attributes = None # entry[RB_SOURCELIST_MODEL_COLUMN_ATTRIBUTES]
+        self.visibility = None # entry[RB_SOURCELIST_MODEL_COLUMN_VISIBILITY]
+        self.is_group = False # entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]
+        self.group_category = None #entry[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
 

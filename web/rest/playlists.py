@@ -25,40 +25,40 @@ class Page(RBRest):
     def get(self):
         handler = self.get_rb_handler()
         
-        if not self.has_path_parameters():
-            rbplaylists = handler.get_sources()
-            sources = []
-            for source in rbplaylists:
-                jsource = self.get_source_as_json(source)
-                sources.append(jsource)
-                
-            playlists = JSon()
-            playlists.put('playlists', sources)
+#        if not self.has_path_parameters():
+        rbplaylists = handler.get_playlists()
+        sources = []
+        for source in rbplaylists:
+            jsource = self.get_source_as_json(source)
+            sources.append(jsource)
             
-            return playlists
+        playlists = JSon()
+        playlists.put('playlists', sources)
         
-        else:
-            playlist_id = self.get_path_parameter(0)
-            if not playlist_id.isdigit():
-                raise ServerException(400, 'Bad request, path parameter must be an int')
-
-            playlist_id = int(playlist_id)
-            
-            self.trace('Loading playlist with id %d' % playlist_id)
-            
-            playlist = handler.get_source(playlist_id)
-            if playlist is None:
-                raise ServerException(400, 'Bad request, playlist id %d is not valid' % playlist_id)
-            
-            limit = 100
-            if self.get_path_parameters_size() > 1:
-                _limit = self.get_path_parameter(1)
-                if str(limit).isdigit():
-                    limit = int(_limit)
-            
-            jplaylist = self.get_source_as_json(playlist, self.get_source_entries(playlist, limit))
-            
-            return jplaylist
+        return playlists
+        
+#        else:
+#            playlist_id = self.get_path_parameter(0)
+#            if not playlist_id.isdigit():
+#                raise ServerException(400, 'Bad request, path parameter must be an int')
+#
+#            playlist_id = int(playlist_id)
+#            
+#            self.trace('Loading playlist with id %d' % playlist_id)
+#            
+#            playlists = handler.get_playlists()
+#            if playlist is None:
+#                raise ServerException(400, 'Bad request, playlist id %d is not valid' % playlist_id)
+#            
+#            limit = 100
+#            if self.get_path_parameters_size() > 1:
+#                _limit = self.get_path_parameter(1)
+#                if str(limit).isdigit():
+#                    limit = int(_limit)
+#            
+#            jplaylist = self.get_source_as_json(playlist, self.get_source_entries(playlist, limit))
+#            
+#            return jplaylist
             
     
     def post(self):
