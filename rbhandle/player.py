@@ -199,12 +199,17 @@ class PlayerHandler(Loggable):
         '''
         Inmediately starts playing provided entry
         '''
-        self.debug('play entry')
-        if not entry is None:
-            if self.get_playing_status():
-                self.play_pause()
-            
-            self.player.play_entry(entry)
+        self.debug('play entry %s' % entry)
+        if entry is None:
+            return
+
+        if self.get_playing_status():
+            self.play_pause()
+        
+        playing_source = self.player.get_playing_source()
+        if not self.player.get_playing_source():
+            playing_source = self.player.props.queue_source
+        self.player.play_entry(entry, playing_source)
     
     
     def get_play_order(self):
