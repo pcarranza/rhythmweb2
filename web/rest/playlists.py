@@ -27,7 +27,7 @@ class Page(RBRest):
         
         if not self.has_path_parameters():
             rbplaylists = handler.get_playlists()
-            if rbplaylist is None:
+            if rbplaylists is None:
                 raise ServerException(404, 'No playlists')
 
             sources = []

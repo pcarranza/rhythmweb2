@@ -105,7 +105,7 @@ class PlayerHandler(Loggable):
         if not type(volume) is float:
             raise Exception('Volume must be a float')
         
-        self.debug('set volume %d', volume)
+        self.debug('set volume %d' % volume)
         
         if volume > 1:
             self.warning('Volume cannot be set over 1')
