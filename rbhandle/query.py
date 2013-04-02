@@ -76,58 +76,45 @@ class QueryHandler(Loggable):
         '''
         db = self.db
         self.info('Querying...')
-        query = GLib.PtrArray()
         query_model = RB.RhythmDBQueryModel.new_empty(db)
         query_model.set_sort_order(RB.RhythmDBQueryModel.album_sort_func, None, False)
 
-        if mtype == TYPE_SONG:
-            db.query_append_params(query, RB.RhythmDBQueryType.FUZZY_MATCH, RB.RhythmDBPropType.TITLE_FOLDED, 'a')
-#            query = GLib.PtrArray()
-#            db.query_append_params(query, RB.RhythmDBQueryType.FUZZY_MATCH, RB.RhythmDBPropType.TITLE_FOLDED, 'a')
-#            sort_func = RB.RhythmDBQueryModel.album_sort_func
-#            model = RB.RhythmDBQueryModel.new(db, query, sort_func, '', True)
-            
-#            db.query_model_new(\
-#                     db.query_new(), \
-#                     RB.rhythmdb_query_model_track_sort_func, \
-#                     0, \
-#                     db.query_model_new_empty())
-#        else:
-#            query_model = db.query_model_new_empty()
+        if mtype is None:
+            query_for_type = None
+        else:
+            query_for_type = (RB.RhythmDBQueryType.EQUALS, \
+                RB.RhythmDBPropType.TYPE, \
+                self.db.entry_type_get_by_name(mtype))
+        
+        
+        if query_for_all: # equivalent to use an OR (many queries)
+            self.info('Query for all parameters separatedly')
+            for parameter in parameters:
+                query = GLib.PtrArray()
+                if not query_for_type is None:
+                    self.info('Appending Query for type \"%s\"...' % mtype)
+                    db.query_append_params(query, query_for_type[0], query_for_type[1], query_for_type[2])
+                self.info('Appending Query for parameter "%s"~"%s"...' % (parameter[1], parameter[2]))
+                db.query_append_params(query, parameter[0], parameter[1], parameter[2]) # Append parameter
 
+                self.append_rating_query(query, min_rating) # Append
+                self.append_play_count_query(query, min_play_count)
+                self.info("Running query")
+                db.do_full_query_parsed(query_model, query) # Do query
 
-
-
-#        if mtype is None:
-#            type = None
-#        else:
-#            type = (RB.RhythmDBQueryType.EQUALS, \
-#                RB.RhythmDBPropType.TYPE, \
-#                self.db.entry_type_get_by_name(mtype))
-#        
-#        
-#        if query_for_all: # equivalent to use an OR (many queries)
-#            self.info('Query for all parameters separatedly')
-#            for parameter in parameters:
-#                self.info('Appending Query for parameter...')
-#                if not type is None:
-#                    self.info('Appending Query for type \"%s\"...' % mtype)
-#                    db.query_append(query, type)
-#                self.__append_rating_query(query, min_rating)
-#                self.__append_play_count_query(query, min_play_count)
-#                db.query_append(query, parameter)
-#        else:
-#            self.info('Query for all parameters in one only full search')
-#            if not type is None:
-#                self.info('Appending Query for type \"%s\"...' % mtype)
-#                db.query_append(query, type)
-#            self.__append_rating_query(query, min_rating)
-#            self.__append_play_count_query(query, min_play_count)
-#            for parameter in parameters:
-#                self.info('Appending Query for parameter...')
-#                db.query_append(query, parameter)
-#            
-        db.do_full_query_parsed(query_model, query)
+        else:
+            self.info('Query for all parameters in one only full search')
+            query = GLib.PtrArray()
+            if not query_for_type is None:
+                self.info('Appending Query for type \"%s\"...' % mtype)
+                db.query_append_params(query, query_for_type[0], query_for_type[1], query_for_type[2])
+            self.append_rating_query(query, min_rating)
+            self.append_play_count_query(query, min_play_count)
+            for parameter in parameters:
+                self.info('Appending Query for parameter "%s"~"%s"...' % (parameter[1], parameter[2]))
+                db.query_append_params(query, parameter[0], parameter[1], parameter[2])        
+            self.info("Running query")
+            db.do_full_query_parsed(query_model, query)
 
         return query_model
     
@@ -138,10 +125,7 @@ class QueryHandler(Loggable):
         '''
         if play_count > 0:
             self.info('Appending min play count %d' % play_count)
-            play_count_query = (RB.RhythmDBQueryType.GREATER_THAN, \
-                RB.RhythmDBPropType.PLAY_COUNT, \
-                play_count)
-            self.db.query_append(query, play_count_query)
+            self.db.query_append_params(query, RB.RhythmDBQueryType.GREATER_THAN, RB.RhythmDBPropType.PLAY_COUNT, play_count)
     
     
     def append_rating_query(self, query, rating):
@@ -149,11 +133,11 @@ class QueryHandler(Loggable):
         Appends a min rating filter to the given query
         '''
         if rating > 0:
-            self.info('Appending min rating %d' % rating)
-            rating_query = (RB.RhythmDBQueryType.GREATER_THAN, \
-                RB.RhythmDBPropType.RATING, \
-                rating)
-            self.db.query_append(query, rating_query)
+            self.info('Appending min rating query %d' % rating)
+            self.db.query_append_params(query, \
+                    RB.RhythmDBQueryType.GREATER_THAN, \
+                    RB.RhythmDBPropType.RATING, \
+                    rating)
     
     
     def query(self, filters):
@@ -223,6 +207,7 @@ class QueryHandler(Loggable):
             if 'all' in filters:
                 all = []
                 all_filter = filters['all'].lower()
+                self.debug('Append all kind of filters with value "%s"' % all_filter)
                 all.append((prop_match, \
                     RB.RhythmDBPropType.ARTIST_FOLDED, \
                     all_filter))
