@@ -56,21 +56,18 @@ class RhythmWeb(GObject.Object, Peas.Activatable):
 
         self.base_path = base_path
         self.config = config
-
         self.log.info('RhythmWeb plugin created')
 
     def do_activate(self):
         shell = self.object
         config = self.config
-
         config.print_configuration()
         rbhandler = RBHandler(shell)
-
         components = {'config': config, 'RB': rbhandler}
 
         application = CGIApplication('RhythmWeb', self.base_path, components)
-
         server = CGIServer(application, config)
+
         server.start()
         shell.server = server
         self.log.info('RhythmWeb server started')
