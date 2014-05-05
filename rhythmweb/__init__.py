@@ -25,12 +25,9 @@
 
 
 import os
-import sys
-import traceback
 
 import serve.log
 
-from io import StringIO
 from gi.repository import GObject, Peas
 from rbhandle import RBHandler
 
@@ -41,11 +38,11 @@ from rhythmweb.conf import Configuration
 
 from serve.app import CGIApplication
 
+
 class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
 
     __gtype_name__ = 'RhythmWeb'
     object = GObject.property(type=GObject.GObject)
-
 
     def __init__(self):
         GObject.Object.__init__(self)
@@ -57,9 +54,7 @@ class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
         self.base_path = base_path
         self.config = config
 
-        resource_path = os.path.join(base_path, 'resources')
         self.info('RhythmWeb loaded')
-
 
     def do_activate(self):
         shell = self.object
@@ -68,7 +63,7 @@ class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
         config.print_configuration()
         rbhandler = RBHandler(shell)
 
-        components = {'config' : config, 'RB' : rbhandler}
+        components = {'config': config, 'RB': rbhandler}
 
         application = CGIApplication('RhythmWeb', self.base_path, components)
 
@@ -76,14 +71,7 @@ class RhythmWeb(GObject.Object, Peas.Activatable, Loggable):
         server.start()
         shell.server = server
 
-
-
     def do_deactivate(self):
         shell = self.object
-        if not shell.server is None:
+        if shell.server:
             shell.server.stop()
-
-        del shell.server
-        del self.config
-        del self.base_path
-

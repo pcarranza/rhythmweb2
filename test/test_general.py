@@ -29,6 +29,7 @@ class ConfigurationTest(unittest.TestCase):
             config.print_configuration()
             log.info.assert_any_call('Showing app configuration:')
 
+
 class LoggerTest(unittest.TestCase):
 
     def test_configure_logger(self):
