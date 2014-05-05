@@ -42,15 +42,9 @@ class LoggerFactory:
     def configure(self, config):
         self._loggers.clear()
         
-        logfilename = config.get_string('log.file', 
-                                         False, 
-                                         'web.log')
-        str_default_log_level = config.get_string('log.level', \
-                                        False, \
-                                        'INFO')
-        log_format = config.get_string('log.format', \
-                                      False, \
-                                      logging.BASIC_FORMAT)
+        logfilename = config.get_string('log.file')
+        str_default_log_level = config.get_string('log.level')
+        log_format = config.get_string('log.format')
         
         if str(str_default_log_level).isdigit():
             default_log_level = int(str_default_log_level)

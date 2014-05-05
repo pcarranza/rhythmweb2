@@ -1,3 +1,4 @@
 gobject.py
 gtk.py
 gi
+.coverage

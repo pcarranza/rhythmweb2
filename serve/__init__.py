@@ -49,15 +49,15 @@ class CGIServer(Loggable):
         
         handle_request = self.__application.handle_request
                 
-        hostname = config.get_string('hostname', False, 'localhost')
+        hostname = config.get_string('hostname')
         
-        port = config.get_int('port', False, 7001)
+        port = config.get_int('port')
         self.info('   HOSTNAME   %s' % hostname)
         self.info('   PORT       %d' % port)
 
-        use_proxy = config.get_boolean('proxy', False, True)
-        proxy_port = config.get_int('proxy.port', False, 7000)
-        proxy_hostname = config.get_string('proxy.hostname', False, 'localhost')
+        use_proxy = config.get_boolean('proxy')
+        proxy_port = config.get_int('proxy.port')
+        proxy_hostname = config.get_string('proxy.hostname')
         
         if self.__internal_server is None:
             self.__internal_server = make_server(
