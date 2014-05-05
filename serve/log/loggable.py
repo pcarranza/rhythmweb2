@@ -15,64 +15,29 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import io
-import traceback
-import sys
 import logging
-import serve.log
-from serve.log import LEVEL_TRACE
 
+log = logging.getLogger(__name__)
 
 class Loggable(object):
     
-    factory = None
-    
-    def get_logger_factory(self):
-        if Loggable.factory is None:
-            Loggable.factory = serve.log.get_factory()
-            
-        return Loggable.factory
-    
-    
     def info(self, message):
-        self.__print(message, logging.INFO)
-
+        log.info(message)
 
     def trace(self, message):
-        self.__print(message, LEVEL_TRACE)
-    
+        log.debug(message)
     
     def debug(self, message):
-        self.__print(message, logging.DEBUG)
-    
+        log.debug(message)
     
     def error(self, message):
-        self.__print(message, logging.ERROR)
-        
+        log.error(message)
     
     def critical(self, message):
-        self.__print(message, logging.CRITICAL)
-        
+        log.error(message)
     
     def warn(self, message):
-        self.warning(message)
-    
+        log.warn(message)
     
     def warning(self, message):
-        self.__print(message, logging.WARNING)
-        
-    
-    def __print(self, message, level):
-        log = self.get_logger_factory().get_logger(self.get_logname())
-        (_, exc, trc) = sys.exc_info()
-        if exc:
-            trace = io.BytesIO()
-            traceback.print_exc(file=trace)
-            message = '%s\n%s' % (message, trace.getvalue())
-        log.log(level, message)
-        if level >= log.level:
-            print >> sys.stdout, message
-        
-        
-    def get_logname(self):
-        return self.__class__.__name__
+        log.warn(message)

@@ -2,14 +2,12 @@ import unittest
 
 from os import path
 from rhythmweb import RhythmWeb
-from mock import patch, Mock
+from mock import patch, Mock, call
 
 
-@patch('serve.log')
 class TestPluginLoading(unittest.TestCase):
 
-    def test_creating_the_plugin_works(self, logger):
-        logger.get_factory = Mock()
+    def test_creating_the_plugin_works(self):
         rw = RhythmWeb()
         self.assertIsNotNone(rw)
         self.assertEquals(path.abspath(path.join(
@@ -18,7 +16,10 @@ class TestPluginLoading(unittest.TestCase):
 
     @patch('rhythmweb.CGIApplication')
     @patch('rhythmweb.CGIServer')
-    def test_activation_creates_cgi_app(self, server_class, app_patch, logger):
+    @patch('rhythmweb.logging')
+    def test_activation_creates_cgi_app(self, logging, server_class, app_patch):
+        log = Mock()
+        logging.getLogger.return_value = log
         rb = RhythmWeb()
         rb.config = Mock()
         server = Mock()
@@ -28,8 +29,10 @@ class TestPluginLoading(unittest.TestCase):
         server.start.assert_called_once_with()
         rb.do_deactivate()
         server.stop.assert_called_once_with()
+        log.info.assert_called([call('RhythmWeb server stopped'),
+            call('RhythmWeb server started'), call('RhythmWeb plugin created')])
 
-    def test_deactivation_without_previous_activation(self, logger):
+    def test_deactivation_without_previous_activation(self):
         rb = RhythmWeb()
         rb.do_deactivate()
 
