@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/pcarranza/rhythmweb.svg?branch=master)](https://travis-ci.org/pcarranza/rhythmweb)
+
 # Rhythmweb
 
 A web ui for controlling the player, searching the library and controlling the queue on rhythmbox
