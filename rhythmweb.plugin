@@ -3,8 +3,8 @@ Loader=python
 Module=rhythmweb
 IAge=1
 Name=RhythmWeb
-Description=Rhythmbox Web Page controller
+Description=A web ui for controlling rhythmbox, searching the library and controlling the queue
 Authors=Pablo Carranza <pcarranza@gmail.com>
-Copyright=Pablo Carranza <pcarranza@gmail.com>, but it's copyleft actually
+Copyright=Pablo Carranza <pcarranza@gmail.com>
 Website=https://github.com/pcarranza/rhythmweb
 
