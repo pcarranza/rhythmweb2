@@ -1,0 +1,9 @@
+languate: python
+python:
+    - "2.7"
+install:
+    - "pip install python-coveralls"
+    - "./test/bootstrap.sh"
+script: nosetests
+after_success:
+    - coveralls

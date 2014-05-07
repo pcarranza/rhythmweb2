@@ -7,6 +7,8 @@ fi
 mkdir -p gi
 touch gi/__init__.py
 echo "
+import mock
+
 class GObject(object):
     class Object(object):
         pass
@@ -15,7 +17,7 @@ class GObject(object):
 
     @classmethod
     def property(*args, **kwargs):
-        pass
+        return mock.Mock()
 
 class RB(object):
     pass
