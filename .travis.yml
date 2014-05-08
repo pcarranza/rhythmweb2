@@ -2,8 +2,8 @@ language: python
 python:
     - "2.7"
 install:
-    - "pip install python-coveralls"
+    - "pip install coveralls"
     - "./test/bootstrap.sh"
 script: nosetests --with-coverage --cover-package=preferences,rbhandle,serve,web,rhythmweb --cover-xml
 after_success:
-    - "coveralls debug"
+    - "coveralls"
