@@ -21,7 +21,6 @@ class TestBaseRest(unittest.TestCase):
 
 
     def test_post_return_value_is_json(self):
-        components = defaultdict(Mock())
         myjson = JSon()
         myjson.put('value', 2)
         stub = RestStub(Mock(), myjson)
@@ -30,12 +29,22 @@ class TestBaseRest(unittest.TestCase):
         self.assertEquals(2, j['value'])
 
     def test_error_404(self):
-        components = defaultdict(Mock())
         stub = RestStub(Mock(), None)
         response = Mock()
         stub.do_get(defaultdict(Mock()), response)
         response.assert_called_with('404 NOT FOUND', 
                 [('Content-type','text/html; charset=UTF-8')])
+
+    def test_parse_path(self):
+        environment = defaultdict(Mock())
+        environment['PATH_PARAMS'] = 'bla/final'
+        stub = RestStub(Mock(), 'response')
+        response = stub.do_get(environment, Mock())
+        params = stub.get_path_parameters()
+        self.assertEquals(['bla', 'final'], params)
+        self.assertEquals('response', response)
+
+
 
 
 
