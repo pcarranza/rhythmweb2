@@ -1,5 +1,5 @@
 from os import path
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 
 import logging
 
@@ -25,7 +25,7 @@ class Configuration(object):
         self.parser.read(path.expanduser('~/.rhythmweb'))
 
     def get_string(self, key):
-        return self.parser.get('server', key, True)
+        return self.parser.get('server', key, raw=True)
 
     def get_int(self, key):
         return self.parser.getint('server', key)
@@ -38,4 +38,4 @@ class Configuration(object):
         for section_name in self.parser.sections():
             log.info('Section: %s' % section_name)
             for key in self.parser.options(section_name):
-                log.info('  %s = %s' % (key, self.parser.get(section_name, key, True)))
+                log.info('  %s = %s' % (key, self.parser.get(section_name, key, raw=True)))

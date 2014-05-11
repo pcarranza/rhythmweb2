@@ -19,6 +19,9 @@
 from web.rest import RBRest
 from serve.request import ServerException
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class Page(RBRest):
     
@@ -29,19 +32,16 @@ class Page(RBRest):
         action = self.get_parameter('action', True)
         handler = self.get_rb_handler()
         
-        self.info('POST action %s' % action)
+        log.info('POST action %s' % action)
         
         if action == 'play_pause':
             handler.play_pause()
             
-            
         elif action == 'next':
-            handler.next()
-            
+            next(handler)
             
         elif action == 'previous':
             handler.previous()
-            
             
         elif action == 'seek':
             time = self.get_parameter('time', True)
@@ -53,26 +53,21 @@ class Page(RBRest):
             
             handler.seek(time)
             
-            
         elif action == 'enqueue':
             entry_id = self.get_parameter('entry_id', True)
             entry_ids = self.pack_as_list(entry_id)
             handler.enqueue(entry_ids)
-            
             
         elif action == 'dequeue':
             entry_id = self.get_parameter('entry_id', True)
             entry_ids = self.pack_as_list(entry_id)
             handler.dequeue(entry_ids)
             
-            
         elif action == 'shuffle_queue':
             handler.shuffle_queue()
             
-            
         elif action == 'clear_queue':
             handler.clear_play_queue()
-        
         
         elif action == 'play_entry':
             entry_id = self.get_parameter('entry_id', True)
@@ -80,10 +75,8 @@ class Page(RBRest):
                 raise ServerException(400, 'Bad request, only one entry_id parameter accepted')
             handler.play_entry(entry_id)
         
-        
         elif action == 'mute':
             handler.toggle_mute()
-        
             
         elif action == 'set_volume':
             volume = self.get_parameter('volume', True)
@@ -94,16 +87,10 @@ class Page(RBRest):
             
             handler.set_volume(volume)
             
-            
         else:
             raise ServerException(400, 'Bad request, action "%s" is not supported' % action)
-            
 
         status = self.get_status_as_json()        
         status.put('last_action', action)
         
         return status
-    
-    
-    def get_logname(self):
-        return 'PLAYER'

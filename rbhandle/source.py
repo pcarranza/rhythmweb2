@@ -16,9 +16,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from serve.log.loggable import Loggable
-from model import ModelHandler
+from .model import ModelHandler
 
+import logging
+log = logging.getLogger(__name__)
 
 RB_SOURCELIST_MODEL_COLUMN_PLAYING = 0
 RB_SOURCELIST_MODEL_COLUMN_PIXBUF = 1
@@ -32,19 +33,17 @@ RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY = 7
 SOURCETYPE_PLAYLIST = 'playlist'
 SOURCETYPE_SOURCE = 'source'
 
-
-class SourceHandler(Loggable):
+class SourceHandler(object):
     
     def __init__(self, shell):
         self.shell = shell
     
     def play_source(self, source):
-        self.info('Set source playing')
+        log.info('Set source playing')
         if self.get_playing_status():
             self.play_pause()
         self.shell.props.shell_player.set_playing_source(source.source)
         return self.play_pause()
-    
     
     def __get_sources(self, all_sources=False):
         '''
@@ -52,7 +51,6 @@ class SourceHandler(Loggable):
         '''
 #        index = 0
         sources = []
-        
 #        for sourcelist in self.shell.props.sourcelist_model:
 #            category = sourcelist[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
 #            if category == rb.SOURCE_GROUP_CATEGORY_PERSISTENT or \
@@ -65,12 +63,10 @@ class SourceHandler(Loggable):
 #                    if all_sources:
 #                        sources.append(RBSource(index, source, SOURCETYPE_SOURCE))
 #                    index += 1
-            
         return self.get_sources()
     
-    
     def get_source(self, source_index):
-        self.info('Getting source with index %d' % source_index)
+        log.info('Getting source with index %d' % source_index)
         
         if not type(source_index) is int:
             raise Exception('source_index parameter must be an int')
@@ -79,15 +75,14 @@ class SourceHandler(Loggable):
         sources = self.__get_sources(True)
         for source in sources:
             if source.index == source_index:
-                self.debug('Returning source with index %d' % index)
+                log.debug('Returning source with index %d' % index)
                 return source
             index += 1
         
         return None
         
-        
     def get_source_entries(self, source, limit=100):
-        self.info('Getting source entries')
+        log.info('Getting source entries')
         entries = []
         m = ModelHandler(self.shell)
         if not source is None:
@@ -96,20 +91,17 @@ class SourceHandler(Loggable):
                                    limit=limit)
         return entries
     
-    
     def get_playlists(self):
         '''
         Returns all registered playlists 
         '''
         return self.__get_wrapped_sources(self.shell.props.playlist_manager.get_playlists())
     
-    
     def get_sources(self):
         '''
         Returns all fixed sources 
         '''
         return self.__get_sources(True)
-    
     
     def __get_wrapped_sources(self, sourcelist):
         sources = []
@@ -121,12 +113,11 @@ class SourceHandler(Loggable):
         
         return sources
     
-    
     def enqueue_source(self, source):
         '''
         Enqueues in the play queue the given playlist 
         '''
-        self.info('Enqueuing source')
+        log.info('Enqueuing source')
         
         if not source:
             return 0
@@ -139,13 +130,10 @@ class SourceHandler(Loggable):
                    query_model=source.query_model)
 
 
-
-
-class RBSource():
+class RBSource(object):
     '''
     Source wrapper, loads all data on initialization
     '''
-    
     def __init__(self, index, entry, source_type='playlist'):
         self.id = index
         self.index = index

@@ -15,14 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.log.loggable import Loggable
-from SocketServer import TCPServer
-import SocketServer
+from socketserver import TCPServer
+import socketserver
 import threading
 import socket
 import sys
 import time
 import select
+
+import logging
+log = logging.getLogger(__name__)
 
 ERRORS = {
   400 : 'Bad request',
@@ -32,10 +34,10 @@ ERRORS = {
 }
 
 
-class BufferProxyServer(TCPServer, Loggable):
+class BufferProxyServer(TCPServer):
     
     def __init__(self, proxy_host, proxy_port, target_host, target_port):
-        TCPServer.__init__(self, (proxy_host, proxy_port), SocketServer.StreamRequestHandler)
+        TCPServer.__init__(self, (proxy_host, proxy_port), socketserver.StreamRequestHandler)
         self.target_address = (target_host, target_port)
         self.server_thread = None
         self.daemon_threads = False
@@ -58,8 +60,8 @@ class BufferProxyServer(TCPServer, Loggable):
                     r, w, e = select.select([self], [], [], poll_interval)
                     if self in r:
                         self._handle_request_noblock()
-                except Exception, e:
-                    self.error('Exception handling request: %s' % e)
+                except Exception as e:
+                    log.error('Exception handling request: %s' % e, exc_info=True)
         finally:
             self.__shutdown_request = False
             self.__is_shut_down.set()
@@ -72,17 +74,17 @@ class BufferProxyServer(TCPServer, Loggable):
     
     def start(self):
         if not self.server_thread:
-            self.debug('STARTING PROXY SERVER THREAD')
+            log.debug('STARTING PROXY SERVER THREAD')
             self.server_thread = threading.Thread(target=self.serve_forever)
             self.server_thread.start()
-            self.debug('PROXY SERVER THREAD STARTED')
+            log.debug('PROXY SERVER THREAD STARTED')
         
         
     def stop(self):
         if self.server_thread:
-            self.debug('STOPPING PROXY SERVER THREAD...')
+            log.debug('STOPPING PROXY SERVER THREAD...')
             self.shutdown()
-            self.debug('PROXY SERVER THREAD STOPPED')
+            log.debug('PROXY SERVER THREAD STOPPED')
             
         self.server_thread = None
         
@@ -96,17 +98,17 @@ class BufferProxyServer(TCPServer, Loggable):
 
 
     def handle_request(self):
-        self.trace('HANDLING REQUEST')
+        log.debug('HANDLING REQUEST')
         return self._handle_request_noblock(self)
         
         
     def _handle_request_noblock(self):
-        self.trace('HANDLING NON_BLOCKING REQUEST')
+        log.debug('HANDLING NON_BLOCKING REQUEST')
         
         try:
             request, client_address = self.socket.accept()
-        except Exception, e:
-            self.error('Request buffer handle exception: %s' % e)
+        except Exception as e:
+            log.error('Request buffer handle exception: %s' % e, exc_info=True)
             
         t = threading.Thread(target = self.process_request_thread,
                      args = (request, client_address))
@@ -118,67 +120,65 @@ class BufferProxyServer(TCPServer, Loggable):
         
         
     def process_request_thread(self, request, client_address):
-        self.debug('Handling request with proxy from address %s' % client_address[0])
+        log.debug('Handling request with proxy from address %s' % client_address[0])
         
-        buffer_size = self.default_buffer_size
         try:
-            rfile = request.makefile('rb', buffer_size)
+            rfile = request.makefile('rb')
             try:
                 buffer = self.read_request(rfile)
-            except CommandNotSupportedError, e:
+            except CommandNotSupportedError as e:
                 return self.send_error(request, 405)
                 
-            self.trace('Closing request...')
+            log.debug('Closing request...')
             rfile.close()
             
-            self.trace('Creating client socket')
+            log.debug('Creating client socket')
             
             try:
                 client = socket.socket()
                 client.connect(self.target_address)
-            except Exception, e:
+            except Exception as e:
                 return self.send_error(request, 503, e)
             
-            
-            self.trace('Writing request in client socket')
-            wfile = client.makefile('wb', buffer_size)
+            log.debug('Writing request in client socket')
+            wfile = client.makefile('wb')
             try:
-                wfile.writelines(buffer)
-            except Exception, e:
+                for line in buffer:
+                    wfile.write(bytes(line, 'UTF-8'))
+            except Exception as e:
                 return self.send_error(request, 503, e)
             finally:
-                self.trace('Closing client socket requests')
+                log.debug('Closing client socket requests')
                 wfile.close()
             
-            
-            wfile = request.makefile('wb', buffer_size)
-            rfile = client.makefile('rw', buffer_size)
-            self.trace('Reading client response and writing to the main response')
+            wfile = request.makefile('wb')
+            rfile = client.makefile('rwb')
+            log.debug('Reading client response and writing to the main response')
             
             try:
                 while True:
                     try:
-                        line = rfile.next()
+                        line = next(rfile)
                         wfile.write(line)
                     except StopIteration:
                         break
                     
                 return True
             
-            except Exception, e:
-                self.error(e)
+            except Exception as e:
+                log.error(e, exc_info=True)
                 
             finally:
-                self.trace('Closing client response and request socket')
+                log.debug('Closing client response and request socket')
                 rfile.close()
                 wfile.close()
             
-        except Exception, e:
+        except Exception as e:
             return self.send_error(request, 500, e)
         
         
     def send_error(self, request, code, message=None):
-        if not ERRORS.has_key(code):
+        if code not in ERRORS:
             error = 'Invalid error code %d' % code
             code = 500
         else:
@@ -187,12 +187,12 @@ class BufferProxyServer(TCPServer, Loggable):
         if not message is None:
             error = '%s %s' % (error, message)
             
-        self.error(error)
+        log.error(error, exc_info=True)
         
         error = 'HTTP/1.1 %d %s' % (code, error)
         
-        wfile = request.makefile('wb', self.default_buffer_size)
-        wfile.writelines([error])
+        wfile = request.makefile('wb')
+        wfile.write(bytes(error, 'UTF-8'))
         wfile.close()
         return False
         
@@ -200,20 +200,22 @@ class BufferProxyServer(TCPServer, Loggable):
         buffer = []
         command = None
         length = 0
-        self.trace('Reading client request')
+        log.debug('Reading client request')
         while True:
             try:
-                line = rfile.next()
+                line = next(rfile).decode('UTF-8')
                 buffer.append(line)
                 
                 if command is None:
                     command = str(line).split(' ')[0]
                     if command not in ['GET', 'POST']:
                         raise CommandNotSupportedError('Command %s is not supported' % command)
+                        log.debug('command: {}'.format(command))
                 
                 if length == 0: 
                     if line.startswith('Content-Length:'):
                         length = int(line.split(' ')[1])
+                        log.debug('content length: {}'.format(length))
                 
                 if not self.clean_line(line):
                     break
@@ -221,27 +223,22 @@ class BufferProxyServer(TCPServer, Loggable):
             except StopIteration:
                 break
         
-        if length > 0:
-            self.trace('Reading Content...')
-            buffer_size = 1024
-            while True:
-                try:
-                    if buffer_size < length:
-                        line = rfile.read(buffer_size)
-                        length -= buffer_size
-                    else:
-                        line = rfile.read(length)
-                        
-                    buffer.append(line)
-                    
-                    if buffer_size > length:
-                        break
-                    
-                except StopIteration:
-                    break
-        
+        log.debug('Reading Content up to {} chars'.format(length))
+        while length > 0:
+            if length > 1024:
+                available = 1024
+            else:
+                available = length
+
+            if available == 0:
+                break
+                
+            line = rfile.read(available).decode('UTF-8')
+            buffer.append(line)
+            length -= len(line)
+
+        log.debug('request from client read, size {}'.format(len(buffer)))
         return buffer
-    
     
 
 class CommandNotSupportedError(RuntimeError):
@@ -257,10 +254,6 @@ def __debug(message):
 
 if __name__ == '__main__':
     bs = BufferProxyServer('0.0.0.0', 7001, 7000)
-    bs.debug = __debug
-    bs.trace = __debug
-    bs.info = __debug
-    bs.error = __debug
     bs.start()
     while True:
         sys.stdout.write('Waiting connections...\n')

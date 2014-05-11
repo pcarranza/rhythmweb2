@@ -15,28 +15,27 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.log.loggable import Loggable
+from .entry import EntryHandler
 
-from entry import EntryHandler
+import logging
+log = logging.getLogger(__name__)
 
 
-class ModelHandler(Loggable):
+class ModelHandler(object):
     
     def __init__(self, shell):
         self.shell = shell
-        
         
     def loop_query_model(self, func, query_model, first=0, limit=0):
         '''
         Loops a query model object and invokes the given function for every row, can also receive a first and a limit to "page" 
         '''
-        self.trace('Loop query_model...')
+        log.debug('Loop query_model...')
 
         if func is None:
             raise Exception('Func cannot be None')
         if query_model is None:
             raise Exception('Query Model cannot be None')
-        
         
         if first != 0:
             limit = limit + first
@@ -45,11 +44,11 @@ class ModelHandler(Loggable):
         count = 0
         entry_handler = EntryHandler(self.shell)
         for row in query_model:
-            self.trace('Reading Row...')
+            log.debug('Reading Row...')
 
             if index < first:
                 index += + 1
-                self.trace('Skipping row ')
+                log.debug('Skipping row ')
                 continue
             
             entry = self.get_entry_from_row(row)
@@ -64,7 +63,6 @@ class ModelHandler(Loggable):
         
         return count
     
-    
     def get_entry_from_row(self, row):
         '''
         Returns the entry id for a given row from a query model
@@ -73,4 +71,3 @@ class ModelHandler(Loggable):
             raise Exception('Row from query model cannot be None')
         
         return row[0]
-

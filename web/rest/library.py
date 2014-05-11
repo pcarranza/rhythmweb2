@@ -30,7 +30,7 @@ class Page(RBRest):
        
         search_by = self.get_path_parameter(0)
         
-        if not SEARCH_TYPES.has_key(search_by):
+        if search_by not in SEARCH_TYPES:
             raise ServerException(400, 'Bad request, path parameter "%s" not supported' % search_by)
         
         if self.get_path_parameters_size() == 1:

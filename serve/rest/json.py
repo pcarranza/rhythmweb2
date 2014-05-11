@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from types import NoneType
 
 class JSon():
     
@@ -31,7 +30,7 @@ class JSon():
         
         
     def get(self, name):
-        if self.attributes.has_key(name):
+        if name in self.attributes:
             return self.attributes[name]
         
         return None
@@ -44,7 +43,7 @@ class JSon():
         attributes = self.attributes
         try:
             return_value.append(self.__parse_attributes(attributes))
-        except Exception, e:
+        except Exception as e:
             raise Exception('Could not parse json object', e)
         
         return ''.join(return_value)
@@ -75,9 +74,6 @@ class JSon():
             return_value.append(self.__encode_str(value))
             return_value.append("\" ")
 
-        elif type(value) is NoneType:
-            return_value.append('null')
-        
         elif type(value) is bool:
             if value:
                 return_value.append('true')
@@ -87,6 +83,9 @@ class JSon():
         elif isinstance(value, JSon):
             return_value.append(value.parse())
             
+        elif value is None:
+            return_value.append('null')
+        
         else: # type(value) is int or type(value) is float:
             return_value.append(self.__encode_str(value))
         

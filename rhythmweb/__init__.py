@@ -23,20 +23,17 @@
 # TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 # OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-
-import os
-import logging
-
-import serve.log
-
 from gi.repository import GObject, Peas
 from rbhandle import RBHandler
 
-from serve import CGIServer
-
 from rhythmweb.conf import Configuration
 
+from serve import CGIServer
 from serve.app import CGIApplication
+
+import os
+import logging
+log = logging.getLogger(__name__)
 
 
 class RhythmWeb(GObject.Object, Peas.Activatable):
@@ -52,11 +49,10 @@ class RhythmWeb(GObject.Object, Peas.Activatable):
         logging.basicConfig(filename=config.get_string('log.file'),
                             level=config.get_string('log.level'),
                             format=config.get_string('log.format'))
-        self.log = logging.getLogger(__name__)
 
         self.base_path = base_path
         self.config = config
-        self.log.info('RhythmWeb plugin created')
+        log.info('RhythmWeb plugin created')
 
     def do_activate(self):
         shell = self.object
@@ -70,10 +66,11 @@ class RhythmWeb(GObject.Object, Peas.Activatable):
 
         server.start()
         shell.server = server
-        self.log.info('RhythmWeb server started')
+        log.info('RhythmWeb server started')
 
     def do_deactivate(self):
         shell = self.object
         if shell.server:
             shell.server.stop()
-            self.log.info('RhythmWeb server stopped')
+            log.info('RhythmWeb server stopped')
+

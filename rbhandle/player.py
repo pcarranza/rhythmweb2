@@ -15,9 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+log = logging.getLogger(__name__)
 
-from serve.log.loggable import Loggable
-#from gi.repository import RB
 
 ORDER_LINEAR = 'linear'
 ORDER_SHUFFLE = 'shuffle'
@@ -29,7 +29,7 @@ ORDER_SHUFFLE_EQUALS = 'random-equal-weights'
 PLAY_ORDER_KEY = '/apps/rhythmbox/state/play_order'
 PLAY_LOOP = '-loop'
 
-class PlayerHandler(Loggable):
+class PlayerHandler(object):
     
     def __init__(self, shell):
         self.shell = shell
@@ -73,7 +73,7 @@ class PlayerHandler(Loggable):
         '''
         Gets the playing status, returns True or False according to playing or not
         '''
-        self.debug('get playing status')
+        log.debug('get playing status')
         return self.player.get_playing()[1]
     
     
@@ -81,12 +81,12 @@ class PlayerHandler(Loggable):
         '''
         Gets True if the player is muted
         '''
-        self.debug('get mute status')
+        log.debug('get mute status')
         return self.player.get_mute()[1]
     
     
     def toggle_mute(self):
-        self.debug('toggle mute')
+        log.debug('toggle mute')
         self.player.toggle_mute()
         
         
@@ -94,7 +94,7 @@ class PlayerHandler(Loggable):
         '''
         Gets the player volume, a float between 0 and 1
         '''
-        self.debug('get volume')
+        log.debug('get volume')
         return self.player.get_volume()[1]
     
         
@@ -105,10 +105,10 @@ class PlayerHandler(Loggable):
         if not type(volume) is float:
             raise Exception('Volume must be a float')
         
-        self.debug('set volume %d' % volume)
+        log.debug('set volume %d' % volume)
         
         if volume > 1:
-            self.warning('Volume cannot be set over 1')
+            log.warning('Volume cannot be set over 1')
             
         self.player.set_volume(volume)
     
@@ -128,7 +128,7 @@ class PlayerHandler(Loggable):
         '''
         Returns the rhythmbox current playing entry object
         '''
-        self.debug('get playing entry')
+        log.debug('get playing entry')
         return self.player.get_playing_entry()
     
     
@@ -136,7 +136,7 @@ class PlayerHandler(Loggable):
         '''
         Gets the playing time, in seconds
         '''
-        self.debug('get playing time')
+        log.debug('get playing time')
         return self.player.get_playing_time()[1]
     
     
@@ -144,15 +144,15 @@ class PlayerHandler(Loggable):
         '''
         Gets the playing time, as a string in "x:xx of x:xx left" format
         '''
-        self.debug('get playing time string')
+        log.debug('get playing time string')
         return self.player.get_playing_time_string()
     
     
-    def next(self):
+    def __next__(self):
         '''
         If playing, skips the player to the next song
         '''
-        self.debug('skip to next')
+        log.debug('skip to next')
         if self.get_playing_status():
             self.player.do_next()
         
@@ -161,7 +161,7 @@ class PlayerHandler(Loggable):
         '''
         Seeks n seconds in the current playing song, receives and int, positive or negative
         '''
-        self.debug('seek %d seconds' % seconds)
+        log.debug('seek %d seconds' % seconds)
         self.player.seek(seconds)
         
         
@@ -169,7 +169,7 @@ class PlayerHandler(Loggable):
         '''
         If playing, skips the player to the previous song
         '''
-        self.debug('skip to previous')
+        log.debug('skip to previous')
         if self.get_playing_status():
             self.player.do_previous()
     
@@ -178,7 +178,7 @@ class PlayerHandler(Loggable):
         '''
         Starts playing or pauses
         '''
-        self.debug('toggle playing status')
+        log.debug('toggle playing status')
         
         status = self.get_playing_status()
         return self.player.playpause(not status)
@@ -188,7 +188,7 @@ class PlayerHandler(Loggable):
         '''
         Inmediatly starts playing the entry which id gets by parameter
         '''
-        self.info('Playing entry %s' % entry_id)
+        log.info('Playing entry %s' % entry_id)
         
         entry = self.get_entry(entry_id)
         if not entry is None:
@@ -199,7 +199,7 @@ class PlayerHandler(Loggable):
         '''
         Inmediately starts playing provided entry
         '''
-        self.debug('play entry %s' % entry)
+        log.debug('play entry %s' % entry)
         if entry is None:
             return
 
@@ -241,13 +241,13 @@ class PlayerHandler(Loggable):
         '''
         order = self.get_play_order()
         new_order = ORDER_LINEAR
-        if self._play_toggle_loop.has_key(order):
+        if order in self._play_toggle_loop:
             new_order = self._play_toggle_loop[order]
         self.set_play_order(new_order)
     
     
 #    def __playing_song_changed(self, player, entry):
-#        self.debug('Playing song changed....')
+#        log.debug('Playing song changed....')
 #        if not self.__playing_song is None:
 #            old_playcount = self.__playing_song.play_count
 #            old_entry = self.get_entry(self.__playing_song.id)

@@ -15,10 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.log.loggable import Loggable
 from gi.repository import RB
 
-class EntryHandler(Loggable):
+import logging
+log = logging.getLogger(__name__)
+
+
+class EntryHandler(object):
     
     def __init__(self, shell):
         self.db = shell.props.db
@@ -32,7 +35,7 @@ class EntryHandler(Loggable):
         
         entry_id = int(entry_id)
         
-        self.trace('Getting entry %d' % entry_id)
+        log.debug('Getting entry %d' % entry_id)
         return self.db.entry_lookup_by_id(entry_id)
        
     def load_entry(self, entry):
@@ -40,7 +43,7 @@ class EntryHandler(Loggable):
         Returns a RBEntry with the entry information fully loaded for the given id 
         '''
         if entry is None:
-            self.info('Entry is None')
+            log.info('Entry is None')
             return None
         
         rbentry = RBEntry()
@@ -64,10 +67,10 @@ class EntryHandler(Loggable):
         '''
         Returns a RBEntry with the entry information fully loaded for the given id 
         '''
-        self.debug('Loading entry %s' % str(entry_id))
+        log.debug('Loading entry %s' % str(entry_id))
         entry = self.get_entry(entry_id)
         if entry is None:
-            self.info('Entry %s not found' % str(entry_id))
+            log.info('Entry %s not found' % str(entry_id))
             return None
        
         return self.load_entry(entry)
@@ -80,7 +83,7 @@ class EntryHandler(Loggable):
         if not type(rating) is int:
             raise Exception('Rating parameter must be an int')
         
-        self.info('Setting rating %d to entry %s' % (rating, entry_id))
+        log.info('Setting rating %d to entry %s' % (rating, entry_id))
         entry = self.get_entry(entry_id)
         if not entry is None:
             self.db.entry_set(entry, RB.RhythmDBPropType.RATING, rating)
@@ -90,7 +93,7 @@ class EntryHandler(Loggable):
         return entry.get_ulong(RB.RhythmDBPropType.ENTRY_ID)
     
 
-class RBEntry():
+class RBEntry(object):
     '''
     Rhythmbox entry wrapper, loads all entry data on initialization
     '''

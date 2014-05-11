@@ -15,17 +15,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from player import PlayerHandler
-from entry import EntryHandler
-from query import QueryHandler
-from queue import QueueHandler
-from source import SourceHandler
-from cache import CacheHandler
+from .player import PlayerHandler
+from .entry import EntryHandler
+from .query import QueryHandler
+from .queue import QueueHandler
+from .source import SourceHandler
+from .cache import CacheHandler
 
-from serve.log.loggable import Loggable
+import logging
+log = logging.getLogger(__name__)
 
 
-class RBHandler(PlayerHandler, EntryHandler, QueryHandler, QueueHandler, SourceHandler, CacheHandler, Loggable):
+class RBHandler(PlayerHandler, EntryHandler, QueryHandler, QueueHandler, SourceHandler, CacheHandler):
     '''
     Rhythmbox shell wrapper, provides player, queue, playlist, 
     artist/album/genre count cache and max instances 
@@ -38,10 +39,10 @@ class RBHandler(PlayerHandler, EntryHandler, QueryHandler, QueueHandler, SourceH
         by parameter
         '''
         if shell is None:
-            self.error('Setting shell object to None')
+            log.error('Setting shell object to None')
             raise Exception('Shell object cannot be null')
         else:
-            self.trace('Setting shell object')
+            log.debug('Setting shell object')
 
         PlayerHandler.__init__(self, shell)
         EntryHandler.__init__(self, shell)
@@ -50,12 +51,5 @@ class RBHandler(PlayerHandler, EntryHandler, QueryHandler, QueueHandler, SourceH
         SourceHandler.__init__(self, shell)
         CacheHandler.__init__(self, shell)
         
-        self.trace('rbhandler loaded')
-        print 'rbhandler loaded'
-        
-        
-    
-    
-
-
-
+        log.debug('rbhandler loaded')
+        print('rbhandler loaded')

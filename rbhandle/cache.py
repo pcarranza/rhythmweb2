@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.log.loggable import Loggable
 from gi.repository import RB
-import os.path, urllib
+import os.path, urllib.request, urllib.parse, urllib.error
 
-class CacheHandler(Loggable):
+import logging
+log = logging.getLogger(__name__)
+
+class CacheHandler(object):
     
     __CACHE_ARTISTS = 'artists'
     __CACHE_GENRES = 'genres'
@@ -46,7 +48,7 @@ class CacheHandler(Loggable):
     
     def __assert_cache(self):
         if not self.__db_cache_loaded:
-            self.warning("Forcing cache load")
+            log.warning("Forcing cache load")
             self.__db.entry_foreach(self.__force_entry_load_into_cache)
             
             
@@ -118,10 +120,10 @@ class CacheHandler(Loggable):
         location = self.get_value(entry, RB.RhythmDBPropType.LOCATION)
         
         if location and str(location).startswith('file://'):
-            fpath = urllib.url2pathname(location)
+            fpath = urllib.request.url2pathname(location)
             fpath = str(fpath).replace('file://', '')
             if not os.path.exists(fpath):
-                self.trace('Skipping missing file %s' % fpath)
+                log.debug('Skipping missing file %s' % fpath)
                 return
 
         artist = self.get_value(entry, RB.RhythmDBPropType.ARTIST)
@@ -130,15 +132,15 @@ class CacheHandler(Loggable):
         play_count = self.get_value(entry, RB.RhythmDBPropType.PLAY_COUNT)
         
         if not artist:
-            self.trace('Empty artist for entry %d %s, skipping' % (entry_id, location))
+            log.debug('Empty artist for entry %d %s, skipping' % (entry_id, location))
             return
         
         if not album:
-            self.trace('Empty album for entry %d %s, skipping' % (entry_id, location))
+            log.debug('Empty album for entry %d %s, skipping' % (entry_id, location))
             return
         
         if not genre:
-            self.trace('Empty genre for entry %d %s, skipping' % (entry_id, location))
+            log.debug('Empty genre for entry %d %s, skipping' % (entry_id, location))
             return
 
         if not play_count:
@@ -150,10 +152,10 @@ class CacheHandler(Loggable):
     
     
     def __append_artist(self, artist, play_count):
-        self.trace('Append playcount in %d to artist "%s"' % (play_count, artist))    
+        log.debug('Append playcount in %d to artist "%s"' % (play_count, artist))    
         artists_cache = self.__db_cache[self.__CACHE_ARTISTS]
         
-        if artists_cache.has_key(artist):
+        if artist in artists_cache:
             artists_cache[artist] += play_count
         else:
             artists_cache[artist] = play_count
@@ -165,10 +167,10 @@ class CacheHandler(Loggable):
             
     
     def __append_album(self, album, play_count):
-        self.trace('Append playcount in %d to album "%s"' % (play_count, album))
+        log.debug('Append playcount in %d to album "%s"' % (play_count, album))
         albums_cache = self.__db_cache[self.__CACHE_ALBUMS]
         
-        if albums_cache.has_key(album):
+        if album in albums_cache:
             albums_cache[album] += play_count
         else:
             albums_cache[album] = play_count
@@ -180,10 +182,10 @@ class CacheHandler(Loggable):
 
 
     def __append_genre(self, genre, play_count):
-        self.trace('Append playcount in %d to genre "%s"' % (play_count, genre))
+        log.debug('Append playcount in %d to genre "%s"' % (play_count, genre))
         genres_cache = self.__db_cache[self.__CACHE_GENRES]
     
-        if genres_cache.has_key(genre):
+        if genre in genres_cache:
             genres_cache[genre] += play_count
         else:
             genres_cache[genre] = play_count

@@ -19,12 +19,13 @@
 from gi.repository import GObject
 from wsgiref.simple_server import WSGIRequestHandler
 from wsgiref.simple_server import make_server
-from serve.log.loggable import Loggable
 
 from serve.proxy import BufferProxyServer
 
+import logging
+log = logging.getLogger(__name__)
 
-class CGIServer(Loggable):
+class CGIServer(object):
     
     __application = None
     __config = None
@@ -40,10 +41,9 @@ class CGIServer(Loggable):
         
         self.__config = config
         self.__application = application
-        
     
     def start(self):
-        self.info('   STARTING SERVER')
+        log.info('   STARTING SERVER')
 
         config = self.__config
         
@@ -52,8 +52,8 @@ class CGIServer(Loggable):
         hostname = config.get_string('hostname')
         
         port = config.get_int('port')
-        self.info('   HOSTNAME   %s' % hostname)
-        self.info('   PORT       %d' % port)
+        log.info('   HOSTNAME   %s' % hostname)
+        log.info('   PORT       %d' % port)
 
         use_proxy = config.get_boolean('proxy')
         proxy_port = config.get_int('proxy.port')
@@ -71,46 +71,44 @@ class CGIServer(Loggable):
                                                  self.__idle_request_loop)
         
         self.__running = True
-        self.info('   SERVER STARTED')
+        log.info('   SERVER STARTED')
         
         if use_proxy == True:
-            self.info('   PROXY_HOSTNAME %s' % proxy_hostname)
-            self.info('   PROXY_PORT     %d' % proxy_port)
+            log.info('   PROXY_HOSTNAME %s' % proxy_hostname)
+            log.info('   PROXY_PORT     %d' % proxy_port)
             
-            self.info('   STARTING PROXY')
+            log.info('   STARTING PROXY')
             self.__proxy_server = BufferProxyServer(proxy_hostname, proxy_port, hostname, port)
             self.__proxy_server.start()
             
-            self.info('   PROXY STARTED')
-        
-        
+            log.info('   PROXY STARTED')
 
     def stop(self):
-        self.info('   STOPPING SERVER')
+        log.info('   STOPPING SERVER')
         GObject.source_remove(self.__watch_request_loop_id)
         if self.__internal_server is None:
             return
         
         if not self.__proxy_server is None:
-            self.info('   STOPPING PROXY SERVER')
+            log.info('   STOPPING PROXY SERVER')
             self.__proxy_server.stop()
         
         self.__internal_server = None
         self.__proxy_server = None
         self.__running = False
-        self.info('   SERVER STOPPED')
+        log.info('   SERVER STOPPED')
     
     
     def __idle_request_loop(self, source, cb_condition):
-        self.debug('Handling request')
+        log.debug('Handling request')
         if not self.__running:
-            self.debug('NOT RUNNING')
+            log.debug('NOT RUNNING')
             return False
         self.__internal_server.handle_request()
         return True
     
 
-class LoggingWSGIRequestHandler(WSGIRequestHandler, Loggable):
+class LoggingWSGIRequestHandler(WSGIRequestHandler):
     '''
     Request handler, ends up invoking app method
     '''
@@ -121,17 +119,9 @@ class LoggingWSGIRequestHandler(WSGIRequestHandler, Loggable):
         '''
         return WSGIRequestHandler.get_environ(self)
     
-    
     def log_message(self, format, *args):
-        self.info('%s - [%s] %s' %
+        log.info('%s - [%s] %s' %
                          (self.address_string(),
                           self.log_date_time_string(),
                           format % args))
-    
-    def get_logname(self):
-        return 'Request'
-    
-
-
-
 

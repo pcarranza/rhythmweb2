@@ -18,22 +18,21 @@
 
 from serve.rest.json import JSon
 from serve.rest.base import BaseRest
-from serve.log.loggable import Loggable
 
-class RBRest(BaseRest, Loggable):
-    
+import logging
+log = logging.getLogger(__name__)
+
+class RBRest(BaseRest):
     
     def get_rb_handler(self):
         return self.get_component('RB')
     
-    
     def get_song_as_json(self, entry):
-        self.trace('Obtaining entry %s as json object' % entry)
+        log.debug('Obtaining entry %s as json object' % entry)
         return Song.get_song_as_JSon(entry)
     
-    
     def get_songs_as_json_list(self, entries):
-        self.trace('Loading entries list as json list')
+        log.debug('Loading entries list as json list')
         entries_list = []
         for entry in entries:
             entry = self.get_song_as_json(entry)
@@ -41,19 +40,16 @@ class RBRest(BaseRest, Loggable):
                 
         return entries_list
     
-    
     def get_source_as_json(self, playlist, entries = None):
-        self.trace('Loading playlist as json object')
+        log.debug('Loading playlist as json object')
         return Playlist.get_source_as_JSon(playlist, entries)
     
-    
     def get_status_as_json(self):
-        self.trace('Loading status as json object')
+        log.debug('Loading status as json object')
         return Status.get_status_as_JSon(self.get_rb_handler())
     
-    
     def get_library_as_json_list(self, library):
-        self.trace('Converting library dictionary to json list')
+        log.debug('Converting library dictionary to json list')
         libraries = []
         
         for key in library:
@@ -61,18 +57,13 @@ class RBRest(BaseRest, Loggable):
             
         return libraries
     
-    
     def get_name_value_as_json(self, name, value):
         json = JSon()
         json.put('name', name)
         json.put('value', value)
         return json
     
-    
-    def get_logname(self):
-        return 'Rest_' + self.__class__.__name__
-    
-    
+
 class Song:
     
     @staticmethod
@@ -134,5 +125,3 @@ class Status:
         status.put('volume', handler.get_volume())
         
         return status
-
-

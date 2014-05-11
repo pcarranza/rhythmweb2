@@ -11,7 +11,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 __all__ = ['ParseError', 'Node', 'Template']
 
-from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 from keyword import kwlist
 import re, sys
 
@@ -158,15 +158,15 @@ class Parser(HTMLParser):
             if nodeType != 'del' and (
                     not self.__validNodeNamePattern.match(nodeName) 
                     or nodeName in self.__invalidNodeNames):
-                raise ParseError, "Invalid node name: %r" % nodeName
+                raise ParseError("Invalid node name: %r" % nodeName)
             shouldDelete = nodeType == 'del'
-            if node.elementNames.has_key(nodeName):
+            if nodeName in node.elementNames:
                 if node.elementNames[nodeName] == nodeType:
                     shouldDelete = True
                 elif nodeType != 'sep':
-                    raise ParseError, ("Invalid node name: %s:%s " 
+                    raise ParseError(("Invalid node name: %s:%s " 
                             "(node %s:%s already found).") % (nodeType,  
-                            nodeName, node.elementNames[nodeName], nodeName)
+                            nodeName, node.elementNames[nodeName], nodeName))
             self.__outputStack.append(ElementCollector(nodeType, nodeName, 
                     tagName, atts, isEmpty, omitTags, shouldDelete))
         else:
@@ -199,11 +199,11 @@ class Parser(HTMLParser):
             for node in parent.content[1::2]:
                 if node._nodeName == element.nodeName:
                     if node._nodeType != 'rep':
-                        raise ParseError, ("Can't process separator node "
+                        raise ParseError(("Can't process separator node "
                                 "'sep:%s': repeater node 'rep:%s' wasn't "
                                 "found. Found node '%s:%s' instead.") % (
                                 element.nodeName, element.nodeName, 
-                                element.nodeType, element.nodeName)
+                                element.nodeType, element.nodeName))
                     if element.omitTags:
                         if content:
                             node._sep = content[0]
@@ -212,16 +212,16 @@ class Parser(HTMLParser):
                     else:
                         if content:
                             node._sep = '<%s%s>%s</%s>' % (element.tagName, 
-                                    renderAtts(element.atts.items()), # FIXED
+                                    renderAtts(list(element.atts.items())), # FIXED
                                     content[0], element.tagName)
                         else:
                             node._sep = '<%s%s />' % (element.tagName, 
-                                    renderAtts(element.atts.items())) # FIXED
+                                    renderAtts(list(element.atts.items()))) # FIXED
                     return
-            raise ParseError, ("Can't process separator node 'sep:%s' in node "
+            raise ParseError(("Can't process separator node 'sep:%s' in node "
                     "'%s:%s': repeater node 'rep:%s' wasn't found.") % (
                     element.nodeName, parent.nodeType, parent.nodeName, 
-                    element.nodeName)
+                    element.nodeName))
     
     def __endTag(self, tagName, isEmpty):
         # Process an end tag that closes an HTML element, i.e. </foo> or 
@@ -276,8 +276,8 @@ class Parser(HTMLParser):
         # Get content of template's ElementCollector once parsing is done.
         element = self.__outputStack.pop()
         if element.nodeType != 'tem':
-            raise ParseError, ("Can't complete template: node '%s:%s' wasn't "
-                    "correctly closed.") % (element.nodeType, element.nodeName)
+            raise ParseError(("Can't complete template: node '%s:%s' wasn't "
+                    "correctly closed.") % (element.nodeType, element.nodeName))
         #if len(element.content) == 1:
         #    raise ParseError, "No special %r attributes were found." % (
         #            self. __specialAttributeName)
@@ -364,7 +364,7 @@ class Container(Node):
         if self.__omitTags:
             self._renderContent(collector)
         else:
-            collector.append(self.__startTag % renderAtts(self._atts.items()))
+            collector.append(self.__startTag % renderAtts(list(self._atts.items())))
             self._renderContent(collector)
             collector.append(self.__endTag)
 
@@ -379,7 +379,7 @@ class Container(Node):
     def __attsSet(self, val):
         self._atts = {}
         atts = Attributes(self._atts, self._encode, self._decode)
-        for name, value in val.items():
+        for name, value in list(val.items()):
             atts[name] = value
     
     atts = property(__attsGet, __attsSet, 
@@ -454,26 +454,26 @@ class Attributes:
         try:
             if not self.__attNamePattern.match(name): # Note: this 
             # will throw a TypeError if 'name' is not string/unicode.
-                raise KeyError, "bad name."
+                raise KeyError("bad name.")
             if val != None:
-                if not isinstance(val, basestring):
-                    raise TypeError, "bad value: %r" % val
+                if not isinstance(val, str):
+                    raise TypeError("bad value: %r" % val)
                 val = self.__encode(val)
                 if '"' in val and "'" in val:
-                    raise ValueError, "value %r contains " \
-                            "both single and double quotes." % val
+                    raise ValueError("value %r contains " \
+                            "both single and double quotes." % val)
             self.__atts[name] = val
-        except Exception, e:
+        except Exception as e:
             msg = str(e)
-            if not isinstance(name, basestring):
+            if not isinstance(name, str):
                 msg = "bad name."
-            raise e.__class__, "Can't set tag attribute %r: %s" % (name, msg)
+            raise e.__class__("Can't set tag attribute %r: %s" % (name, msg))
         
     def __delitem__(self, name):
         del self.__atts[name]
     
     def __repr__(self):
-        return '<Attributes [%s]>' % renderAtts(self.__atts.items())[1:]
+        return '<Attributes [%s]>' % renderAtts(list(self.__atts.items()))[1:]
 
 
 #######
@@ -487,7 +487,7 @@ class Content(object):
         self._decode = decoder
     
     def _printStructure(self, indent):
-        print >> sys.stderr, indent + self._nodeType + ':' + self._nodeName
+        print(indent + self._nodeType + ':' + self._nodeName, file=sys.stderr)
 
 ##
 
@@ -543,7 +543,7 @@ class RichContent(Content):
     
     def __rawGet(self):
         if self.__nodesDict:
-            raise RuntimeError, ("Can't get raw/content of a node that "
+            raise RuntimeError("Can't get raw/content of a node that "
                     "contains other nodes.")
         else:
             return self.__nodesList[0]
@@ -580,21 +580,21 @@ class RichContent(Content):
     
     def __getattr__(self, name):
         # Get a sub-node.
-        if self.__nodesDict.has_key(name):
+        if name in self.__nodesDict:
             return self.__nodesDict[name]
         else:
-            raise AttributeError , "%s instance has no attribute %r." % (
-                    self.__class__.__name__, name)
+            raise AttributeError("%s instance has no attribute %r." % (
+                    self.__class__.__name__, name))
     
     def __setattr__(self, name, value):
         # Replace a sub-node, or replace node's content.
-        if self.__nodesDict.has_key(name):
+        if name in self.__nodesDict:
             if not isinstance(value, Node):
                 # Note: This type check is to catch careless user mistakes like
                 # 'node.foo = "text"' instead of  'node.foo.content = "text"'
-                raise TypeError, ("Can't replace node '%s:%s': value isn't a "
+                raise TypeError(("Can't replace node '%s:%s': value isn't a "
                         "Node object.") % (self.__nodesDict[name]._nodeType,
-                         self.__nodesDict[name]._nodeName)
+                         self.__nodesDict[name]._nodeName))
             value = value._clone() 
             value._nodeName = name
             idx = self.__nodesList.index(self.__nodesDict[name])
@@ -720,12 +720,12 @@ class Template(RichContent):
             # checking for bad value assignments at point of origin, but cheap
             return ''.join(collector)
         except TypeError:
-            raise TypeError, ("Can't render template: some node's content was "
+            raise TypeError("Can't render template: some node's content was "
                     "set to a non-text value.")
 
     def structure(self):
         """Print the object model's structure for diagnostic use."""
-        print >> sys.stderr, '-' * 80
+        print('-' * 80, file=sys.stderr)
         self._printStructure('')
-        print >> sys.stderr, '-' * 80
+        print('-' * 80, file=sys.stderr)
 

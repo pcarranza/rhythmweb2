@@ -20,6 +20,9 @@ from web.rest import RBRest
 from serve.rest.json import JSon
 from serve.request import ServerException
 
+import logging
+log = logging.getLogger(__name__)
+
 class Page(RBRest):
     
     def get(self):
@@ -47,7 +50,7 @@ class Page(RBRest):
 
             playlist_id = int(playlist_id)
             
-            self.trace('Loading playlist with id %d' % playlist_id)
+            log.debug('Loading playlist with id %d' % playlist_id)
             playlist = self.get_playlist_by_id(playlist_id) 
             
             if playlist is None:
@@ -104,7 +107,3 @@ class Page(RBRest):
     def get_source_entries(self, source, limit):
         entry_ids = self.get_rb_handler().get_source_entries(source, limit)
         return self.get_songs_as_json_list(entry_ids)
-
-
-    def get_logname(self):
-        return 'PLAYLISTS'

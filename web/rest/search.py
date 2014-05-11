@@ -21,6 +21,8 @@ from web.rest import RBRest
 from rbhandle.query import InvalidQueryException
 from serve.request import ServerException
 
+import logging
+log = logging.getLogger(__name__)
 
 class Page(RBRest):
     
@@ -30,69 +32,59 @@ class Page(RBRest):
              'podcast' : 'podcast-post', 
              'podcast-post' : 'podcast-post'}
     
-    
     def get(self):
-        self.info('GET search')
+        log.info('GET search')
         handler = self.get_rb_handler()
         filter = self.get_filter()
         
         try:
             entry_ids = handler.query(filter)
-        except InvalidQueryException, e:
-            self.error('Invalid query: %s' % e)
+        except InvalidQueryException as e:
+            log.error('Invalid query: %s' % e)
             raise ServerException(400, 'bad request: %s' % e.message)
-        except Exception, e:
-            self.error('Unknown exception: %s' % e)
+        except Exception as e:
+            log.error('Unknown exception: %s' % e)
             raise ServerException(500, 'Exception when executing query: %s' % e)
         
         json = JSon()
         
         if not entry_ids:
-            self.info('Search returned none')
+            log.info('Search returned none')
         else:
             entries = self.get_songs_as_json_list(entry_ids)
             json.put('entries', entries)
         
         return json
         
-        
-        
     def post(self):
-        self.trace('POST search')
+        log.debug('POST search')
         return self.get()
         
-        
     def get_filter(self):
-        self.trace('get_filter')
+        log.debug('get_filter')
         filter = {}
 
         if self.has_path_parameters():
-            self.debug('Reading path parameters')
+            log.debug('Reading path parameters')
             filter = self.__unpack_path_params(self.get_path_parameters())
-            
         else:
-            self.debug('No search path parameters')
-            
+            log.debug('No search path parameters')
         
         if self.has_post_parameters():
             
-            self.debug('Reading POST parameters')
+            log.debug('Reading POST parameters')
             
             if not 'type' in filter and self.has_parameter('type'):
                 filter['type'] = self.__unpack_type(self.get_parameter('type'))
             
-            
             if self.has_parameter('artist'):
                 filter['artist'] = self.get_parameter('artist')
-            
                 
             if self.has_parameter('title'):
                 filter['title'] = self.get_parameter('title')
-            
                 
             if self.has_parameter('album'):
                 filter['album'] = self.get_parameter('album')
-            
                 
             if self.has_parameter('rating'):
                 rating = self.get_parameter('rating')
@@ -103,39 +95,29 @@ class Page(RBRest):
                     irating = len(str(rating).strip())
                     
                 filter['rating'] = irating
-            
                 
             if self.has_parameter('genre'):
                 filter['genre'] = self.get_parameter('genre')
-            
                 
             if self.has_parameter('first'):
                 filter['first'] = self.get_parameter('first')
             
-            
             if self.has_parameter('limit'):
                 filter['limit'] = self.get_parameter('limit')
-            
                 
             if self.has_parameter('all'):
                 filter['all'] = self.get_parameter('all')
-            
-            
         else:
-            self.debug('No search POST parameters')
-        
-        
+            log.debug('No search POST parameters')
         return filter
     
-    
     def __unpack_type(self, type):
-        if self.TYPES.has_key(type):
-            self.trace('Returning type for "%s"' % type)
+        if type in self.TYPES:
+            log.debug('Returning type for "%s"' % type)
             return self.TYPES[type]
         
-        self.trace('No type for "%s"' % type)
+        log.debug('No type for "%s"' % type)
         return None
-    
     
     def __unpack_path_params(self, path_params):
         unpacked = {}
@@ -155,8 +137,3 @@ class Page(RBRest):
             unpacked['type'] = self.__unpack_type(path_params)
         
         return unpacked
-    
-    
-    def get_logname(self):
-        return 'SEARCH'
-    

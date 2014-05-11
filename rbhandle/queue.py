@@ -15,11 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from serve.log.loggable import Loggable
-from model import ModelHandler
+from .model import ModelHandler
 import random
 
-class QueueHandler(Loggable):
+import logging
+log = logging.getLogger(__name__)
+
+class QueueHandler(object):
     
     def __init__(self, shell):
         self.shell = shell
@@ -28,20 +30,18 @@ class QueueHandler(Loggable):
         '''
         Returns the play queue, limited to 100 entries by default
         '''
-        self.info('Getting play queue')
+        log.info('Getting play queue')
         entries = []
         
         m = ModelHandler(self.shell)
         m.loop_query_model(func=entries.append, query_model=self.get_play_queue_model(), limit=queue_limit)
         return entries
     
-    
     def get_play_queue_model(self):
         '''
         Returns the main play queue query model
         '''
         return self.shell.props.queue_source.props.query_model
-    
     
     def clear_play_queue(self):
         '''
@@ -50,29 +50,26 @@ class QueueHandler(Loggable):
         m = ModelHandler(self.shell)
         m.loop_query_model(func=self.dequeue, query_model=self.get_play_queue_model())
     
-    
     def shuffle_queue(self):
-        self.debug('shuffling queue')
+        log.debug('shuffling queue')
         entries = self.get_play_queue()
         if entries:
-            self.debug('There are entries, actually shuffling the queue')
+            log.debug('There are entries, actually shuffling the queue')
             random.shuffle(entries)
             
             for i in range(0, len(entries) - 1):
                 entry = self.load_entry(entries[i])
                 self.move_entry_in_queue(entry, i)
     
-    
     def move_entry_in_queue(self, entry, index):
         queue = self.shell.props.queue_source
         queue.move_entry(entry, index)
-    
     
     def enqueue(self, entry_ids):
         '''
         Appends the given entry id or ids to the playing queue 
         '''
-        self.info('Adding entries %s to queue' % entry_ids)
+        log.info('Adding entries %s to queue' % entry_ids)
         if type(entry_ids) is list:
             for entry_id in entry_ids:
                 entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
@@ -84,7 +81,7 @@ class QueueHandler(Loggable):
             if not entry is None:
                 self.shell.props.queue_source.add_entry(entry, -1)
         else:
-            self.info('Plain RBEntry')
+            log.info('Plain RBEntry')
             entry = self.shell.props.db.entry_lookup_by_id(entry_ids.id)
             self.shell.props.queue_source.add_entry(entry, -1)
 
@@ -96,14 +93,14 @@ class QueueHandler(Loggable):
         Removes the given entry id or ids from the playing queue 
         '''
         if type(entry_ids) is list:
-            self.info('Removing entries %s from queue' % entry_ids)
+            log.info('Removing entries %s from queue' % entry_ids)
             for entry_id in entry_ids:
                 entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
                 if entry is None:
                     continue
                 self.shell.props.queue_source.remove_entry(entry)
         elif type(entry_ids) is int:
-            self.info('Removing entry %d from queue' % entry_ids)
+            log.info('Removing entry %d from queue' % entry_ids)
             entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
             if not entry is None:
                 location = str(entry.location)

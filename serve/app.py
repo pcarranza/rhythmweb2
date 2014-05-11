@@ -15,24 +15,25 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-from serve.log.loggable import Loggable
 import os
 import cgi
-from serve.request import ResponseWrapper, ResourceHandler, ServerException
 import re
 
-class CGIApplication(Loggable):
+from serve.request import ResourceHandler, ServerException
+
+import logging
+log = logging.getLogger(__name__)
+
+class CGIApplication(object):
 
     __app_name = None
     __resource_path = None
     __web_path = None
     __components = None
 
-
     def __init__(self, app_name, path, components):
         try:
-            self.debug('%s CGI Application started' % app_name)
+            log.debug('%s CGI Application started' % app_name)
 
             self.__web_path = os.path.join(path, 'web')
             self.__components = components
@@ -41,121 +42,97 @@ class CGIApplication(Loggable):
             resource_path = os.path.join(path, 'resources')
             self.__resource_path = resource_path
         except:
-            self.error('Exception intializing application')
-
+            log.error('Exception intializing application', exc_info=True)
 
     def handle_request(self, environ, response):
-
         method = environ['REQUEST_METHOD']
+        log.debug('Handling method %s' % method)
+        def do_return(value):
+            if type(value) is str:
+                return bytes(value, 'UTF-8')
+            return value
 
-        self.trace('Handling method %s' % method)
         try:
+            return_value = ''
             if method == 'GET':
-                return self.__do_get(environ, response)
+                return_value = self.do_get(environ, response)
+                yield do_return(return_value)
 
             elif method == 'POST':
                 params = self.parse_post(environ)
-
                 if params is None:
-                    self.debug('No parameters in POST method')
+                    log.debug('No parameters in POST method')
+                decoded_params = {}
+                for key in params:
+                    decoded_params[key.decode('UTF-8')] = [value.decode('UTF-8') for value in params[key]]
+                return_value = self.do_post(environ, decoded_params, response)
+                yield do_return(return_value)
 
-                for p in params:
-                    self.debug('POST %s = %s' % (p, str(params[p])))
+            else:
+                self.send_error(
+                    500,
+                    '%s Not implemented' % method,
+                    response)
 
-                return self.__do_post(environ, params, response)
-
-            return self.send_error(
-                 500,
-                 '%s Not implemented' % method,
-                 response)
-
-        except Exception, e:
-            self.error('Exception handling request')
-            return self.send_error(
+        except Exception as e:
+            log.error('Exception handling request', exc_info=True)
+            yield self.send_error(
                  500,
                  '%s Unknown exception' % e,
                  response)
 
-
-
-
-
     def parse_post(self, environ):
-        self.trace('Parsing post parameters')
-
+        log.debug('Parsing post parameters')
         if 'CONTENT_TYPE' in environ:
             length = -1
             if 'CONTENT_LENGTH' in environ:
                 length = int(environ['CONTENT_LENGTH'])
-
             if environ['CONTENT_TYPE'] == 'application/x-www-form-urlencoded':
                 return cgi.parse_qs(environ['wsgi.input'].read(length))
-
             if environ['CONTENT_TYPE'] == 'multipart/form-data':
                 return cgi.parse_multipart(environ['wsgi.input'].read(length))
-
             else:
                 return cgi.parse_qs(environ['wsgi.input'].read(length))
-
         return None
 
+    def do_get(self, environ, response):
+        log.debug('Invoking get method')
+        return self.handle_method('get', environ, response)
 
-
-    def __do_get(self, environ, response):
-        self.trace('Invoking get method')
-
-        wrapper = ResponseWrapper(environ, response)
-        return_value = self.handle_method('get', environ, wrapper.response)
-        return wrapper.wrap(return_value)
-
-
-    def __do_post(self, environ, params, response):
-        self.trace('Invoking post method')
-        self.trace('POST parameters:')
+    def do_post(self, environ, params, response):
+        log.debug('Invoking post method')
+        log.debug('POST parameters:')
         if params:
             for param in params:
-                self.trace("   %s = %s" % (param, params[param]))
-
-        # gzipping POST does not works, for some reason...
-        # wrapper = ResponseWrapper(environ, response)
+                log.debug("   %s = %s" % (param, params[param]))
         return self.handle_method('post', environ, response, params)
-        # return wrapper.wrap(return_value)
 
 
-    def __get_resource_path(self, environ):
+    def get_resource_path(self, environ):
         config = self.__components['config']
-
         theme_key = 'theme'
-        if environ.has_key('HTTP_USER_AGENT'):
+        if 'HTTP_USER_AGENT' in environ:
             agent = environ['HTTP_USER_AGENT']
             if re.search('(Android|iPhone)', agent):
                 theme_key = 'theme.mobile'
-
         theme = config.get_string(theme_key)
         resource_path = os.path.join(self.__resource_path, theme)
-
         return resource_path
 
-
     def handle_method(self, request_method, environ, response, params=None):
-
-        self.trace('-------------------------------------')
-        self.trace('ENVIRONMENT for method %s: ' % request_method)
-        for e in environ:
-            self.trace('   %s = %s' % (e, environ[e]))
-        self.trace('-------------------------------------')
-
+        log.debug('-------------------------------------')
+        log.debug('ENVIRONMENT for method %s: ' % request_method)
+        for e in sorted(environ):
+            log.debug('   %s = %s' % (e, environ[e]))
+        log.debug('-------------------------------------')
         request_path = environ['PATH_INFO']
-
         if not request_path or request_path == '/':
             request_path = '/index.html'
-
         if not request_path.startswith('/'):
             request_path = '/' + request_path
+        log.debug('handling %s method - path: %s' % (request_method.upper(), request_path))
 
-        self.debug('handling %s method - path: %s' % (request_method.upper(), request_path))
-
-        resource_path = self.__get_resource_path(environ)
+        resource_path = self.get_resource_path(environ)
         web_path = self.__web_path
 
         path_options = str(request_path).split('/')
@@ -170,7 +147,7 @@ class CGIApplication(Loggable):
                 web_path = os.path.join(web_path, name)
 
                 if self.is_python_file(web_path):
-                    self.debug('Found file %s, loading "Page" class' % web_path)
+                    log.debug('Found file %s, loading "Page" class' % web_path)
 
                     path_params = request_path.replace(walked_path, '')
                     environ['PATH_PARAMS'] = path_params
@@ -190,36 +167,35 @@ class CGIApplication(Loggable):
                         else:
                             return method(environ, params, response)
 
-                    except Exception, e:
+                    except Exception as e:
                         raise ServerException(500, '%s ERROR - %s' %
                                               (request_method, e.message))
 
                 elif self.is_resource_file(web_path):
-                    self.debug('Handling web resource %s' % web_path)
+                    log.debug('Handling web resource %s' % web_path)
                     resource = self.get_resource_handler(web_path)
                     return resource.handle(response, environ)
 
                 elif self.is_resource_file(resource_path):
-                    self.debug('Handling file resource %s' % resource_path)
+                    log.debug('Handling file resource %s' % resource_path)
                     resource = self.get_resource_handler(resource_path)
                     return resource.handle(response, environ)
 
                 else:
                     continue
 
-            self.debug('404 - Could not find resource %s' % request_path)
+            log.debug('404 - Could not find resource %s' % request_path)
             raise ServerException(404, 'Could not find resource %s' % request_path)
             # NOT FOUND
 
-        except ServerException, e:
-            self.error('Exception handling method %s' % request_method)
+        except ServerException as e:
+            log.error('Exception handling method %s' % request_method, exc_info=True)
             return self.send_error(e.code, e.message, response)
 
-        except Exception, e:
-            self.error('Exception handling method %s' % request_method)
+        except Exception as e:
+            log.error('Exception handling method %s' % request_method, exc_info=True)
             return self.send_error(500, e.message, response)
             # UNKNOWN ERROR
-
 
     def is_python_file(self, file):
         basename = os.path.basename(file)
@@ -230,30 +206,27 @@ class CGIApplication(Loggable):
             extension = '.py'
         elif not extension == '.py':
             return False
-
         py_file = os.path.join(basepath, filename + extension)
 
         return os.path.isfile(py_file)
 
-
     def is_resource_file(self, file):
         return os.path.isfile(file)
 
-
     def create_instance(self, page_path):
-        self.trace('Importing module path %s' % page_path)
+        log.debug('Importing module path %s' % page_path)
 
         class_path = os.path.splitext(page_path)[0]
         class_path = class_path.replace(self.__web_path, '')
         class_path = class_path.replace('/', '.')
         class_path = 'web' + class_path
-        self.trace('Importing class path %s' % class_path)
+        log.debug('Importing class path %s' % class_path)
 
         mod = None
         try:
             mod = __import__(class_path, globals(), locals(), ['Page'])
-        except Exception, e:
-            self.warn('Import error for file %s: %s' % (class_path, e))
+        except Exception as e:
+            log.warn('Import error for file %s: %s' % (class_path, e))
 
         if mod is None:
             raise ServerException(501, 'Could not load module %s' % page_path)
@@ -264,30 +237,22 @@ class CGIApplication(Loggable):
             raise ServerException(501, 'Module %s does not contains a Page class' % page_path)
             #  NOT IMPLEMENTED
 
-        self.trace('Creating instance of class "%s" with components:' % klass)
+        log.debug('Creating instance of class "%s" with components:' % klass)
         for component in self.__components:
-            self.trace('   %s = %s' % (component, self.__components[component]))
+            log.debug('   %s = %s' % (component, self.__components[component]))
 
         return klass(self.__components)
 
-
     def send_error(self, code, message, response):
-        self.error('Returning error \'%s\' %s' % (code, message))
+        log.error('Returning error \'%s\' %s' % (code, message), exc_info=True)
         error_message = '%d %s' % (code, message)
         response(error_message, self.__default_headers())
         return 'ERROR: %s' % message
 
-
     def get_resource_handler(self, resource):
         return ResourceHandler(resource) # dont cache
-
 
     def __default_headers(self, headers=[]):
         if not headers:
             headers = [('Content-type', 'text/html; charset=UTF-8')]
-
         return headers
-
-
-
-

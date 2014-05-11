@@ -18,9 +18,11 @@
 
 from serve.rest.json import JSon
 from serve.request import ServerException
-from serve.log.loggable import Loggable
 
-class BaseRest(Loggable):
+import logging
+log = logging.getLogger(__name__)
+
+class BaseRest(object):
     
     __environ = None
     __parameters = None
@@ -44,16 +46,16 @@ class BaseRest(Loggable):
         
         try:
             return_value = self.get()
-            self.debug('GET Method executed OK, sending ok response')
+            log.debug('GET Method executed OK, sending ok response')
             return self.__return_ok(return_value, response)
         
-        except ServerException, e:
-            self.error('ServerException handling rest get')
+        except ServerException as e:
+            log.error('ServerException handling rest get', exc_info=True)
             response('%d %s' % (e.code, e.message), self.__do_headers())
             return e.message
     
-        except Exception, e:
-            self.error('Unknown exception when executing GET method: %s' % e)
+        except Exception as e:
+            log.error('Unknown exception when executing GET method: %s' % e, exc_info=True)
             response('%d %s' % (500, e), self.__do_headers())
             return '%d %s' % (500, e)
         
@@ -62,19 +64,21 @@ class BaseRest(Loggable):
         self.__parameters = post_params
         self.__environ = environ
         self.parse_path_parameters()
-        
+
+        log.debug("post parameters {}".format(post_params))
+
         try:
             return_value = self.post()
-            self.debug('POST Method executed OK, sending ok response')
+            log.debug('POST Method executed OK, sending ok response')
             return self.__return_ok(return_value, response)
             
-        except ServerException, e:
-            self.error('ServerException handling rest get')
+        except ServerException as e:
+            log.error('ServerException handling rest get', exc_info=True)
             response('%d %s' % (e.code, e.message), self.__do_headers())
             return e.message
     
-        except Exception, e:
-            self.error('Unknown exception when executing GET method: %s' % e)
+        except Exception as e:
+            log.error('Unknown exception when executing GET method: %s' % e, exc_info=True)
             response('%d %s' % (500, e), self.__do_headers())
             return '%d %s' % (500, e)
     
@@ -91,13 +95,13 @@ class BaseRest(Loggable):
                 headers.append(('Cache-Control: ', 'no-cache; must-revalidate'))
                 json = value.parse()
                 response('200 OK', self.__do_headers(headers))
-                self.debug('Returning JSON: %s' % json)
+                log.debug('Returning JSON: %s' % json)
                 return json
             
             response('200 OK', self.__do_headers())
             return str(value)
         except:
-            self.error('Exception sending OK Value: "%s"' % value)
+            log.error('Exception sending OK Value: "%s"' % value, exc_info=True)
             return None
 
         
@@ -112,51 +116,44 @@ class BaseRest(Loggable):
                     querystring_params.append(param)
                     
         self.__path_params = querystring_params
-        
-            
+ 
     def __do_page_not_found(self, response):
         response('404 NOT FOUND', self.__do_headers())
         return self.__not_found()
     
-    
     def __not_found(self):
         return 'Page not found'
-    
     
     def get(self):
         raise ServerException(405, 'method GET not allowed')
     
-    
     def post(self):
         raise ServerException(405, 'method POST not allowed')
     
-    
-    
     def unpack_value(self, value):
         if type(value) is dict:
-            self.trace('Value is as dictionary, returning dictionary')
+            log.debug('Value is as dictionary, returning dictionary')
             return value
             
         elif type(value) is list:
             if len(value) == 1:
-                self.trace('Value was packed as 1 element list')
+                log.debug('Value was packed as 1 element list')
                 svalue = value[0]
                 if type(svalue) is str:
                     svalue = svalue.strip()
-                    self.trace('Value "%s" is a string, returning stripped' % svalue)
+                    log.debug('Value "%s" is a string, returning stripped' % svalue)
                 else:
-                    self.trace('Value has type "%s", returning value' % type(svalue))
+                    log.debug('Value has type "%s", returning value' % type(svalue))
                     
                 return svalue
             
             else:
-                self.trace('Value is a list of %d elements, returning list' % len(value))
+                log.debug('Value is a list of %d elements, returning list' % len(value))
                 return value
             
         else:
-            self.trace('Value has type "%s", returning value' % type(value))
+            log.debug('Value has type "%s", returning value' % type(value))
             return value
-
 
     def pack_as_list(self, value):
         if type(value) is list:
@@ -171,37 +168,31 @@ class BaseRest(Loggable):
         else:
             return [value]
     
-    
     def get_component(self, key):
-        self.trace('Obtaining component %s' % key)
+        log.debug('Obtaining component %s' % key)
         
         if not self.__components:
             raise Exception('No components are loaded')
         
-        if not self.__components.has_key(key):
+        if key not in self.__components:
             raise Exception('Components dictionary does not contains key "%s"' % key)
         
         return self.__components[key]
         
-
     def get_environment(self):
         return self.__environ
-
     
     def get_parameters(self):
         return self.__parameters
     
-    
     def get_path_parameters(self):
         return self.__path_params
-    
     
     def has_parameter(self, key):
         if not self.__parameters:
             return False
         
-        return self.__parameters.has_key(key)
-    
+        return key in self.__parameters
     
     def get_parameter(self, key, required=False):
         if not self.has_parameter(key):
@@ -217,7 +208,6 @@ class BaseRest(Loggable):
         except:
             raise ServerException(500, 'Could not unpack post parameter %d' % key)
     
-    
     def has_post_parameters(self):
         if self.__parameters is None:
             return False
@@ -230,7 +220,6 @@ class BaseRest(Loggable):
         
         return True
     
-    
     def has_path_parameters(self):
         if self.__path_params is None:
             return False
@@ -242,13 +231,11 @@ class BaseRest(Loggable):
             return False
         return True
     
-    
     def get_parameters_size(self):
         if not self.__parameters:
             return 0
         
         return len(self.__parameters)
-    
     
     def get_path_parameters_size(self):
         if not self.__path_params:
@@ -256,14 +243,13 @@ class BaseRest(Loggable):
         
         return len(self.__path_params)
     
-    
     def get_path_parameter(self, index):
         if not self.__path_params:
-            self.warn('No path param with index %d (empty path params)' % index)
+            log.warn('No path param with index %d (empty path params)' % index)
             return None
         
         if self.get_path_parameters_size() < index + 1:
-            self.warn('No path param with index %d' % index)
+            log.warn('No path param with index %d' % index)
             return None
         
         try:
