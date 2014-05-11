@@ -35,7 +35,7 @@ class TestBaseRest(unittest.TestCase):
         response = Mock()
         stub.do_get(defaultdict(Mock()), response)
         response.assert_called_with('404 NOT FOUND', 
-                ('Content-type','text/html; charset=UTF-8'))
+                [('Content-type','text/html; charset=UTF-8')])
 
 
 
