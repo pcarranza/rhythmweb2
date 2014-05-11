@@ -17,7 +17,7 @@
 
 
 from web.rest import RBRest
-from serve.rest.json import JSon
+from serve.rest import JSon
 from serve.request import ServerException
 
 SEARCH_TYPES = {'artists' : 'artist', 'genres' : 'genre', 'albums' : 'album'}

@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from serve.rest.json import JSon
+from serve.rest import JSon
 from serve.request import ServerException
 
 import logging
@@ -82,8 +82,6 @@ class BaseRest(object):
             response('%d %s' % (500, e), self.__do_headers())
             return '%d %s' % (500, e)
     
-    
-    
     def __return_ok(self, value, response):
         try:
             if value is None:
@@ -103,7 +101,6 @@ class BaseRest(object):
         except:
             log.error('Exception sending OK Value: "%s"' % value, exc_info=True)
             return None
-
         
     def parse_path_parameters(self):
         path_params = self.__environ['PATH_PARAMS']

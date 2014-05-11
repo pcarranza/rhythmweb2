@@ -17,7 +17,7 @@
 
 
 from web.rest import RBRest
-from serve.rest.json import JSon
+from serve.rest import JSon
 
 class Page(RBRest):
     
@@ -28,7 +28,3 @@ class Page(RBRest):
         playlist = JSon()
         playlist.put('entries', entries)
         return playlist
-
-
-    def get_logname(self):
-        return 'QUEUE'

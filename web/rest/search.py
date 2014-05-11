@@ -16,7 +16,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from serve.rest.json import JSon
+from serve.rest import JSon
 from web.rest import RBRest
 from rbhandle.query import InvalidQueryException
 from serve.request import ServerException

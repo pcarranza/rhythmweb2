@@ -15,4 +15,107 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+class JSon():
+    
+    name = None
+    attributes = None
+    
+    def __init__(self):
+        self.attributes = {}
+        
+    
+    def put(self, name, value):
+        self.attributes[name] = value
+        
+        
+    def get(self, name):
+        if name in self.attributes:
+            return self.attributes[name]
+        
+        return None
+    
+    
+    def parse(self):
+        
+        return_value = []
+        
+        attributes = self.attributes
+        try:
+            return_value.append(self.__parse_attributes(attributes))
+        except Exception as e:
+            raise Exception('Could not parse json object', e)
+        
+        return ''.join(return_value)
+    
+        
+    def __parse_value(self, value):
+        return_value = []
+        
+        if type(value) is list:
+            list_value = []
+            
+            return_value.append('[ ')
+            for v in value:
+                list_value.append(self.__parse_value(v))
+                list_value.append(', ')
+            
+            if len(list_value) > 0:
+                list_value = list_value[0:len(list_value)-1] # remove last element
+                
+            return_value.append(''.join(list_value))
+            return_value.append(' ]')
+            
+        elif type(value) is dict:
+            return_value.append(self.__parse_attributes(value))
+        
+        elif type(value) is str:
+            return_value.append("\"")
+            return_value.append(self.__encode_str(value))
+            return_value.append("\" ")
+
+        elif type(value) is bool:
+            if value:
+                return_value.append('true')
+            else:
+                return_value.append('false')
+                
+        elif isinstance(value, JSon):
+            return_value.append(value.parse())
+            
+        elif value is None:
+            return_value.append('null')
+        
+        else: # type(value) is int or type(value) is float:
+            return_value.append(self.__encode_str(value))
+        
+        return ''.join(return_value)    
+    
+    
+    def __encode_str(self, value):
+        value = str(value)
+        value = value.replace('"', '\\"')
+        return value
+    
+    
+    def __parse_attributes(self, attributes):
+        return_value = []
+        
+        return_value.append('{ ')
+        
+        for attr in attributes:
+            return_value.append("\"")
+            return_value.append(attr)
+            return_value.append("\" : ")
+            
+            value = attributes[attr]
+            return_value.append(self.__parse_value(value))
+            return_value.append(', ')
+            
+        if return_value[-1] == ', ':
+            return_value = return_value[0:len(return_value)-1]
+            
+        return_value.append(' }')
+            
+        return ''.join(return_value)
+    
 
