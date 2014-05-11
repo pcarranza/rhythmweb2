@@ -5,6 +5,7 @@ from mock import Mock
 
 from serve.rest.base import BaseRest
 from serve.rest import JSon
+from serve.request import ServerException
 
 from collections import defaultdict
 
@@ -43,6 +44,16 @@ class TestBaseRest(unittest.TestCase):
         params = stub.get_path_parameters()
         self.assertEquals(['bla', 'final'], params)
         self.assertEquals('response', response)
+
+    def test_ServerException_on_get(self):
+        stub = RestStub(Mock(), None)
+        stub.get = Mock()
+        stub.get.side_effect = ServerException(500, 'my mistake')
+        response = Mock()
+        stub.do_get(defaultdict(Mock()), response)
+        response.assert_called_with('500 my mistake', 
+                [('Content-type', 'text/html; charset=UTF-8')])
+
 
 
 
