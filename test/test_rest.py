@@ -3,8 +3,8 @@ import json
 
 from mock import Mock
 
-from serve.rest.base import BaseRest
 from serve.rest import JSon
+from web.rest import BaseRest
 from serve.request import ServerException
 
 from collections import defaultdict
