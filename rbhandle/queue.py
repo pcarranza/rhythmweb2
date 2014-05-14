@@ -107,4 +107,3 @@ class QueueHandler(object):
                 self.shell.props.queue_source.remove_entry(entry)
                 
         self.shell.props.queue_source.queue_draw()
-

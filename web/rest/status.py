@@ -22,6 +22,3 @@ class Page(RBRest):
     
     def get(self):
         return self.get_status_as_json()
-        
-    def get_logname(self):
-        return 'STATUS'

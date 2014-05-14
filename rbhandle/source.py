@@ -45,26 +45,6 @@ class SourceHandler(object):
         self.shell.props.shell_player.set_playing_source(source.source)
         return self.play_pause()
     
-    def __get_sources(self, all_sources=False):
-        '''
-        Returns a list with all sources registered
-        '''
-#        index = 0
-        sources = []
-#        for sourcelist in self.shell.props.sourcelist_model:
-#            category = sourcelist[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
-#            if category == rb.SOURCE_GROUP_CATEGORY_PERSISTENT or \
-#                    category == rb.SOURCE_GROUP_CATEGORY_REMOVABLE:
-#                for playlist in sourcelist.iterchildren():
-#                    sources.append(RBSource(index, playlist, SOURCETYPE_PLAYLIST))
-#                    index += 1
-#            elif category == rb.SOURCE_GROUP_CATEGORY_FIXED:
-#                for source in sourcelist.iterchildren():
-#                    if all_sources:
-#                        sources.append(RBSource(index, source, SOURCETYPE_SOURCE))
-#                    index += 1
-        return self.get_sources()
-    
     def get_source(self, source_index):
         log.info('Getting source with index %d' % source_index)
         
@@ -72,7 +52,7 @@ class SourceHandler(object):
             raise Exception('source_index parameter must be an int')
         
         index = 0
-        sources = self.__get_sources(True)
+        sources = self.get_sources()
         for source in sources:
             if source.index == source_index:
                 log.debug('Returning source with index %d' % index)
@@ -101,7 +81,7 @@ class SourceHandler(object):
         '''
         Returns all fixed sources 
         '''
-        return self.__get_sources(True)
+        return []
     
     def __get_wrapped_sources(self, sourcelist):
         sources = []
@@ -147,4 +127,3 @@ class RBSource(object):
         self.visibility = None # entry[RB_SOURCELIST_MODEL_COLUMN_VISIBILITY]
         self.is_group = False # entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]
         self.group_category = None #entry[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
-

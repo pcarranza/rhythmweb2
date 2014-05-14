@@ -27,33 +27,13 @@ class Page(RBRest):
     def get(self):
         if not self.has_path_parameters():
             raise ServerException(400, 'Bad request, no parameters')
-       
         search_by = self.get_path_parameter(0)
-        
         if search_by not in SEARCH_TYPES:
             raise ServerException(400, 'Bad request, path parameter "%s" not supported' % search_by)
         
+        library = JSon() 
         if self.get_path_parameters_size() == 1:
-            library = JSon()
-            handler = self.get_rb_handler()
-            
-            if 'artists' == search_by:
-                library.put('artists', self.get_library_as_json_list(handler.get_artists()))
-                (name, value) = handler.get_biggest_artist()
-                library.put('biggest_artist', self.get_name_value_as_json(name, value))
-                
-            elif 'genres' == search_by:
-                library.put('genres', self.get_library_as_json_list(handler.get_genres()))
-                (name, value) = handler.get_biggest_genre()
-                library.put('biggest_genre', self.get_name_value_as_json(name, value))
-                
-            else:
-                library.put('albums', self.get_library_as_json_list(handler.get_albums()))
-                (name, value) = handler.get_biggest_album()
-                library.put('biggest_album', self.get_name_value_as_json(name, value))
-                
-            return library
-        
+            # Drop support for now on
         else:
             value = self.get_path_parameter(1)
             value = str(value).replace('+', ' ')
@@ -63,9 +43,7 @@ class Page(RBRest):
             filter[SEARCH_TYPES[search_by]] = value
             filter['exact-match'] = True
             filter['limit'] = 0
-            
             handler = self.get_rb_handler()
-            
             entry_ids = handler.query(filter)
             log.info('entry_ids')
             log.info(entry_ids)
@@ -73,9 +51,4 @@ class Page(RBRest):
             library = JSon()
             library.put(SEARCH_TYPES[search_by], value)
             library.put('entries', entries)
-            
-            return library
-
-
-    def get_logname(self):
-        return 'LIBRARY'
+        return library
