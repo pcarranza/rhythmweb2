@@ -15,6 +15,22 @@ A long forgotten project, which I did not needed for quite some time (3 years ac
 
 Surprisingly working ok on a linux mint gtk3 with RB3, only search, quick controlling and queueing songs.
 
+## Roadmap
+
+Basically this is what is in my head regarding this project:
+
+* --Compatibility with python3--
+* Maintain compatibility with the front end.
+* Add system level testing to ensure backwards compatibility on the front end.
+* Refactor all the backend code for simplification (focusing on decoupling and single responsibility, remove all the multiple inheritance mess).
+* Add a nice test coverage from the controllers layer before refactoring anything, not a fixed goal.
+* Refactor the web serving layer, one port only, interprocess communication using pipes or maybe a socket file, whatever is simpler.
+* Remove home baked template handling, use bottle or any other "one file" templating engine that can be included in the code instead.
+* Simplify configuration to "no configuration at all"
+* Fix some usability issues in the mobile skin
+* Recover the artits/genre cloud
+* Recover source selection and handling (I miss using radio)
+
 ### Some notes on the instalation process:
 
 From GTK3 the actual folder to install the project is ~/.local/share/rhythmbox/plugins/rhythmweb
