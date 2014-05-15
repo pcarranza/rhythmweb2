@@ -19,7 +19,7 @@ Surprisingly working ok on a linux mint gtk3 with RB3, only search, quick contro
 
 Basically this is what is in my head regarding this project:
 
-* --Compatibility with python3--
+* ~~Compatibility with python3~~
 * Maintain compatibility with the front end.
 * Add system level testing to ensure backwards compatibility on the front end.
 * Refactor all the backend code for simplification (focusing on decoupling and single responsibility, remove all the multiple inheritance mess).
