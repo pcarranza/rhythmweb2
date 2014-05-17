@@ -20,7 +20,20 @@ class GObject(object):
         return mock.Mock()
 
 class RB(object):
-    pass
+    class RhythmDBPropType(object):
+        ENTRY_ID = 1
+        TITLE = 2
+        ARTIST = 3
+        ALBUM = 4
+        TRACK_NUMBER = 5
+        DURATION = 6
+        RATING = 7
+        YEAR = 8
+        GENRE = 9
+        PLAY_COUNT = 10
+        LOCATION = 11
+        BITRATE = 12
+        LAST_PLAYED = 13
 
 class GLib(object):
     pass
