@@ -70,6 +70,23 @@ class TestWebSearch(unittest.TestCase):
         finally:
             self.rb.reset_mock()
 
+    def test_get_search_returns_empty_set(self):
+        try:
+            page = Page(self.components)
+            entry = Stub()
+            response = Mock()
+            environ = defaultdict(lambda: '')
+            self.rb.query.return_value = []
+            result = page.do_get(environ, response)
+            response.assert_called_with('200 OK', 
+                    [('Content-type', 'application/json; charset=UTF-8'), 
+                        ('Cache-Control: ', 'no-cache; must-revalidate')])
+            returned = json.loads(result)
+            self.assertEquals({}, returned)
+            self.rb.query.assert_called_with({})
+        finally:
+            self.rb.reset_mock()
+
 class Stub(object):
     def __getattr__(self, name):
         return name
