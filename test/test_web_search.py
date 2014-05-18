@@ -2,8 +2,10 @@ import unittest
 import json
 
 from collections import defaultdict
-from mock import Mock, patch
+from mock import Mock
 from web.rest.search import Page
+
+from utils import Stub
 
 class TestWebSearch(unittest.TestCase):
 
@@ -86,7 +88,3 @@ class TestWebSearch(unittest.TestCase):
             self.rb.query.assert_called_with({})
         finally:
             self.rb.reset_mock()
-
-class Stub(object):
-    def __getattr__(self, name):
-        return name
