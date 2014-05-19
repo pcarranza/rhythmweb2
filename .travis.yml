@@ -4,6 +4,6 @@ python:
 install:
     - "pip install coveralls"
     - "./test/bootstrap.sh"
-script: nosetests --with-coverage --cover-package=preferences,rbhandle,serve,web,rhythmweb 
+script: nosetests --with-coverage --cover-package=rhythmweb,serve,web,rbhandle
 after_success:
     - "coveralls"
