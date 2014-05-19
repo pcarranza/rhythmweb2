@@ -35,10 +35,10 @@ class Page(RBRest):
     def get(self):
         log.info('GET search')
         handler = self.get_rb_handler()
-        filter = self.get_filter()
+        query_filter = self.get_query_filter()
 
         try:
-            entry_ids = handler.query(filter)
+            entries = handler.query(query_filter)
         except InvalidQueryException as e:
             log.error('Invalid query: %s' % e)
             raise ServerException(400, 'bad request: %s' % e.message)
@@ -47,12 +47,11 @@ class Page(RBRest):
             raise ServerException(500, 'Exception when executing query: %s' % e)
 
         json = JSon()
-
-        if not entry_ids:
-            log.info('Search returned none')
-        else:
-            entries = self.get_songs_as_json_list(entry_ids)
+        if entries:
+            entries = self.get_songs_as_json_list(entries)
             json.put('entries', entries)
+        else:
+            log.info('empty result for query {}'.format(query_filter))
 
         return json
 
@@ -60,13 +59,13 @@ class Page(RBRest):
         log.debug('POST search')
         return self.get()
 
-    def get_filter(self):
-        log.debug('get_filter')
-        filter = {}
+    def get_query_filter(self):
+        log.debug('get_query_filter')
+        query_filter = {}
 
         if self.has_path_parameters():
             log.debug('Reading path parameters')
-            filter = self.__unpack_path_params(self.get_path_parameters())
+            query_filter = self.__unpack_path_params(self.get_path_parameters())
         else:
             log.debug('No search path parameters')
 
@@ -74,17 +73,17 @@ class Page(RBRest):
 
             log.debug('Reading POST parameters')
 
-            if not 'type' in filter and self.has_parameter('type'):
-                filter['type'] = self.__unpack_type(self.get_parameter('type'))
+            if not 'type' in query_filter and self.has_parameter('type'):
+                query_filter['type'] = self.__unpack_type(self.get_parameter('type'))
 
             if self.has_parameter('artist'):
-                filter['artist'] = self.get_parameter('artist')
+                query_filter['artist'] = self.get_parameter('artist')
 
             if self.has_parameter('title'):
-                filter['title'] = self.get_parameter('title')
+                query_filter['title'] = self.get_parameter('title')
 
             if self.has_parameter('album'):
-                filter['album'] = self.get_parameter('album')
+                query_filter['album'] = self.get_parameter('album')
 
             if self.has_parameter('rating'):
                 rating = self.get_parameter('rating')
@@ -94,22 +93,22 @@ class Page(RBRest):
                 else:
                     irating = len(str(rating).strip())
 
-                filter['rating'] = irating
+                query_filter['rating'] = irating
 
             if self.has_parameter('genre'):
-                filter['genre'] = self.get_parameter('genre')
+                query_filter['genre'] = self.get_parameter('genre')
 
             if self.has_parameter('first'):
-                filter['first'] = self.get_parameter('first')
+                query_filter['first'] = self.get_parameter('first')
 
             if self.has_parameter('limit'):
-                filter['limit'] = self.get_parameter('limit')
+                query_filter['limit'] = self.get_parameter('limit')
 
             if self.has_parameter('all'):
-                filter['all'] = self.get_parameter('all')
+                query_filter['all'] = self.get_parameter('all')
         else:
             log.debug('No search POST parameters')
-        return filter
+        return query_filter
 
     def __unpack_type(self, type):
         if type in self.TYPES:
