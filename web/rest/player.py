@@ -38,7 +38,7 @@ class Page(RBRest):
             handler.play_pause()
             
         elif action == 'next':
-            next(handler)
+            handler.play_next()
             
         elif action == 'previous':
             handler.previous()

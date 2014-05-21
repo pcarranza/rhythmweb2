@@ -148,7 +148,7 @@ class PlayerHandler(object):
         return self.player.get_playing_time_string()
     
     
-    def __next__(self):
+    def play_next(self):
         '''
         If playing, skips the player to the next song
         '''
