@@ -6,4 +6,4 @@ install:
     - "./test/bootstrap.sh"
 script: nosetests --with-coverage --cover-package=rhythmweb,serve,web,rbhandle
 after_success:
-    - "coveralls -v"
+    - "coveralls"
