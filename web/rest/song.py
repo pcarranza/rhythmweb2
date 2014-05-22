@@ -30,7 +30,9 @@ class Page(RBRest):
         if song_id is None:
             return None
 
-        return self.get_song_as_json(song_id)
+        rb = self.get_rb_handler()
+        entry = rb.load_entry(rb.get_entry(song_id))
+        return self.get_song_as_json(entry)
 
     def post(self):
         song_id = self.get_song_id()
