@@ -63,3 +63,48 @@ class TestWebSearch(unittest.TestCase):
         self.response.assert_called_with('400 There is no playlist with id 1', 
                 [('Content-type', 'text/html; charset=UTF-8')])
         self.rb.get_playlists.assert_called_with()
+
+    def test_enqueue_playlist(self):
+        page = Page(self.components)
+        self.rb.get_playlists.return_value = [self.playlist]
+        self.rb.enqueue_source.return_value = 1
+        self.params['action'] = 'enqueue'
+        self.params['playlist'] = '0'
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('200 OK',
+                [('Content-type', 'application/json; charset=UTF-8'),
+                    ('Cache-Control: ', 'no-cache; must-revalidate')])
+        expected = json.loads('{ "result" : "OK" , "count" : 1 }')
+        returned = json.loads(result)
+        self.assertEquals(expected, returned)
+        self.rb.enqueue_source.assert_called_with(self.playlist)
+
+    def test_play_playlist_success(self):
+        page = Page(self.components)
+        self.rb.get_playlists.return_value = [self.playlist]
+        self.rb.play_source.return_value = True
+        self.params['action'] = 'play_source'
+        self.params['playlist'] = '0'
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('200 OK',
+                [('Content-type', 'application/json; charset=UTF-8'),
+                    ('Cache-Control: ', 'no-cache; must-revalidate')])
+        expected = json.loads('{ "result" : "OK" }')
+        returned = json.loads(result)
+        self.assertEquals(expected, returned)
+        self.rb.play_source.assert_called_with(self.playlist)
+
+    def test_play_playlist_fails(self):
+        page = Page(self.components)
+        self.rb.get_playlists.return_value = [self.playlist]
+        self.rb.play_source.return_value = False
+        self.params['action'] = 'play_source'
+        self.params['playlist'] = '0'
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('200 OK',
+                [('Content-type', 'application/json; charset=UTF-8'),
+                    ('Cache-Control: ', 'no-cache; must-revalidate')])
+        expected = json.loads('{ "result" : "BAD" }')
+        returned = json.loads(result)
+        self.assertEquals(expected, returned)
+        self.rb.play_source.assert_called_with(self.playlist)

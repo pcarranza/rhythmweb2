@@ -36,20 +36,16 @@ class Page(RBRest):
 
     def post(self):
         song_id = self.get_song_id()
-
         if song_id is None:
-            return None
-
+            return self.get()
         if self.has_parameter('rating'):
             rating = self.get_parameter('rating')
             try:
                 rating = int(rating)
             except:
                 raise ServerException(400, 'Bad Request: rating must be a number')
-
             log.info('Setting Rating %s for song "%s"' % (rating, song_id))
             self.get_rb_handler().set_rating(song_id, rating)
-
         return self.get()
 
     def __not_found(self):

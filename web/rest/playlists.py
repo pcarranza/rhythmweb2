@@ -48,8 +48,6 @@ class Page(RBRest):
             playlist_id = int(playlist_id)
             log.debug('Loading playlist with id %d' % playlist_id)
             playlist = self.get_playlist_by_id(playlist_id) 
-            if playlist is None:
-                raise ServerException(404, 'No playlists')
             return self.get_source_as_json(playlist)
             
     
