@@ -37,25 +37,19 @@ class Page(RBRest):
             for source in rbplaylists:
                 jsource = self.get_source_as_json(source)
                 sources.append(jsource)
-                
             playlists = JSon()
             playlists.put('playlists', sources)
-            
             return playlists
         
         else:
             playlist_id = self.get_path_parameter(0)
             if not playlist_id.isdigit():
                 raise ServerException(400, 'Bad request, path parameter must be an int')
-
             playlist_id = int(playlist_id)
-            
             log.debug('Loading playlist with id %d' % playlist_id)
             playlist = self.get_playlist_by_id(playlist_id) 
-            
             if playlist is None:
                 raise ServerException(404, 'No playlists')
-            
             return self.get_source_as_json(playlist)
             
     
@@ -98,11 +92,12 @@ class Page(RBRest):
     def get_playlist_by_id(self, playlist_id):
         handler = self.get_rb_handler()
         playlists = handler.get_playlists()
-        if len(playlists) < playlist_id:
+        if not playlists:
+            raise ServerException(404, 'there are no playlists')
+        try:
+            return playlists[playlist_id]
+        except IndexError:
             raise ServerException(400, 'There is no playlist with id %d' % playlist_id)
-
-        return playlists[playlist_id]
-
 
     def get_source_entries(self, source, limit):
         entry_ids = self.get_rb_handler().get_source_entries(source, limit)
