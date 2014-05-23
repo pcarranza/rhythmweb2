@@ -25,10 +25,12 @@ Basically this is what is in my head regarding this project:
 * Refactor all the backend code for simplification (focusing on decoupling and single responsibility, remove all the multiple inheritance mess).
 * Add a nice test coverage from the controllers layer before refactoring anything, not a fixed goal.
 * Refactor the web serving layer, one port only, interprocess communication using pipes or maybe a socket file, whatever is simpler.
-* Remove home baked template handling, use bottle or any other "one file" templating engine that can be included in the code instead.
+* ~~Remove home baked template handling, use bottle or any other "one file" templating engine that can be included in the code instead.~~
+* Simplify route handling, stop loading code dinamically, register routes with decorators and move current pages to a controller scheme
 * Simplify configuration to "no configuration at all"
 * Fix some usability issues in the mobile skin
 * Recover the artits/genre cloud
+* Recover playlist handling
 * Recover source selection and handling (I miss using radio)
 
 ### Some notes on the instalation process:
