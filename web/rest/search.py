@@ -16,10 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from serve.rest import JSon
 from web.rest import RBRest
 from rbhandle.query import InvalidQueryException
 from serve.request import ServerException
+from rhythmweb.model import get_song
+from collections import defaultdict
 
 import logging
 log = logging.getLogger(__name__)
@@ -36,7 +37,6 @@ class Page(RBRest):
         log.info('GET search')
         handler = self.get_rb_handler()
         query_filter = self.get_query_filter()
-
         try:
             entries = handler.query(query_filter)
         except InvalidQueryException as e:
@@ -44,14 +44,12 @@ class Page(RBRest):
         except Exception as e:
             raise ServerException(500, 'Exception when executing query: %s' % e)
 
-        json = JSon()
-        if entries:
-            entries = self.get_songs_as_json_list(entries)
-            json.put('entries', entries)
+        songs = defaultdict(lambda:[])
+        for entry in entries:
+            songs['entries'].append(get_song(entry))
         else:
             log.info('empty result for query {}'.format(query_filter))
-
-        return json
+        return songs
 
     def post(self):
         log.debug('POST search')

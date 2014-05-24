@@ -18,6 +18,7 @@
 
 from serve.request import ServerException
 from web.rest import RBRest
+from rhythmweb.model import get_song
 
 import logging
 log = logging.getLogger(__name__)
@@ -32,7 +33,7 @@ class Page(RBRest):
 
         rb = self.get_rb_handler()
         entry = rb.load_entry(rb.get_entry(song_id))
-        return self.get_song_as_json(entry)
+        return get_song(entry)
 
     def post(self):
         song_id = self.get_song_id()

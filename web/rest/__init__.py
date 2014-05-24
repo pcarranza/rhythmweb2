@@ -1,47 +1,22 @@
-# -*- coding: utf-8 -
-# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
-# Copyright (C) 2010  Pablo Carranza
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import json
+import logging
 
-
-from serve.rest import JSon
 from serve.request import ServerException
 
-import logging
 log = logging.getLogger(__name__)
 
-class BaseRest(object):
+HTML_HEADERS = [('Content-type','text/html; charset=UTF-8')]
 
-    __environ = None
-    __parameters = None
-    __path_params = None
-    __components = None
+class RBRest(object):
 
     def __init__(self, components):
-        self.__components = components
-
-    def __do_headers(self, headers=[]):
-        if not headers:
-            headers.append(('Content-type','text/html; charset=UTF-8'))
-
-        return headers
+        self._components = components
+        self.__parameters = None
+        self.__environ = None
 
     def do_get(self, environ, response):
         self.__environ = environ
         self.parse_path_parameters()
-
         try:
             return_value = self.get()
             log.debug('GET Method executed OK, sending ok response')
@@ -49,12 +24,12 @@ class BaseRest(object):
 
         except ServerException as e:
             log.error('ServerException handling rest get', exc_info=True)
-            response('%d %s' % (e.code, e.message), self.__do_headers())
+            response('%d %s' % (e.code, e.message), HTML_HEADERS)
             return e.message
 
         except Exception as e:
             log.error('Unknown exception when executing GET method: %s' % e, exc_info=True)
-            response('%d %s' % (500, e), self.__do_headers())
+            response('%d %s' % (500, e), HTML_HEADERS)
             return '%d %s' % (500, e)
 
 
@@ -72,33 +47,27 @@ class BaseRest(object):
 
         except ServerException as e:
             log.error('ServerException handling rest get', exc_info=True)
-            response('%d %s' % (e.code, e.message), self.__do_headers())
+            response('%d %s' % (e.code, e.message), HTML_HEADERS)
             return e.message
 
         except Exception as e:
             log.error('Unknown exception when executing GET method: %s' % e, exc_info=True)
-            response('%d %s' % (500, e), self.__do_headers())
+            response('%d %s' % (500, e), HTML_HEADERS)
             return '%d %s' % (500, e)
 
     def __return_ok(self, value, response):
-        try:
-            if value is None:
-                return self.__do_page_not_found(response)
+        if value is None:
+            return self.__do_page_not_found(response)
 
-            if isinstance(value, JSon):
-                headers = []
-                headers.append(('Content-type','application/json; charset=UTF-8'))
-                headers.append(('Cache-Control: ', 'no-cache; must-revalidate'))
-                json = value.parse()
-                response('200 OK', self.__do_headers(headers))
-                log.debug('Returning JSON: %s' % json)
-                return json
+        if isinstance(value, dict):
+            headers = []
+            headers.append(('Content-type','application/json; charset=UTF-8'))
+            headers.append(('Cache-Control: ', 'no-cache; must-revalidate'))
+            response('200 OK', headers)
+            return json.dumps(value)
 
-            response('200 OK', self.__do_headers())
-            return str(value)
-        except:
-            log.error('Exception sending OK Value: "%s"' % value, exc_info=True)
-            return None
+        response('200 OK', HTML_HEADERS)
+        return str(value)
 
     def parse_path_parameters(self):
         path_params = self.__environ['PATH_PARAMS']
@@ -113,7 +82,7 @@ class BaseRest(object):
         self.__path_params = querystring_params
 
     def __do_page_not_found(self, response):
-        response('404 NOT FOUND', self.__do_headers())
+        response('404 NOT FOUND', HTML_HEADERS)
         return self.__not_found()
 
     def __not_found(self):
@@ -162,17 +131,6 @@ class BaseRest(object):
             return value.split(',')
         else:
             return [value]
-
-    def get_component(self, key):
-        log.debug('Obtaining component %s' % key)
-
-        if not self.__components:
-            raise Exception('No components are loaded')
-
-        if key not in self.__components:
-            raise Exception('Components dictionary does not contains key "%s"' % key)
-
-        return self.__components[key]
 
     def get_environment(self):
         return self.__environ
@@ -254,107 +212,5 @@ class BaseRest(object):
         except:
             raise ServerException(500, 'Could not unpack path parameter %d' % index)
 
-
-class RBRest(BaseRest):
-
     def get_rb_handler(self):
-        return self.get_component('RB')
-
-    def get_song_as_json(self, entry):
-        log.debug('Obtaining entry %s as json object' % entry)
-        return Song.get_song_as_JSon(entry)
-
-    def get_songs_as_json_list(self, entries):
-        log.debug('Loading entries list as json list')
-        entries_list = []
-        for entry in entries:
-            entry = self.get_song_as_json(entry)
-            entries_list.append(entry)
-
-        return entries_list
-
-    def get_source_as_json(self, playlist, entries = None):
-        log.debug('Loading playlist as json object')
-        return Playlist.get_source_as_JSon(playlist, entries)
-
-    def get_status_as_json(self):
-        log.debug('Loading status as json object')
-        return Status.get_status_as_JSon(self.get_rb_handler())
-
-    def get_library_as_json_list(self, library):
-        log.debug('Converting library dictionary to json list')
-        libraries = []
-
-        for key in library:
-            libraries.append(self.get_name_value_as_json(key, library[key]))
-
-        return libraries
-
-    def get_name_value_as_json(self, name, value):
-        json = JSon()
-        json.put('name', name)
-        json.put('value', value)
-        return json
-
-
-class Song:
-
-    @staticmethod
-    def get_song_as_JSon(entry):
-        if entry is None:
-            return None
-
-        json = JSon()
-        json.put('id', entry.id)
-        json.put('artist', entry.artist)
-        json.put('album', entry.album)
-        json.put('track_number', entry.track_number)
-        json.put('title', entry.title)
-        json.put('duration', entry.duration)
-        json.put('rating', entry.rating)
-        json.put('year', entry.year)
-        json.put('genre', entry.genre)
-        json.put('play_count', entry.play_count)
-        json.put('bitrate', entry.bitrate)
-        json.put('last_played', entry.last_played)
-        json.put('location', entry.location)
-
-        return json
-
-
-class Playlist:
-
-    @staticmethod
-    def get_source_as_JSon(playlist, entries = None):
-        json = JSon()
-        json.put('id', playlist.id)
-        json.put('name', playlist.name)
-        json.put('visibility', playlist.visibility)
-        json.put('is_group', playlist.is_group)
-        json.put('is_playing', playlist.is_playing)
-        json.put('type', playlist.source_type)
-        if not entries is None:
-            json.put('entries', entries)
-        return json
-
-
-class Status:
-
-    @staticmethod
-    def get_status_as_JSon(handler):
-        is_playing = handler.get_playing_status()
-
-        status = JSon()
-        status.put('playing', is_playing)
-        if is_playing:
-            playing_entry = handler.get_playing_entry()
-            playing_entry = handler.load_entry(playing_entry)
-            if playing_entry:
-                status.put('playing_entry', Song.get_song_as_JSon(playing_entry))
-                status.put('playing_time', handler.get_playing_time())
-
-        status.put('playing_order', handler.get_play_order())
-        status.put('muted', handler.get_mute())
-        status.put('volume', handler.get_volume())
-
-        return status
+        return self._components.get('RB', None)

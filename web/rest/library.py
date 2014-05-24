@@ -17,8 +17,9 @@
 
 
 from web.rest import RBRest
-from serve.rest import JSon
 from serve.request import ServerException
+from rhythmweb.model import get_song
+from collections import defaultdict
 
 SEARCH_TYPES = {'artists' : 'artist', 'genres' : 'genre', 'albums' : 'album'}
 
@@ -27,28 +28,26 @@ class Page(RBRest):
     def get(self):
         if not self.has_path_parameters():
             raise ServerException(400, 'Bad request, no parameters')
+
         search_by = self.get_path_parameter(0)
         if search_by not in SEARCH_TYPES:
             raise ServerException(400, 'Bad request, path parameter "%s" not supported' % search_by)
         
-        library = JSon() 
+        library = defaultdict(lambda:[])
         if self.get_path_parameters_size() == 1:
-            # Drop support for now on
+            raise ServerException(400, 'path params by type only search is not supported now')
         else:
             value = self.get_path_parameter(1)
             value = str(value).replace('+', ' ')
             
-            filter = {}
-            filter['type'] = 'song'
-            filter[SEARCH_TYPES[search_by]] = value
-            filter['exact-match'] = True
-            filter['limit'] = 0
+            query = {}
+            query['type'] = 'song'
+            query[SEARCH_TYPES[search_by]] = value
+            query['exact-match'] = True
+            query['limit'] = 0
             handler = self.get_rb_handler()
-            entry_ids = handler.query(filter)
-            log.info('entry_ids')
-            log.info(entry_ids)
-            entries = self.get_songs_as_json_list(entry_ids)
-            library = JSon()
-            library.put(SEARCH_TYPES[search_by], value)
-            library.put('entries', entries)
+            found_entries = handler.query(query)
+            for entry in found_entries:
+                library['entries'].append(get_song(entry))
+            library[SEARCH_TYPES[search_by]] = value
         return library

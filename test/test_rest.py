@@ -3,18 +3,17 @@ import json
 
 from mock import Mock
 
-from serve.rest import JSon
-from web.rest import BaseRest
+from web.rest import RBRest
 from serve.request import ServerException
 
 from collections import defaultdict
 
 
-class TestBaseRest(unittest.TestCase):
+class TestRBRest(unittest.TestCase):
 
     def test_get_return_value_is_json(self):
-        myjson = JSon()
-        myjson.put('value', 1)
+        myjson = {}
+        myjson['value'] = 1
         stub = RestStub(Mock(), myjson)
         response = stub.do_get(defaultdict(Mock()), Mock())
         j = json.loads(response)
@@ -22,8 +21,8 @@ class TestBaseRest(unittest.TestCase):
 
 
     def test_post_return_value_is_json(self):
-        myjson = JSon()
-        myjson.put('value', 2)
+        myjson = {}
+        myjson['value'] = 2
         stub = RestStub(Mock(), myjson)
         response = stub.do_post(defaultdict(Mock()), Mock(), Mock())
         j = json.loads(response)
@@ -59,7 +58,7 @@ class TestBaseRest(unittest.TestCase):
 
 
 
-class RestStub(BaseRest):
+class RestStub(RBRest):
     def __init__(self, components, reply_with):
         super(RestStub, self).__init__(components)
         self.reply_with = reply_with

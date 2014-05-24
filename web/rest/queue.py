@@ -1,30 +1,13 @@
-# -*- coding: utf-8 -
-# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
-# Copyright (C) 2010  Pablo Carranza
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 from web.rest import RBRest
-from serve.rest import JSon
+from rhythmweb.model import get_song
+from collections import defaultdict
 
 class Page(RBRest):
     
     def get(self):
         handler = self.get_rb_handler()
-        entry_ids = handler.get_play_queue()
-        entries = self.get_songs_as_json_list(entry_ids)
-        playlist = JSon()
-        playlist.put('entries', entries)
-        return playlist
+        entries = handler.get_play_queue()
+        queue = defaultdict(lambda:[])
+        for entry in entries:
+            queue['entries'].append(get_song(entry))
+        return queue
