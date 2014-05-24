@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 from mock import Mock
 from web.rest.search import Page
+from rbhandle.query import InvalidQueryException
 
 from utils import Stub
 
@@ -76,6 +77,8 @@ class TestWebSearch(unittest.TestCase):
         self.params['type'] = 'song'
         self.params['genre'] = 'classic'
         self.params['rating'] = '4'
+        self.params['first'] = '1'
+        self.params['limit'] = '10'
         self.rb.query.return_value = [self.entry]
         result = page.do_post(self.environ, self.params, self.response)
         self.response.assert_called_with('200 OK',
@@ -84,5 +87,26 @@ class TestWebSearch(unittest.TestCase):
         expected = json.loads('{ "entries" : [ { "duration" : "duration" , "location" : "location" , "last_played" : "last_played" , "album" : "album" , "title" : "title" , "genre" : "genre" , "year" : "year" , "rating" : "rating" , "id" : "id" , "track_number" : "track_number" , "play_count" : "play_count" , "bitrate" : "bitrate" , "artist" : "artist"  } ] }')
         returned = json.loads(result)
         self.assertEquals(expected, returned)
-        self.rb.query.assert_called_with({'artist': 'uno', 'title': 'oruga', 'rating': 4, 'album': 'calabaza', 'type': 'song', 'genre': 'classic'})
+        self.rb.query.assert_called_with({'type': 'song', 'limit': '10', 'rating': 4, 'album': 'calabaza', 'title': 'oruga', 'first': '1', 'genre': 'classic', 'artist': 'uno'})
 
+    def test_post_invalid_type(self):
+        page = Page(self.components)
+        self.params['type'] = 'calabazas'
+        self.rb.query.return_value = [self.entry]
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('200 OK',
+                [('Content-type', 'application/json; charset=UTF-8'),
+                    ('Cache-Control: ', 'no-cache; must-revalidate')])
+        expected = json.loads('{ "entries" : [ { "duration" : "duration" , "location" : "location" , "last_played" : "last_played" , "album" : "album" , "title" : "title" , "genre" : "genre" , "year" : "year" , "rating" : "rating" , "id" : "id" , "track_number" : "track_number" , "play_count" : "play_count" , "bitrate" : "bitrate" , "artist" : "artist"  } ] }')
+        returned = json.loads(result)
+        self.assertEquals(expected, returned)
+        self.rb.query.assert_called_with({'type': None})
+
+    def test_get_invalid_query(self):
+        page = Page(self.components)
+        self.rb.query.side_effect = InvalidQueryException('Invalid query')
+        self.environ['PATH_PARAMS'] = 'song'
+        result = page.do_get(self.environ, self.response)
+        self.response.assert_called_with('400 bad request: Invalid query', 
+                [('Content-type', 'text/html; charset=UTF-8')])
+        self.rb.query.assert_called_with({'type': 'song'})

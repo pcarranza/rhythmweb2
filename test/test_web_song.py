@@ -44,3 +44,19 @@ class TestWebStatus(unittest.TestCase):
         returned = json.loads(result)
         self.assertEquals(expected, returned)
         self.rb.set_rating.assert_called_with(2, 5)
+
+    def test_post_invalid_song_id_errs(self):
+        self.environ['PATH_PARAMS'] = 'X'
+        self.params['rating'] = '1'
+        page = Page(self.components)
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('400 Bad Request: song id is not a number',
+                [('Content-type', 'text/html; charset=UTF-8')])
+
+    def test_post_invalid_rating_errs(self):
+        self.environ['PATH_PARAMS'] = '1'
+        self.params['rating'] = 'x'
+        page = Page(self.components)
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('400 Bad Request: rating must be a number',
+                [('Content-type', 'text/html; charset=UTF-8')])

@@ -40,10 +40,8 @@ class Page(RBRest):
         try:
             entries = handler.query(query_filter)
         except InvalidQueryException as e:
-            log.error('Invalid query: %s' % e)
             raise ServerException(400, 'bad request: %s' % e.message)
         except Exception as e:
-            log.error('Unknown exception: %s' % e)
             raise ServerException(500, 'Exception when executing query: %s' % e)
 
         json = JSon()
