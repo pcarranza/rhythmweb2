@@ -26,18 +26,7 @@ class Page(RBRest):
         return self.get()
 
     def get_song_id(self):
-        log.debug('Getting song id from path parameters')
-        if not self.has_path_parameters():
-            return None
-        if len(self.get_path_parameters()) > 1:
-            raise ServerException(400, 'Bad Request: no song id in path')
-        log.debug('Reading path parameters index 0')
-        song_id = self.get_path_parameter(0)
-        try:
-            song_id = int(song_id)
-        except:
-            raise ServerException(400, 'Bad Request: song id is not a number')
-        return song_id
+        return self.get_int_path_parameter(0, 'song id is not a number')
 
     def __not_found(self):
         return 'Song {} not found'.format(self.get_song_id())

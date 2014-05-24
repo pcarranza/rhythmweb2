@@ -120,9 +120,6 @@ class RBRest(object):
         else:
             return [value]
 
-    def get_parameters(self):
-        return self.post_parameters
-
     def get_path_parameters(self):
         return self.path_parameters
 
@@ -133,12 +130,11 @@ class RBRest(object):
 
     def get_int_parameter(self, key):
         value = self.post_parameters.get(key, None)
-        if value is None:
-            return None
-        try:
-            return int(value)
-        except:
-            raise ServerException(400, 'Bad Request: {} must be a number'.format(key))
+        return self.to_int(value, message='{} must be a number'.format(key))
+
+    def get_int_path_parameter(self, index, message):
+        value = self.get_path_parameter(index)
+        return self.to_int(value, message)
 
     def get_parameter(self, key, required=False):
         try:
@@ -185,3 +181,12 @@ class RBRest(object):
 
     def get_rb_handler(self):
         return self.components.get('RB', None)
+
+    def to_int(self, value, message='value must be a number'):
+        if value is None:
+            return None
+        try:
+            return int(value)
+        except:
+            raise ServerException(400, 'Bad Request: {}'.format(message))
+
