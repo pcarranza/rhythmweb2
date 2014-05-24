@@ -24,7 +24,7 @@ class TestRBRest(unittest.TestCase):
         myjson = {}
         myjson['value'] = 2
         stub = RestStub(Mock(), myjson)
-        response = stub.do_post(defaultdict(Mock()), Mock(), Mock())
+        response = stub.do_post(defaultdict(Mock()), defaultdict(Mock()), Mock())
         j = json.loads(response)
         self.assertEquals(2, j['value'])
 
@@ -52,10 +52,6 @@ class TestRBRest(unittest.TestCase):
         stub.do_get(defaultdict(Mock()), response)
         response.assert_called_with('500 my mistake', 
                 [('Content-type', 'text/html; charset=UTF-8')])
-
-
-
-
 
 
 class RestStub(RBRest):
