@@ -20,8 +20,7 @@ Surprisingly working ok on a linux mint gtk3 with RB3, only search, quick contro
 Basically this is what is in my head regarding this project:
 
 * ~~Compatibility with python3~~
-* Maintain compatibility with the front end.
-* Add system level testing to ensure backwards compatibility on the front end.
+* ~~Add system level testing to ensure backwards compatibility on the front end.~~ (Manual but is something)
 * Refactor all the backend code for simplification (focusing on decoupling and single responsibility, remove all the multiple inheritance mess).
 * ~~Add a nice test coverage from the controllers layer before refactoring anything, not a fixed goal.~~
 * Refactor the web serving layer, one port only, interprocess communication using pipes or maybe a socket file, whatever is simpler.
@@ -32,6 +31,7 @@ Basically this is what is in my head regarding this project:
 * Recover the artits/genre cloud
 * Recover playlist handling
 * Recover source selection and handling (I miss using radio)
+* Maintain compatibility with the front end.
 
 ### Some notes on the instalation process:
 
