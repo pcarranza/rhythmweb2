@@ -58,5 +58,5 @@ class TestWebStatus(unittest.TestCase):
         self.params['rating'] = 'x'
         page = Page(self.components)
         result = page.do_post(self.environ, self.params, self.response)
-        self.response.assert_called_with('400 Bad Request: rating must be a number',
+        self.response.assert_called_with('400 Bad Request: rating must be a number, "x" received',
                 [('Content-type', 'text/html; charset=UTF-8')])
