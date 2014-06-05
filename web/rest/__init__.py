@@ -130,7 +130,9 @@ class RBRest(object):
 
     def get_int_parameter(self, key):
         value = self.post_parameters.get(key, None)
-        return self.to_int(value, message='{} must be a number'.format(key))
+        if isinstance(value, list):
+            value = value[0]
+        return self.to_int(value, message='{} must be a number, "{}" received'.format(key, value))
 
     def get_int_path_parameter(self, index, message):
         value = self.get_path_parameter(index)
@@ -140,10 +142,10 @@ class RBRest(object):
         try:
             param = self.post_parameters.get(key, None)
             if required and param is None:
-                raise ServerException(400, 'Bad request, no "%s" parameter' % key)
+                raise ServerException(400, 'Bad request, no "{}" parameter'.format(key))
             return self.unpack_value(param)
         except:
-            raise ServerException(500, 'Could not unpack post parameter %d' % key)
+            raise ServerException(500, 'Could not unpack post parameter {}'.format(key))
 
     def has_post_parameters(self):
         if self.post_parameters is None:

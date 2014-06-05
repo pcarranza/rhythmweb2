@@ -37,6 +37,7 @@ ERRORS = {
 class BufferProxyServer(TCPServer):
     
     def __init__(self, proxy_host, proxy_port, target_host, target_port):
+        self.allow_reuse_address = True
         TCPServer.__init__(self, (proxy_host, proxy_port), socketserver.StreamRequestHandler)
         self.target_address = (target_host, target_port)
         self.server_thread = None
