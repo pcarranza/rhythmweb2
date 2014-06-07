@@ -39,6 +39,15 @@ class TestWebStatus(unittest.TestCase):
         expected = json.loads('{ "play_count" : "play_count" , "album" : "album" , "track_number" : "track_number" , "rating" : "rating" , "last_played" : "last_played" , "location" : "location" , "id" : 1, "bitrate" : "bitrate" , "year" : "year" , "duration" : "duration" , "title" : "title" , "genre" : "genre" , "artist" : "artist"  }')
         self.assertEquals(expected, returned)
 
+    def test_rate_invalid_song_fails(self):
+        self.environ['PATH_PARAMS'] = '2'
+        self.params['rating'] = '5'
+        self.rb.get_entry.return_value = None
+        page = Page(self.components)
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('404 NOT FOUND',
+                [('Content-type', 'text/html; charset=UTF-8')])
+
     def test_rate_song_success(self):
         self.environ['PATH_PARAMS'] = '2'
         self.params['rating'] = '5'

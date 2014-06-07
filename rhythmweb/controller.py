@@ -21,4 +21,3 @@ class Song(object):
         rating = song['rating']
         self.rb.set_rating(song_id, rating)
         log.debug('Song %d rated as %d', song_id, rating)
-
