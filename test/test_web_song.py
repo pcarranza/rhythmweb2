@@ -19,13 +19,21 @@ class TestWebStatus(unittest.TestCase):
         page = Page(self.components)
         self.assertIsNotNone(page)
 
+    def test_get_invalid_song_returns_not_found(self):
+        self.environ['PATH_PARAMS'] = '1'
+        self.rb.get_entry.return_value = None
+        page = Page(self.components)
+        result = page.do_get(self.environ, self.response)
+        self.response.assert_called_with('404 NOT FOUND',
+                [('Content-type', 'text/html; charset=UTF-8')])
+
     def test_get_song_success(self):
         self.environ['PATH_PARAMS'] = '1'
         self.rb.load_entry.return_value = Stub(1)
         page = Page(self.components)
         result = page.do_get(self.environ, self.response)
-        self.response.assert_called_with('200 OK', 
-                [('Content-type', 'application/json; charset=UTF-8'), 
+        self.response.assert_called_with('200 OK',
+                [('Content-type', 'application/json; charset=UTF-8'),
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
         returned = json.loads(result)
         expected = json.loads('{ "play_count" : "play_count" , "album" : "album" , "track_number" : "track_number" , "rating" : "rating" , "last_played" : "last_played" , "location" : "location" , "id" : 1, "bitrate" : "bitrate" , "year" : "year" , "duration" : "duration" , "title" : "title" , "genre" : "genre" , "artist" : "artist"  }')
@@ -40,7 +48,7 @@ class TestWebStatus(unittest.TestCase):
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
-        expected = json.loads('{ "play_count" : "play_count" , "album" : "album" , "track_number" : "track_number" , "rating" : "rating" , "last_played" : "last_played" , "location" : "location" , "id" : 2, "bitrate" : "bitrate" , "year" : "year" , "duration" : "duration" , "title" : "title" , "genre" : "genre" , "artist" : "artist"  }')
+        expected = json.loads('{ "play_count" : "play_count" , "album" : "album" , "track_number" : "track_number" , "rating" : 5, "last_played" : "last_played" , "location" : "location" , "id" : 2, "bitrate" : "bitrate" , "year" : "year" , "duration" : "duration" , "title" : "title" , "genre" : "genre" , "artist" : "artist"  }')
         returned = json.loads(result)
         self.assertEquals(expected, returned)
         self.rb.set_rating.assert_called_with(2, 5)
