@@ -118,16 +118,6 @@ class RBRest(object):
             return False
         return key in self.post_parameters
 
-    def get_int_parameter(self, key):
-        value = self.post_parameters.get(key, None)
-        if isinstance(value, list):
-            value = value[0]
-        return self.to_int(value, message='{} must be a number, "{}" received'.format(key, value))
-
-    def get_int_path_parameter(self, index, message):
-        value = self.get_path_parameter(index)
-        return self.to_int(value, message)
-
     def get_parameter(self, key, required=False):
         try:
             param = self.post_parameters.get(key, None)
@@ -186,5 +176,6 @@ class RBRest(object):
         try:
             return func(value)
         except:
+            log.error('Cannot cast "{}": {}'.format(value, message))
             raise ServerException(400, 'Bad Request: {}'.format(message))
 

@@ -22,14 +22,13 @@ class Page(RBRest):
         return song
 
     def get_song_id(self):
-        return self.get_int_path_parameter(0, 'song id is not a number')
+        return self.to_int(self.get_path_parameter(0), 
+                'song id is not a number')
 
     def get_rating(self):
-        return self.get_int_parameter('rating')
+        return self.to_int(self.get_parameter('rating', True),
+                'rating must be a number')
 
     @property
     def controller(self):
         return Song(self.get_rb_handler())
-
-    def __not_found(self):
-        return 'Song {} not found'.format(self.get_song_id())

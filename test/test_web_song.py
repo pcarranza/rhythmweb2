@@ -6,7 +6,7 @@ from mock import Mock
 from web.rest.song import Page
 from utils import Stub
 
-class TestWebStatus(unittest.TestCase):
+class TestWebSong(unittest.TestCase):
 
     def setUp(self):
         self.rb = Mock()
@@ -75,5 +75,5 @@ class TestWebStatus(unittest.TestCase):
         self.params['rating'] = 'x'
         page = Page(self.components)
         result = page.do_post(self.environ, self.params, self.response)
-        self.response.assert_called_with('400 Bad Request: rating must be a number, "x" received',
+        self.response.assert_called_with('400 Bad Request: rating must be a number',
                 [('Content-type', 'text/html; charset=UTF-8')])
