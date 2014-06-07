@@ -107,6 +107,6 @@ class TestWebSearch(unittest.TestCase):
         self.rb.query.side_effect = InvalidQueryException('Invalid query')
         self.environ['PATH_PARAMS'] = 'song'
         result = page.do_get(self.environ, self.response)
-        self.response.assert_called_with('400 bad request: Invalid query', 
+        self.response.assert_called_with('400 Bad request: Invalid query', 
                 [('Content-type', 'text/html; charset=UTF-8')])
         self.rb.query.assert_called_with({'type': 'song'})

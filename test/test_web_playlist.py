@@ -7,7 +7,7 @@ from web.rest.playlists import Page
 
 from utils import Stub
 
-class TestWebSearch(unittest.TestCase):
+class TestWebPlaylist(unittest.TestCase):
 
     def setUp(self):
         self.rb = Mock()
@@ -51,7 +51,7 @@ class TestWebSearch(unittest.TestCase):
         self.rb.get_playlists.return_value = []
         self.environ['PATH_PARAMS'] = '0'
         result = page.do_get(self.environ, self.response)
-        self.response.assert_called_with('404 there are no playlists', 
+        self.response.assert_called_with('404 NOT FOUND',
                 [('Content-type', 'text/html; charset=UTF-8')])
         self.rb.get_playlists.assert_called_with()
 
@@ -60,7 +60,7 @@ class TestWebSearch(unittest.TestCase):
         self.rb.get_playlists.return_value = [self.playlist]
         self.environ['PATH_PARAMS'] = '1'
         result = page.do_get(self.environ, self.response)
-        self.response.assert_called_with('400 There is no playlist with id 1', 
+        self.response.assert_called_with('400 Bad request: There is no playlist with id 1',
                 [('Content-type', 'text/html; charset=UTF-8')])
         self.rb.get_playlists.assert_called_with()
 

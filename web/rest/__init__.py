@@ -110,16 +110,6 @@ class RBRest(object):
             log.debug('Value has type "%s", returning value' % type(value))
             return value
 
-    def pack_as_list(self, value):
-        if type(value) is list:
-            return value
-        elif type(value) is dict:
-            return value.keys()
-        elif type(value) is str and ',' in value:
-            return value.split(',')
-        else:
-            return [value]
-
     def get_path_parameters(self):
         return self.path_parameters
 

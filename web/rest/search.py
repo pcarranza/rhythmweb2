@@ -18,7 +18,7 @@
 
 from web.rest import RBRest
 from rbhandle.query import InvalidQueryException
-from serve.request import ServerException
+from serve.request import ServerException, ClientError
 from rhythmweb.model import get_song
 from collections import defaultdict
 
@@ -40,8 +40,10 @@ class Page(RBRest):
         try:
             entries = handler.query(query_filter)
         except InvalidQueryException as e:
-            raise ServerException(400, 'bad request: %s' % e.message)
+            log.error('Invalid query {}'.format(query_filter))
+            raise ClientError(e.message)
         except Exception as e:
+            log.exception(e)
             raise ServerException(500, 'Exception when executing query: %s' % e)
 
         songs = defaultdict(lambda:[])

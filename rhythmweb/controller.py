@@ -1,7 +1,7 @@
 
 from collections import defaultdict
 
-from rhythmweb.model import get_song
+from rhythmweb.model import get_song, get_status
 
 import logging
 log = logging.getLogger(__name__)
@@ -25,6 +25,7 @@ class Song(object):
         self.rb.set_rating(song_id, rating)
         log.debug('Song %d rated as %d', song_id, rating)
 
+
 class Queue(object):
 
     def __init__(self, rb):
@@ -36,3 +37,50 @@ class Queue(object):
         for entry in entries:
             queue['entries'].append(get_song(entry))
         return queue
+
+    def enqueue(self, entry_id):
+        self.rb.enqueue(as_list(entry_id))
+
+    def dequeue(self, entry_id):
+        self.rb.dequeue(as_list(entry_id))
+
+    def shuffle_queue(self):
+        self.rb.shuffle_queue()
+
+    def clear_queue(self):
+        self.rb.clear_play_queue()
+
+
+class Player(object):
+
+    def __init__(self, rb):
+        self.rb = rb
+
+    def next(self):
+        self.rb.play_next()
+
+    def previous(self):
+        self.rb.previous()
+
+    def play_pause(self):
+        self.rb.play_pause()
+
+    def seek(self, time=0):
+        self.rb.seek(time)
+
+    def play_entry(self, entry_id=None):
+        self.rb.play_entry(entry_id)
+
+    def mute(self):
+        self.rb.toggle_mute()
+
+    def set_volume(self, volume=1.0):
+        self.rb.set_volume(volume)
+
+    def status(self):
+        return get_status(self.rb)
+
+
+def as_list(value):
+    value = [value] if not isinstance(value, list) else value
+    return value

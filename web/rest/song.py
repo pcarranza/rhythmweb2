@@ -1,4 +1,3 @@
-from serve.request import ServerException
 from web.rest import RBRest
 from rhythmweb.controller import Song
 
