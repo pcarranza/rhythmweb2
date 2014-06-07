@@ -1,3 +1,6 @@
+
+from collections import defaultdict
+
 from rhythmweb.model import get_song
 
 import logging
@@ -21,3 +24,15 @@ class Song(object):
         rating = song['rating']
         self.rb.set_rating(song_id, rating)
         log.debug('Song %d rated as %d', song_id, rating)
+
+class Queue(object):
+
+    def __init__(self, rb):
+        self.rb = rb
+
+    def get_queue(self):
+        entries = self.rb.get_play_queue()
+        queue = defaultdict(lambda:[])
+        for entry in entries:
+            queue['entries'].append(get_song(entry))
+        return queue
