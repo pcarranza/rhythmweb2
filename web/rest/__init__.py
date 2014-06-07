@@ -175,10 +175,16 @@ class RBRest(object):
         return self.components.get('RB', None)
 
     def to_int(self, value, message='value must be a number'):
+        return self.cast(value, message, int)
+
+    def to_float(self, value, message='value must be a number'):
+        return self.cast(value, message, float)
+
+    def cast(self, value, message, func):
         if value is None:
             return None
         try:
-            return int(value)
+            return func(value)
         except:
             raise ServerException(400, 'Bad Request: {}'.format(message))
 
