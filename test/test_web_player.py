@@ -47,35 +47,40 @@ class TestWebPlayer(unittest.TestCase):
 
     def test_post_seek_works(self):
         page = Page(self.components)
-        result = page.do_post(self.environ, post_params={'action' : 'seek', 'time' : 10},
+        result = page.do_post(self.environ, post_params={
+                'action' : 'seek', 'time' : "10"},
                 response=self.response)
         self.rb.seek.assert_called_with(10)
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_enqueue_with_one_value_works(self):
         page = Page(self.components)
-        result = page.do_post(self.environ, post_params={'action' : 'enqueue', 'entry_id' : 1},
+        result = page.do_post(self.environ, post_params={
+                'action' : 'enqueue', 'entry_id' : "1"},
                 response=self.response)
         self.rb.enqueue.assert_called_with([1])
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_enqueue_with_many_values_works(self):
         page = Page(self.components)
-        result = page.do_post(self.environ, post_params={'action' : 'enqueue', 'entry_id' : [1, 2]},
+        result = page.do_post(self.environ, post_params={
+                'action' : 'enqueue', 'entry_id' : "1,2"},
                 response=self.response)
         self.rb.enqueue.assert_called_with([1, 2])
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_dequeue_with_one_value_works(self):
         page = Page(self.components)
-        result = page.do_post(self.environ, post_params={'action' : 'dequeue', 'entry_id' : 1},
+        result = page.do_post(self.environ, post_params={
+                'action' : 'dequeue', 'entry_id' : "1"},
                 response=self.response)
         self.rb.dequeue.assert_called_with([1])
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_dequeue_with_many_values_works(self):
         page = Page(self.components)
-        result = page.do_post(self.environ, post_params={'action' : 'dequeue', 'entry_id' : [1, 2]},
+        result = page.do_post(self.environ, post_params={
+                'action' : 'dequeue', 'entry_id' : "1,2"},
                 response=self.response)
         self.rb.dequeue.assert_called_with([1, 2])
         self.rb.get_playing_status.assert_called_with()
@@ -96,7 +101,8 @@ class TestWebPlayer(unittest.TestCase):
 
     def test_post_play_entry_works(self):
         page = Page(self.components)
-        result = page.do_post(self.environ, post_params={'action' : 'play_entry', 'entry_id' : 1},
+        result = page.do_post(self.environ, post_params={
+                'action' : 'play_entry', 'entry_id' : "1"},
                 response=self.response)
         self.rb.play_entry.assert_called_with(1)
         self.rb.get_playing_status.assert_called_with()
@@ -110,7 +116,8 @@ class TestWebPlayer(unittest.TestCase):
 
     def test_post_set_volume_works(self):
         page = Page(self.components)
-        result = page.do_post(self.environ, post_params={'action' : 'set_volume', 'volume' : 0.5},
+        result = page.do_post(self.environ, post_params={
+                'action' : 'set_volume', 'volume' : "0.5"},
                 response=self.response)
         self.rb.set_volume.assert_called_with(0.5)
         self.rb.get_playing_status.assert_called_with()

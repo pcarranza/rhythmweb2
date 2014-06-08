@@ -35,7 +35,12 @@ class Page(RBRest):
                     'time must be a number')
 
         if 'entry_id' in self.post_parameters:
-            kwargs['entry_id'] = self.get_parameter('entry_id', True)
+            entry_id = self.get_parameter('entry_id', True)
+            if ',' in entry_id:
+                entries = [int(entry) for entry in entry_id.split(',')]
+            else:
+                entries = int(entry_id)
+            kwargs['entry_id'] = entries
 
         if 'volume' in self.post_parameters:
             kwargs['volume'] = self.to_float(self.get_parameter('volume', True),

@@ -58,7 +58,7 @@ class QueueHandler(object):
             random.shuffle(entries)
             
             for i in range(0, len(entries) - 1):
-                entry = self.load_entry(entries[i])
+                entry = self.shell.props.db.entry_lookup_by_id(int(entries[i].id))
                 self.move_entry_in_queue(entry, i)
     
     def move_entry_in_queue(self, entry, index):
@@ -76,6 +76,7 @@ class QueueHandler(object):
                 if entry is None:
                     continue
                 self.shell.props.queue_source.add_entry(entry, -1)
+
         elif type(entry_ids) is int:
             entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
             if not entry is None:
