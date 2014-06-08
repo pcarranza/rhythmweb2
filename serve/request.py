@@ -5,45 +5,6 @@ from datetime import timedelta, datetime
 import logging
 log = logging.getLogger(__name__)
 
-
-class ResponseWrapper(object):
-
-    __headers = None
-    __status = None
-
-    def __init__(self, environment, response, compression_level=8):
-        self.__response = response
-
-    def response(self, status, headers):
-        log.debug('Responding with wrapper')
-        if not headers:
-            log.debug('No headers, creating new')
-            headers = [('Content-type', 'text/html; charset=UTF-8'), \
-                       ('Cache-Control', 'public')]
-
-        self.__headers = headers
-        self.__status = status
-
-    def wrap(self, return_value):
-        if self.__status is None:
-            raise ServerException(500, 'No response status was setted')
-
-        if self.__headers is None:
-            raise ServerException(500, 'No response headers were setted')
-
-        value = return_value
-
-        length = len(value)
-        self.__headers.append(('Content-Length', str(length)))
-
-        log.debug('Responding with code %s' % self.__status)
-        for header in self.__headers:
-            log.debug('   %s : %s' % tuple(header))
-
-        self.__response(self.__status, self.__headers)
-        return value
-
-
 class ResourceHandler(object):
 
     __content_type = None
@@ -70,8 +31,6 @@ class ResourceHandler(object):
             log.debug('Handling resource %s' % self.__file)
 
             (content_type, open_as) = self.__get_content_type()
-            if not content_type:
-                raise UnknownContentTypeException(self.__extension)
 
             mtime = os.path.getmtime(self.__file)
             mtime = datetime.fromtimestamp(mtime)
@@ -121,13 +80,6 @@ class ResourceHandler(object):
             return ('application/x-javascript', 't')
 
         return ('text/plain', 't')
-
-
-class UnknownContentTypeException(Exception):
-
-    def __init__(self, ext):
-        Exception.__init__(self)
-        self.message = 'Unknown content type %s' % ext
 
 
 class ServerException(Exception):
