@@ -1,26 +1,8 @@
-# -*- coding: utf-8 -
-# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
-# Copyright (C) 2010  Pablo Carranza
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 from web.rest import RBRest
 from rbhandle.query import InvalidQueryException
 from serve.request import ServerException, ClientError
 from rhythmweb.model import get_song
-from collections import defaultdict
+from rhythmweb.controller import Query
 
 import logging
 log = logging.getLogger(__name__)
@@ -35,23 +17,16 @@ class Page(RBRest):
 
     def get(self):
         log.info('GET search')
-        handler = self.get_rb_handler()
         query_filter = self.get_query_filter()
+        query = Query(self.get_rb_handler())
         try:
-            entries = handler.query(query_filter)
+            return query.query(query_filter)
         except InvalidQueryException as e:
             log.error('Invalid query {}'.format(query_filter))
             raise ClientError(e.message)
         except Exception as e:
             log.exception(e)
             raise ServerException(500, 'Exception when executing query: %s' % e)
-
-        songs = defaultdict(lambda:[])
-        for entry in entries:
-            songs['entries'].append(get_song(entry))
-        else:
-            log.info('empty result for query {}'.format(query_filter))
-        return songs
 
     def post(self):
         log.debug('POST search')

@@ -31,7 +31,7 @@ class TestWebPlayer(unittest.TestCase):
         self.rb.play_pause.assert_called_with()
         self.rb.get_playing_status.assert_called_with()
 
-    def test_post_previous_works(self):
+    def test_post_next_works(self):
         page = Page(self.components)
         result = page.do_post(self.environ, post_params={'action' : 'next'},
                 response=self.response)

@@ -81,6 +81,18 @@ class Player(object):
         return get_status(self.rb)
 
 
+class Query(object):
+
+    def __init__(self, rb):
+        self.rb = rb
+
+    def query(self, query_filter):
+        entries = defaultdict(lambda: [])
+        for entry in self.rb.query(query_filter):
+            entries['entries'].append(get_song(entry))
+        return entries
+
+
 def as_list(value):
     value = [value] if not isinstance(value, list) else value
     return value
