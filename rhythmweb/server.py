@@ -31,8 +31,8 @@ class Server(object):
                 response.reply_with_json(content)
 
             if method == 'POST':
-                kwargs = self.parse_post_parameters(environ)
-                content = app.route(path, **kwargs)
+                post = self.parse_post_parameters(environ)
+                content = app.route(path, **post)
                 if content is None:
                     response.reply_with_not_found()
                 response.reply_with_json(content)
@@ -41,12 +41,16 @@ class Server(object):
             response.reply_with_server_error(e)
 
     def parse_post_parameters(self, environ):
-        if not 'CONTENT_TYPE' in environ:
-            return None
-        length = int(environ.get('CONTENT_LENGTH', '-1'))
-        if environ['CONTENT_TYPE'] == 'multipart/form-data':
-            return cgi.parse_multipart(environ['wsgi.input'].read(length))
-        return cgi.parse_qs(environ['wsgi.input'].read(length))
+        parsed = cgi.FieldStorage(
+            fp=environ['wsgi.input'],
+            environ=environ,
+            keep_blank_values=True
+        )
+        post = {}
+        for key in parsed.keys():
+            post[key] = parsed[key].value
+        return post
+
 
 
 class ServerError(Exception):

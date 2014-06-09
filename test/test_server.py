@@ -2,7 +2,7 @@
 import unittest
 
 from mock import Mock
-from io import StringIO
+from io import BytesIO
 from rhythmweb.server import Server
 from rhythmweb.view import app, route
 
@@ -33,7 +33,7 @@ class TestNewServer(unittest.TestCase):
         server.handle_request({'PATH_INFO': '/something/myarg'}, response)
         response.reply_with_json.assert_called_with({'the_argument', 'myarg'})
 
-    def test_post_parameters(self):
+    def test_post_plain_parameters(self):
         server = Server(Mock())
         response = Mock()
         server.handle_request(
@@ -41,11 +41,24 @@ class TestNewServer(unittest.TestCase):
                 'PATH_INFO': '/path/with/kwargs',
                 'REQUEST_METHOD': 'POST',
                 'CONTENT_TYPE': 'application/x-www-form-urlencoded',
-                'wsgi.input': StringIO('key1=value1&key2=value2')
+                'wsgi.input': BytesIO(b'key1=value1&key2=value2')
             }, response)
         response.reply_with_json.assert_called_with({
-            'key1': ['value1'],
-            'key2': ['value2']})
+            'key1': 'value1',
+            'key2': 'value2'})
+
+    def test_post_list_parameters(self):
+        server = Server(Mock())
+        response = Mock()
+        server.handle_request(
+            {
+                'PATH_INFO': '/path/with/kwargs',
+                'REQUEST_METHOD': 'POST',
+                'CONTENT_TYPE': 'application/x-www-form-urlencoded',
+                'wsgi.input': BytesIO(b'key1=value1,value3,value5')
+            }, response)
+        response.reply_with_json.assert_called_with({
+            'key1': 'value1,value3,value5'})
 
 
 
