@@ -60,7 +60,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.get_playlists.return_value = [self.playlist]
         self.environ['PATH_PARAMS'] = '1'
         result = page.do_get(self.environ, self.response)
-        self.response.assert_called_with('400 Bad request: There is no playlist with id 1',
+        self.response.assert_called_with('400 Bad request: there is no playlist with id 1',
                 [('Content-type', 'text/html; charset=UTF-8')])
         self.rb.get_playlists.assert_called_with()
 
@@ -123,6 +123,16 @@ class TestWebPlaylist(unittest.TestCase):
         returned = json.loads(result)
         self.assertEquals(expected, returned)
         self.rb.play_source.assert_called_with(self.playlist)
+
+    def test_play_invalid_source_fails(self):
+        page = Page(self.components)
+        self.rb.get_playlists.return_value = [self.playlist]
+        self.rb.play_source.return_value = False
+        self.params['action'] = 'play_source'
+        self.params['source'] = '10'
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('400 Bad request: there is no playlist with id 10', 
+                [('Content-type', 'text/html; charset=UTF-8')])
 
     def test_play_with_no_source_fails(self):
         page = Page(self.components)

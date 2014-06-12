@@ -93,6 +93,32 @@ class Query(object):
         return entries
 
 
+class Source(object):
+
+    def __init__(self, rb):
+        self.rb = rb
+
+    def get_sources(self):
+        return self.rb.get_playlists()
+
+    def get_source(self, source_id):
+        sources = self.rb.get_playlists()
+        return sources[source_id] if sources else None
+
+    def enqueue_by_id(self, source_id):
+        playlist = self.get_source(source_id) 
+        if not playlist:
+            return None
+        return self.rb.enqueue_source(playlist)
+
+    def play_source(self, source_id):
+        source = self.get_source(source_id)
+        if not source:
+            return False
+        return self.rb.play_source(source)
+
+
+
 def as_list(value):
     value = [value] if not isinstance(value, list) else value
     return value
