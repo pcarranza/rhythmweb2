@@ -1,7 +1,7 @@
 import json
 import logging
 
-from serve.request import ServerException
+from serve.request import ServerException, ClientError
 
 log = logging.getLogger(__name__)
 
@@ -122,8 +122,10 @@ class RBRest(object):
         try:
             param = self.post_parameters.get(key, None)
             if required and param is None:
-                raise ServerException(400, 'Bad request, no "{}" parameter'.format(key))
+                raise ClientError('no "{}" parameter'.format(key))
             return self.unpack_value(param)
+        except ClientError:
+            raise
         except:
             raise ServerException(500, 'Could not unpack post parameter {}'.format(key))
 
