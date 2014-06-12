@@ -108,3 +108,27 @@ class TestWebPlaylist(unittest.TestCase):
         returned = json.loads(result)
         self.assertEquals(expected, returned)
         self.rb.play_source.assert_called_with(self.playlist)
+    
+    def test_play_source_fails(self):
+        page = Page(self.components)
+        self.rb.get_playlists.return_value = [self.playlist]
+        self.rb.play_source.return_value = False
+        self.params['action'] = 'play_source'
+        self.params['source'] = '0'
+        result = page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('200 OK',
+                [('Content-type', 'application/json; charset=UTF-8'),
+                    ('Cache-Control: ', 'no-cache; must-revalidate')])
+        expected = json.loads('{ "result" : "BAD" }')
+        returned = json.loads(result)
+        self.assertEquals(expected, returned)
+        self.rb.play_source.assert_called_with(self.playlist)
+
+    def test_play_with_no_source_fails(self):
+        page = Page(self.components)
+        self.rb.get_playlists.return_value = [self.playlist]
+        self.rb.play_source.return_value = False
+        self.params['action'] = 'play_source'
+        page.do_post(self.environ, self.params, self.response)
+        self.response.assert_called_with('400 Bad request: no "source" parameter', 
+                [('Content-type', 'text/html; charset=UTF-8')])
