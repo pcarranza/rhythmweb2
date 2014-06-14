@@ -1,11 +1,9 @@
 import unittest
 import json
 
-from rhythmweb import controller
-from collections import defaultdict
 from mock import Mock
-from web.rest.status import Page
-from utils import Stub
+from rhythmweb import controller
+from utils import Stub, cgi_application, environ, handle_request
 
 class TestWebStatus(unittest.TestCase):
 
@@ -14,19 +12,14 @@ class TestWebStatus(unittest.TestCase):
         controller.rb_handler['rb'] = self.rb
         self.entry = Stub()
         self.response = Mock()
-        self.environ = defaultdict(lambda: '')
-
-    def test_build(self):
-        page = Page()
-        self.assertIsNotNone(page)
+        self.app = cgi_application()
 
     def test_get_status_when_not_playing_works(self):
-        page = Page()
         self.rb.get_playing_status.return_value = False
         self.rb.get_play_order.return_value = 'bla'
         self.rb.get_mute.return_value = True
         self.rb.get_volume.return_value = 1
-        result = page.do_get(self.environ, self.response)
+        result = handle_request(self.app, environ('/rest/status'), self.response)
         self.response.assert_called_with('200 OK', 
                 [('Content-type', 'application/json; charset=UTF-8'), 
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
@@ -35,14 +28,13 @@ class TestWebStatus(unittest.TestCase):
         self.assertEquals(expected, returned)
 
     def test_get_status_when_playing_works(self):
-        page = Page()
         self.rb.get_playing_status.return_value = True
         self.rb.get_play_order.return_value = 'bla'
         self.rb.get_mute.return_value = False
         self.rb.get_volume.return_value = 1
         self.rb.load_entry.return_value = self.entry
         self.rb.get_playing_time.return_value = 10
-        result = page.do_get(self.environ, self.response)
+        result = handle_request(self.app, environ('/rest/status'), self.response)
         self.response.assert_called_with('200 OK', 
                 [('Content-type', 'application/json; charset=UTF-8'), 
                     ('Cache-Control: ', 'no-cache; must-revalidate')])

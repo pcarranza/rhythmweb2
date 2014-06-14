@@ -13,8 +13,8 @@ class CGIApplication(object):
         try:
             log.debug('Application started')
 
-            self.web_path = os.path.join(path, 'web')
             self.config = config
+            self.web_path = os.path.join(path, 'web')
             self.resources_path = os.path.join(path, 'resources')
 
         except:

@@ -1,13 +1,9 @@
 import unittest
 import json
 
-from rhythmweb import controller
-from collections import defaultdict
 from mock import Mock
-from web.rest.library import Page
-from rbhandle.query import InvalidQueryException
-
-from utils import Stub
+from rhythmweb import controller
+from utils import Stub, cgi_application, environ, handle_request
 
 class TestWebSearch(unittest.TestCase):
 
@@ -16,18 +12,11 @@ class TestWebSearch(unittest.TestCase):
         controller.rb_handler['rb'] = self.rb
         self.entry = Stub()
         self.response = Mock()
-        self.environ = defaultdict(lambda: '')
-        self.params = defaultdict(lambda: '')
-
-    def test_build(self):
-        page = Page()
-        self.assertIsNotNone(page)
+        self.app = cgi_application()
 
     def test_basic_do_get(self):
-        page = Page()
-        self.environ['PATH_PARAMS'] = 'artists/bla'
         self.rb.query.return_value = [self.entry]
-        result = page.do_get(self.environ, self.response)
+        result = handle_request(self.app, environ('/rest/library/artists/bla'), self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
@@ -36,3 +25,8 @@ class TestWebSearch(unittest.TestCase):
         self.assertEquals(expected, returned)
         self.rb.query.assert_called_with({'exact-match': True, 'type': 'song', 'artist': 'bla', 'limit': 0})
 
+    def test_invalid_search_type_fails(self):
+        self.rb.query.return_value = [self.entry]
+        result = handle_request(self.app, environ('/rest/library/calabaza/bla'), self.response)
+        self.response.assert_called_with('400 Bad request: path parameter "calabaza" not supported',
+                [('Content-type', 'text/html; charset=UTF-8')])
