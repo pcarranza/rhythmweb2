@@ -30,17 +30,3 @@ def get_playlist(playlist, entries=None):
     if entries:
         plst['entries'] = entries
     return plst
-
-def get_status(handler):
-    status = {}
-    status['playing'] = handler.get_playing_status()
-    if status['playing']:
-        playing_entry = handler.get_playing_entry()
-        playing_entry = handler.load_entry(playing_entry)
-        if playing_entry:
-            status['playing_entry'] = get_song(playing_entry)
-            status['playing_time'] = handler.get_playing_time()
-    status['playing_order'] = handler.get_play_order()
-    status['muted'] = handler.get_mute()
-    status['volume'] = handler.get_volume()
-    return status

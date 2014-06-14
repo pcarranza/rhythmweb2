@@ -1,6 +1,7 @@
 import unittest
 import json
 
+from rhythmweb import controller
 from collections import defaultdict
 from mock import Mock
 from web.rest.search import Page
@@ -12,18 +13,18 @@ class TestWebSearch(unittest.TestCase):
 
     def setUp(self):
         self.rb = Mock()
-        self.components = {'RB' : self.rb}
+        controller.rb_handler['rb'] = self.rb
         self.entry = Stub()
         self.response = Mock()
         self.environ = defaultdict(lambda: '')
         self.params = defaultdict(lambda: '')
 
     def test_build(self):
-        page = Page(self.components)
+        page = Page()
         self.assertIsNotNone(page)
 
     def test_basic_do_get(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.query.return_value = [self.entry]
         result = page.do_get(self.environ, self.response)
         self.response.assert_called_with('200 OK',
@@ -35,7 +36,7 @@ class TestWebSearch(unittest.TestCase):
         self.rb.query.assert_called_with({})
 
     def test_post_search(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.query.return_value = [self.entry]
         result = page.do_post(self.environ, self.params, self.response)
         self.response.assert_called_with('200 OK',
@@ -47,7 +48,7 @@ class TestWebSearch(unittest.TestCase):
         self.rb.query.assert_called_with({})
 
     def test_query_with_params_and_limit(self):
-        page = Page(self.components)
+        page = Page()
         self.environ['PATH_PARAMS'] = 'song/limit/10/first/5'
         self.rb.query.return_value = [self.entry for i in range(5)]
         result = page.do_get(self.environ, self.response)
@@ -59,7 +60,7 @@ class TestWebSearch(unittest.TestCase):
         self.rb.query.assert_called_with({ 'type' : 'song', 'limit' : '10', 'first' : '5' })
 
     def test_get_search_returns_empty_set(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.query.return_value = []
         result = page.do_get(self.environ, self.response)
         self.response.assert_called_with('200 OK',
@@ -70,7 +71,7 @@ class TestWebSearch(unittest.TestCase):
         self.rb.query.assert_called_with({})
 
     def test_post_search_with_post_params(self):
-        page = Page(self.components)
+        page = Page()
         self.params['album'] = 'calabaza'
         self.params['title'] = 'oruga'
         self.params['artist'] = 'uno'
@@ -90,7 +91,7 @@ class TestWebSearch(unittest.TestCase):
         self.rb.query.assert_called_with({'type': 'song', 'limit': '10', 'rating': 4, 'album': 'calabaza', 'title': 'oruga', 'first': '1', 'genre': 'classic', 'artist': 'uno'})
 
     def test_post_invalid_type(self):
-        page = Page(self.components)
+        page = Page()
         self.params['type'] = 'calabazas'
         self.rb.query.return_value = [self.entry]
         result = page.do_post(self.environ, self.params, self.response)
@@ -103,7 +104,7 @@ class TestWebSearch(unittest.TestCase):
         self.rb.query.assert_called_with({'type': None})
 
     def test_get_invalid_query(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.query.side_effect = InvalidQueryException('Invalid query')
         self.environ['PATH_PARAMS'] = 'song'
         result = page.do_get(self.environ, self.response)

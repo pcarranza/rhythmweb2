@@ -14,7 +14,7 @@ class TestRBRest(unittest.TestCase):
     def test_get_return_value_is_json(self):
         myjson = {}
         myjson['value'] = 1
-        stub = RestStub(Mock(), myjson)
+        stub = RestStub(myjson)
         response = stub.do_get(defaultdict(Mock()), Mock())
         j = json.loads(response)
         self.assertEquals(1, j['value'])
@@ -23,13 +23,13 @@ class TestRBRest(unittest.TestCase):
     def test_post_return_value_is_json(self):
         myjson = {}
         myjson['value'] = 2
-        stub = RestStub(Mock(), myjson)
+        stub = RestStub(myjson)
         response = stub.do_post(defaultdict(Mock()), defaultdict(Mock()), Mock())
         j = json.loads(response)
         self.assertEquals(2, j['value'])
 
     def test_error_404(self):
-        stub = RestStub(Mock(), None)
+        stub = RestStub(None)
         response = Mock()
         stub.do_get(defaultdict(Mock()), response)
         response.assert_called_with('404 NOT FOUND', 
@@ -38,14 +38,14 @@ class TestRBRest(unittest.TestCase):
     def test_parse_path(self):
         environment = defaultdict(Mock())
         environment['PATH_PARAMS'] = 'bla/final'
-        stub = RestStub(Mock(), 'response')
+        stub = RestStub('response')
         response = stub.do_get(environment, Mock())
         params = stub.get_path_parameters()
         self.assertEquals(['bla', 'final'], params)
         self.assertEquals('response', response)
 
     def test_ServerException_on_get(self):
-        stub = RestStub(Mock(), None)
+        stub = RestStub(None)
         stub.get = Mock()
         stub.get.side_effect = ServerException(500, 'my mistake')
         response = Mock()
@@ -55,8 +55,8 @@ class TestRBRest(unittest.TestCase):
 
 
 class RestStub(RBRest):
-    def __init__(self, components, reply_with):
-        super(RestStub, self).__init__(components)
+    def __init__(self, reply_with):
+        super(RestStub, self).__init__()
         self.reply_with = reply_with
 
     def get(self):

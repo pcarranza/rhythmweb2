@@ -1,21 +1,3 @@
-# -*- coding: utf-8 -
-# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
-# Copyright (C) 2010  Pablo Carranza
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
 from gi.repository import GObject
 from wsgiref.simple_server import WSGIRequestHandler
 from wsgiref.simple_server import make_server
@@ -27,13 +9,11 @@ log = logging.getLogger(__name__)
 
 class CGIServer(object):
 
-
-    def __init__(self, application, config):
-        if not config:
-            raise ValueError("Configuration is required")
+    def __init__(self, application):
         if not application:
             raise ValueError("Application is required")
-        self._config = config
+        if not application.config:
+            raise ValueError("Configuration is required")
         self._application = application
         self._internal_server = None
         self._running = False
@@ -41,7 +21,7 @@ class CGIServer(object):
 
     def start(self):
         log.info('   STARTING SERVER')
-        config = self._config
+        config = self._application.config
         hostname = config.get_string('hostname')
         port = config.get_int('port')
         log.info('   HOSTNAME   %s' % hostname)

@@ -18,7 +18,7 @@ class Page(RBRest):
     def get(self):
         log.info('GET search')
         query_filter = self.get_query_filter()
-        query = Query(self.get_rb_handler())
+        query = Query()
         try:
             return query.query(query_filter)
         except InvalidQueryException as e:

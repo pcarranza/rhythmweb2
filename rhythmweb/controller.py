@@ -1,15 +1,24 @@
 
 from collections import defaultdict
 
-from rhythmweb.model import get_song, get_status
+from rhythmweb.model import get_song
+from rbhandle import RBHandler
 
 import logging
 log = logging.getLogger(__name__)
 
+rb_handler = {}
+
+def set_shell(shell):
+    rb_handler['rb'] = RBHandler(shell)
+
+def get_handler():
+    return rb_handler.get('rb', None)
+
 class Song(object):
 
-    def __init__(self, rb):
-        self.rb = rb
+    def __init__(self):
+        self.rb = get_handler()
 
     def find_by_id(self, song_id):
         entry = self.rb.get_entry(song_id)
@@ -28,8 +37,8 @@ class Song(object):
 
 class Queue(object):
 
-    def __init__(self, rb):
-        self.rb = rb
+    def __init__(self):
+        self.rb = get_handler()
 
     def get_queue(self):
         entries = self.rb.get_play_queue()
@@ -53,8 +62,8 @@ class Queue(object):
 
 class Player(object):
 
-    def __init__(self, rb):
-        self.rb = rb
+    def __init__(self):
+        self.rb = get_handler()
 
     def next(self):
         self.rb.play_next()
@@ -78,13 +87,25 @@ class Player(object):
         self.rb.set_volume(volume)
 
     def status(self):
-        return get_status(self.rb)
+        status = {}
+        handler = self.rb
+        status['playing'] = handler.get_playing_status()
+        if status['playing']:
+            playing_entry = handler.get_playing_entry()
+            playing_entry = handler.load_entry(playing_entry)
+            if playing_entry:
+                status['playing_entry'] = get_song(playing_entry)
+                status['playing_time'] = handler.get_playing_time()
+        status['playing_order'] = handler.get_play_order()
+        status['muted'] = handler.get_mute()
+        status['volume'] = handler.get_volume()
+        return status
 
 
 class Query(object):
 
-    def __init__(self, rb):
-        self.rb = rb
+    def __init__(self):
+        self.rb = get_handler()
 
     def query(self, query_filter):
         entries = defaultdict(lambda: [])
@@ -95,8 +116,8 @@ class Query(object):
 
 class Source(object):
 
-    def __init__(self, rb):
-        self.rb = rb
+    def __init__(self):
+        self.rb = get_handler()
 
     def get_sources(self):
         return self.rb.get_playlists()
@@ -116,7 +137,6 @@ class Source(object):
         if not source:
             return False
         return self.rb.play_source(source)
-
 
 
 def as_list(value):

@@ -1,6 +1,7 @@
 import unittest
 import json
 
+from rhythmweb import controller
 from collections import defaultdict
 from mock import Mock
 from web.rest.playlists import Page
@@ -11,18 +12,18 @@ class TestWebPlaylist(unittest.TestCase):
 
     def setUp(self):
         self.rb = Mock()
-        self.components = {'RB' : self.rb}
+        controller.rb_handler['rb'] = self.rb
         self.playlist = Stub()
         self.response = Mock()
         self.environ = defaultdict(lambda: '')
         self.params = defaultdict(lambda: '')
 
     def test_build(self):
-        page = Page(self.components)
+        page = Page()
         self.assertIsNotNone(page)
 
     def test_basic_do_get_list_returns_one_element(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = [self.playlist]
         result = page.do_get(self.environ, self.response)
         self.response.assert_called_with('200 OK',
@@ -34,7 +35,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.get_playlists.assert_called_with()
 
     def test_basic_do_get_with_playlist_returns_right_element(self):
-        page = Page(self.components)
+        page = Page()
         self.environ['PATH_PARAMS'] = '0'
         self.rb.get_playlists.return_value = [self.playlist]
         result = page.do_get(self.environ, self.response)
@@ -47,7 +48,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.get_playlists.assert_called_with()
 
     def test_basic_do_get_without_playlists_returns_error(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = []
         self.environ['PATH_PARAMS'] = '0'
         result = page.do_get(self.environ, self.response)
@@ -56,7 +57,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.get_playlists.assert_called_with()
 
     def test_basic_do_get_with_wrong_playlist_id_returns_client_error(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = [self.playlist]
         self.environ['PATH_PARAMS'] = '1'
         result = page.do_get(self.environ, self.response)
@@ -65,7 +66,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.get_playlists.assert_called_with()
 
     def test_enqueue_playlist(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = [self.playlist]
         self.rb.enqueue_source.return_value = 1
         self.params['action'] = 'enqueue'
@@ -80,7 +81,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.enqueue_source.assert_called_with(self.playlist)
 
     def test_play_playlist_success(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = [self.playlist]
         self.rb.play_source.return_value = True
         self.params['action'] = 'play_source'
@@ -95,7 +96,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.play_source.assert_called_with(self.playlist)
 
     def test_play_playlist_fails(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = [self.playlist]
         self.rb.play_source.return_value = False
         self.params['action'] = 'play_source'
@@ -110,7 +111,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.play_source.assert_called_with(self.playlist)
     
     def test_play_source_fails(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = [self.playlist]
         self.rb.play_source.return_value = False
         self.params['action'] = 'play_source'
@@ -125,7 +126,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.play_source.assert_called_with(self.playlist)
 
     def test_play_invalid_source_fails(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = [self.playlist]
         self.rb.play_source.return_value = False
         self.params['action'] = 'play_source'
@@ -135,7 +136,7 @@ class TestWebPlaylist(unittest.TestCase):
                 [('Content-type', 'text/html; charset=UTF-8')])
 
     def test_play_with_no_source_fails(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playlists.return_value = [self.playlist]
         self.rb.play_source.return_value = False
         self.params['action'] = 'play_source'
@@ -144,7 +145,7 @@ class TestWebPlaylist(unittest.TestCase):
                 [('Content-type', 'text/html; charset=UTF-8')])
 
     def test_play_with_no_action_fails(self):
-        page = Page(self.components)
+        page = Page()
         self.params['source'] = '1'
         page.do_post(self.environ, self.params, self.response)
         self.response.assert_called_with('400 Bad request: no "action" parameter', 

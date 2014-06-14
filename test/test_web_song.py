@@ -1,6 +1,7 @@
 import unittest
 import json
 
+from rhythmweb import controller
 from collections import defaultdict
 from mock import Mock
 from web.rest.song import Page
@@ -10,19 +11,19 @@ class TestWebSong(unittest.TestCase):
 
     def setUp(self):
         self.rb = Mock()
-        self.components = {'RB' : self.rb}
+        controller.rb_handler['rb'] = self.rb
         self.response = Mock()
         self.environ = defaultdict(lambda: '')
         self.params = defaultdict(lambda: '')
 
     def test_build(self):
-        page = Page(self.components)
+        page = Page()
         self.assertIsNotNone(page)
 
     def test_get_invalid_song_returns_not_found(self):
         self.environ['PATH_PARAMS'] = '1'
         self.rb.get_entry.return_value = None
-        page = Page(self.components)
+        page = Page()
         result = page.do_get(self.environ, self.response)
         self.response.assert_called_with('404 NOT FOUND',
                 [('Content-type', 'text/html; charset=UTF-8')])
@@ -30,7 +31,7 @@ class TestWebSong(unittest.TestCase):
     def test_get_song_success(self):
         self.environ['PATH_PARAMS'] = '1'
         self.rb.load_entry.return_value = Stub(1)
-        page = Page(self.components)
+        page = Page()
         result = page.do_get(self.environ, self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
@@ -43,7 +44,7 @@ class TestWebSong(unittest.TestCase):
         self.environ['PATH_PARAMS'] = '2'
         self.params['rating'] = '5'
         self.rb.get_entry.return_value = None
-        page = Page(self.components)
+        page = Page()
         result = page.do_post(self.environ, self.params, self.response)
         self.response.assert_called_with('404 NOT FOUND',
                 [('Content-type', 'text/html; charset=UTF-8')])
@@ -52,7 +53,7 @@ class TestWebSong(unittest.TestCase):
         self.environ['PATH_PARAMS'] = '2'
         self.params['rating'] = '5'
         self.rb.load_entry.return_value = Stub(2)
-        page = Page(self.components)
+        page = Page()
         result = page.do_post(self.environ, self.params, self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
@@ -65,7 +66,7 @@ class TestWebSong(unittest.TestCase):
     def test_post_invalid_song_id_errs(self):
         self.environ['PATH_PARAMS'] = 'X'
         self.params['rating'] = '1'
-        page = Page(self.components)
+        page = Page()
         result = page.do_post(self.environ, self.params, self.response)
         self.response.assert_called_with('400 Bad Request: song id is not a number',
                 [('Content-type', 'text/html; charset=UTF-8')])
@@ -73,7 +74,7 @@ class TestWebSong(unittest.TestCase):
     def test_post_invalid_rating_errs(self):
         self.environ['PATH_PARAMS'] = '1'
         self.params['rating'] = 'x'
-        page = Page(self.components)
+        page = Page()
         result = page.do_post(self.environ, self.params, self.response)
         self.response.assert_called_with('400 Bad Request: rating must be a number',
                 [('Content-type', 'text/html; charset=UTF-8')])

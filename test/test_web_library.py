@@ -1,6 +1,7 @@
 import unittest
 import json
 
+from rhythmweb import controller
 from collections import defaultdict
 from mock import Mock
 from web.rest.library import Page
@@ -12,18 +13,18 @@ class TestWebSearch(unittest.TestCase):
 
     def setUp(self):
         self.rb = Mock()
-        self.components = {'RB' : self.rb}
+        controller.rb_handler['rb'] = self.rb
         self.entry = Stub()
         self.response = Mock()
         self.environ = defaultdict(lambda: '')
         self.params = defaultdict(lambda: '')
 
     def test_build(self):
-        page = Page(self.components)
+        page = Page()
         self.assertIsNotNone(page)
 
     def test_basic_do_get(self):
-        page = Page(self.components)
+        page = Page()
         self.environ['PATH_PARAMS'] = 'artists/bla'
         self.rb.query.return_value = [self.entry]
         result = page.do_get(self.environ, self.response)

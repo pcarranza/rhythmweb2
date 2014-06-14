@@ -10,16 +10,15 @@ log = logging.getLogger(__name__)
 class Page(RBRest):
 
     def post(self):
-        rb = self.get_rb_handler()
         action = self.get_parameter('action', True)
-        player = Player(rb)
+        player = Player()
         log.info('POST action %s' % action)
         if action in ('play_pause', 'next', 'previous', 'seek', 'play_entry',
                       'mute', 'set_volume'):
             method = getattr(player, action)
             method(**self.get_args())
         elif action in ('enqueue', 'dequeue', 'shuffle_queue', 'clear_queue'):
-            queue = Queue(rb)
+            queue = Queue()
             method = getattr(queue, action)
             method(**self.get_args())
         else:

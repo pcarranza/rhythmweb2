@@ -9,8 +9,7 @@ HTML_HEADERS = [('Content-type','text/html; charset=UTF-8')]
 
 class RBRest(object):
 
-    def __init__(self, components):
-        self.components = components
+    def __init__(self):
         self.environment = None
         self.post_parameters = {}
         self.path_parameters = []
@@ -162,9 +161,6 @@ class RBRest(object):
             return None
         except:
             raise ServerException(500, 'Could not unpack path parameter %d' % index)
-
-    def get_rb_handler(self):
-        return self.components.get('RB', None)
 
     def to_int(self, value, message='value must be a number'):
         return self.cast(value, message, int)

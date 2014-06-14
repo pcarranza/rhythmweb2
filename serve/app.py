@@ -1,20 +1,3 @@
-# -*- coding: utf-8 -
-# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
-# Copyright (C) 2010  Pablo Carranza
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 import os
 import cgi
 import re
@@ -26,21 +9,14 @@ log = logging.getLogger(__name__)
 
 class CGIApplication(object):
 
-    __app_name = None
-    __resource_path = None
-    __web_path = None
-    __components = None
-
-    def __init__(self, app_name, path, components):
+    def __init__(self, path, config):
         try:
-            log.debug('%s CGI Application started' % app_name)
+            log.debug('Application started')
 
-            self.__web_path = os.path.join(path, 'web')
-            self.__components = components
-            self.__app_name = app_name
+            self.web_path = os.path.join(path, 'web')
+            self.config = config
+            self.resources_path = os.path.join(path, 'resources')
 
-            resource_path = os.path.join(path, 'resources')
-            self.__resource_path = resource_path
         except:
             log.error('Exception intializing application', exc_info=True)
 
@@ -109,14 +85,13 @@ class CGIApplication(object):
 
 
     def get_resource_path(self, environ):
-        config = self.__components['config']
         theme_key = 'theme'
         if 'HTTP_USER_AGENT' in environ:
             agent = environ['HTTP_USER_AGENT']
             if re.search('(Android|iPhone)', agent):
                 theme_key = 'theme.mobile'
-        theme = config.get_string(theme_key)
-        resource_path = os.path.join(self.__resource_path, theme)
+        theme = self.config.get_string(theme_key)
+        resource_path = os.path.join(self.resources_path, theme)
         return resource_path
 
     def handle_method(self, request_method, environ, response, params=None):
@@ -133,7 +108,7 @@ class CGIApplication(object):
         log.debug('handling %s method - path: %s' % (request_method.upper(), request_path))
 
         resource_path = self.get_resource_path(environ)
-        web_path = self.__web_path
+        web_path = self.web_path
 
         path_options = str(request_path).split('/')
         walked_path = ''
@@ -217,7 +192,7 @@ class CGIApplication(object):
         log.debug('Importing module path %s' % page_path)
 
         class_path = os.path.splitext(page_path)[0]
-        class_path = class_path.replace(self.__web_path, '')
+        class_path = class_path.replace(self.web_path, '')
         class_path = class_path.replace('/', '.')
         class_path = 'web' + class_path
         log.debug('Importing class path %s' % class_path)
@@ -230,18 +205,12 @@ class CGIApplication(object):
 
         if mod is None:
             raise ServerException(501, 'Could not load module %s' % page_path)
-            #  NOT IMPLEMENTED
 
         klass = getattr(mod, 'Page')
         if not klass:
             raise ServerException(501, 'Module %s does not contains a Page class' % page_path)
-            #  NOT IMPLEMENTED
 
-        log.debug('Creating instance of class "%s" with components:' % klass)
-        for component in self.__components:
-            log.debug('   %s = %s' % (component, self.__components[component]))
-
-        return klass(self.__components)
+        return klass()
 
     def send_error(self, code, message, response):
         log.error('Returning error \'%s\' %s' % (code, message), exc_info=True)

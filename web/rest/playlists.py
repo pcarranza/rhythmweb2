@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class Page(RBRest):
     
     def get(self):
-        source = Source(self.get_rb_handler())
+        source = Source()
         
         if not self.has_path_parameters():
             playlists = source.get_sources()
@@ -41,7 +41,7 @@ class Page(RBRest):
         else:
             raise ClientError('no "source" parameter')
 
-        source = Source(self.get_rb_handler())
+        source = Source()
 
         try:
             if action == 'enqueue':

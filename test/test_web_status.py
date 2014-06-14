@@ -1,6 +1,7 @@
 import unittest
 import json
 
+from rhythmweb import controller
 from collections import defaultdict
 from mock import Mock
 from web.rest.status import Page
@@ -10,17 +11,17 @@ class TestWebStatus(unittest.TestCase):
 
     def setUp(self):
         self.rb = Mock()
-        self.components = {'RB' : self.rb}
+        controller.rb_handler['rb'] = self.rb
         self.entry = Stub()
         self.response = Mock()
         self.environ = defaultdict(lambda: '')
 
     def test_build(self):
-        page = Page(self.components)
+        page = Page()
         self.assertIsNotNone(page)
 
     def test_get_status_when_not_playing_works(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playing_status.return_value = False
         self.rb.get_play_order.return_value = 'bla'
         self.rb.get_mute.return_value = True
@@ -34,7 +35,7 @@ class TestWebStatus(unittest.TestCase):
         self.assertEquals(expected, returned)
 
     def test_get_status_when_playing_works(self):
-        page = Page(self.components)
+        page = Page()
         self.rb.get_playing_status.return_value = True
         self.rb.get_play_order.return_value = 'bla'
         self.rb.get_mute.return_value = False
