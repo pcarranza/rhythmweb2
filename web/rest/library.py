@@ -1,5 +1,5 @@
 from web.rest import RBRest
-from serve.request import ClientError
+from serve.app import ClientError
 from rhythmweb.controller import Query
 from collections import defaultdict
 

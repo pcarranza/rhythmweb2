@@ -1,7 +1,6 @@
 from web.rest import RBRest
 from rbhandle.query import InvalidQueryException
-from serve.request import ServerException, ClientError
-from rhythmweb.model import get_song
+from serve.app import ServerException, ClientError
 from rhythmweb.controller import Query
 
 import logging

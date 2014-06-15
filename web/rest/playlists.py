@@ -1,7 +1,7 @@
 import logging
 
 from web.rest import RBRest
-from serve.request import ClientError
+from serve.app import ClientError
 from rhythmweb.model import get_playlist
 from rhythmweb.controller import Source
 

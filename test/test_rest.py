@@ -4,7 +4,7 @@ import json
 from mock import Mock
 
 from web.rest import RBRest
-from serve.request import ServerException
+from serve.app import ServerException
 
 from collections import defaultdict
 

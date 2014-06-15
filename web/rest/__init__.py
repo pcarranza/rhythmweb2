@@ -1,7 +1,7 @@
 import json
 import logging
 
-from serve.request import ServerException, ClientError
+from serve.app import ServerException, ClientError
 
 log = logging.getLogger(__name__)
 
