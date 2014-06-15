@@ -1,5 +1,5 @@
 from web.rest import RBRest
-from rbhandle.query import InvalidQueryException
+from rbhandle import InvalidQueryException
 from serve.app import ServerException, ClientError
 from rhythmweb.controller import Query
 

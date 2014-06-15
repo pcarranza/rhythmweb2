@@ -3,7 +3,7 @@ import json
 
 from mock import Mock
 from rhythmweb import controller
-from rbhandle.query import InvalidQueryException
+from rbhandle import InvalidQueryException
 from utils import Stub, cgi_application, environ, handle_request
 
 from utils import Stub
