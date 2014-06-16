@@ -270,9 +270,7 @@ class RBHandler(object):
         '''
         log.info('Getting play queue')
         entries = []
-        
-        m = ModelHandler(self.shell)
-        m.loop_query_model(func=entries.append, query_model=self.get_play_queue_model(), limit=queue_limit)
+        self.loop_query_model(func=entries.append, query_model=self.get_play_queue_model(), limit=queue_limit)
         return entries
     
     def get_play_queue_model(self):
@@ -285,8 +283,7 @@ class RBHandler(object):
         '''
         Cleans the playing queue
         '''
-        m = ModelHandler(self.shell)
-        m.loop_query_model(func=self.dequeue, query_model=self.get_play_queue_model())
+        self.loop_query_model(func=self.dequeue, query_model=self.get_play_queue_model())
     
     def shuffle_queue(self):
         log.debug('shuffling queue')
@@ -430,7 +427,6 @@ class RBHandler(object):
         
         index = 0
         count = 0
-        entry_handler = EntryHandler(self.shell)
         for row in query_model:
             log.debug('Reading Row...')
 
@@ -440,7 +436,7 @@ class RBHandler(object):
                 continue
             
             entry = self.get_entry_from_row(row)
-            entry_id = entry_handler.load_entry(entry)
+            entry_id = self.load_entry(entry)
             
             func(entry_id)
             count += 1
@@ -685,8 +681,7 @@ class RBHandler(object):
         
         log.debug('RBHandler.query executed, loading results...')
         entries = []
-        m = ModelHandler(self.shell)
-        m.loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
+        self.loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
         log.debug('RBHandler.query executed, returning results...')
         return entries
 
@@ -715,9 +710,8 @@ class RBHandler(object):
     def get_source_entries(self, source, limit=100):
         log.info('Getting source entries')
         entries = []
-        m = ModelHandler(self.shell)
         if not source is None:
-            m.loop_query_model(func=entries.append,
+            self.loop_query_model(func=entries.append,
                                    query_model=source.query_model,
                                    limit=limit)
         return entries
@@ -754,8 +748,7 @@ class RBHandler(object):
         
         # playlist.add_to_queue(self.shell.props.queue_source)
         # This way we will know how many songs are added
-        m = ModelHandler(self.shell)
-        return m.loop_query_model(
+        return self.loop_query_model(
                    func=self.enqueue, 
                    query_model=source.query_model)
 
