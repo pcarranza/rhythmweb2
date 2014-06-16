@@ -19,10 +19,10 @@ class RBBasicHandlerTest(unittest.TestCase):
 class RBTest(unittest.TestCase):
 
     def setUp(self):
-        player = Mock()
-        shell = Mock()
+        (player, shell, db) = Mock(), Mock(), Mock()
         shell.props.shell_player = player
-        self.player, self.shell = player, shell
+        shell.props.db = db
+        self.player, self.shell, self.db = player, shell, db
 
     def test_playing_status(self):
         rbplayer = RBHandler(self.shell)
@@ -95,4 +95,31 @@ class RBTest(unittest.TestCase):
         rbplayer = RBHandler(self.shell)
         rbplayer.seek(15)
         self.player.seek.assert_called_with(15)
+
+    def test_play_pause(self):
+        self.player.get_playing.return_value = (None, True)
+        self.player.playpause.return_value = 1
+        rbplayer = RBHandler(self.shell)
+        self.assertEquals(rbplayer.play_pause(), 1)
+        self.player.playpause.assert_called_with(False)
+
+    def test_play_entry_with_invalid_id_fails(self):
+        rbplayer = RBHandler(self.shell)
+        with self.assertRaises(Exception):
+            rbplayer.play_entry('invalid')
+
+    def test_play_entry_with_none_as_id_fails(self):
+        rbplayer = RBHandler(self.shell)
+        with self.assertRaises(Exception):
+            rbplayer.play_entry(None)
+
+    def test_play_entry_with_valid_id_works(self):
+        entry = Mock()
+        source = Mock()
+        self.player.get_playing_source.return_value = source
+        self.player.get_playing.return_value = (None, True)
+        self.db.entry_lookup_by_id.return_value = entry
+        rbplayer = RBHandler(self.shell)
+        rbplayer.play_entry(1)
+        self.player.play_entry.assert_called_with(entry, source)
 
