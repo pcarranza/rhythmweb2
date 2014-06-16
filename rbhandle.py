@@ -43,8 +43,7 @@ class RBHandler(object):
         Creates a new rhythmbox handler, wrapping the RBShell object that gets 
         by parameter
         '''
-        if shell is None:
-            log.error('Setting shell object to None')
+        if not shell:
             raise Exception('Shell object cannot be null')
 
         log.debug('Setting shell object')
@@ -96,7 +95,6 @@ class RBHandler(object):
         log.debug('get playing status')
         return self.player.get_playing()[1]
     
-    
     def get_mute(self):
         '''
         Gets True if the player is muted
@@ -104,11 +102,9 @@ class RBHandler(object):
         log.debug('get mute status')
         return self.player.get_mute()[1]
     
-    
     def toggle_mute(self):
         log.debug('toggle mute')
         self.player.toggle_mute()
-        
         
     def get_volume(self):
         '''
@@ -116,7 +112,6 @@ class RBHandler(object):
         '''
         log.debug('get volume')
         return self.player.get_volume()[1]
-    
         
     def set_volume(self, volume):
         '''
@@ -132,7 +127,6 @@ class RBHandler(object):
             
         self.player.set_volume(volume)
     
-    
     def get_playing_entry_id(self):
         '''
         Gets playing entry id, returns a string
@@ -143,14 +137,12 @@ class RBHandler(object):
         
         return self.get_entry_id(entry)
     
-    
     def get_playing_entry(self):
         '''
         Returns the rhythmbox current playing entry object
         '''
         log.debug('get playing entry')
         return self.player.get_playing_entry()
-    
     
     def get_playing_time(self):
         '''
@@ -159,14 +151,12 @@ class RBHandler(object):
         log.debug('get playing time')
         return self.player.get_playing_time()[1]
     
-    
     def get_playing_time_string(self):
         '''
         Gets the playing time, as a string in "x:xx of x:xx left" format
         '''
         log.debug('get playing time string')
         return self.player.get_playing_time_string()
-    
     
     def play_next(self):
         '''
@@ -176,14 +166,12 @@ class RBHandler(object):
         if self.get_playing_status():
             self.player.do_next()
         
-        
     def seek(self, seconds):
         '''
         Seeks n seconds in the current playing song, receives and int, positive or negative
         '''
         log.debug('seek %d seconds' % seconds)
         self.player.seek(seconds)
-        
         
     def previous(self):
         '''
@@ -192,7 +180,6 @@ class RBHandler(object):
         log.debug('skip to previous')
         if self.get_playing_status():
             self.player.do_previous()
-    
     
     def play_pause(self):
         '''
@@ -203,7 +190,6 @@ class RBHandler(object):
         status = self.get_playing_status()
         return self.player.playpause(not status)
     
-    
     def play_entry(self, entry_id): # entry id
         '''
         Inmediatly starts playing the entry which id gets by parameter
@@ -213,7 +199,6 @@ class RBHandler(object):
         entry = self.get_entry(entry_id)
         if not entry is None:
             self._play_entry(entry)
-    
     
     def _play_entry(self, entry):
         '''
@@ -231,20 +216,17 @@ class RBHandler(object):
             playing_source = self.player.props.queue_source
         self.player.play_entry(entry, playing_source)
     
-    
     def get_play_order(self):
         '''
         Returns the play order
         '''
         return self.player.props.play_order
     
-    
     def set_play_order(self, play_order):
         '''
         Sets the play order
         '''
         self.player.props.play_order = play_order
-    
     
     def toggle_shuffle(self):
         '''
@@ -253,7 +235,6 @@ class RBHandler(object):
         status = self.get_play_order()
         new_status = self._play_toggle_shuffle[status]
         self.set_play_order(new_status)
-    
     
     def toggle_loop(self):
         '''
