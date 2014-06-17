@@ -44,6 +44,7 @@ class RB(object):
     class RhythmDBQueryType(object):
         FUZZY_MATCH = 'FUZZY'
         EQUALS = 'EQUALS'
+        GREATER_THAN = 'GREATER_THAN'
 
     class RhythmDBQueryModel(object):
 
