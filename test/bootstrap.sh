@@ -35,8 +35,39 @@ class RB(object):
         BITRATE = 12
         LAST_PLAYED = 13
 
+        ARTIST_FOLDED = 'ARTIST_FOLDED'
+        TITLE_FOLDED = 'TITLE_FOLDED'
+        ALBUM_FOLDED = 'ALBUM_FOLDED'
+        GENRE_FOLDED = 'GENRE_FOLDED'
+        TYPE = 'TYPE'
+
+    class RhythmDBQueryType(object):
+        FUZZY_MATCH = 'FUZZY'
+        EQUALS = 'EQUALS'
+
+    class RhythmDBQueryModel(object):
+
+        album_sort_func = 'album_sort_func'
+
+        def __init__(self, db):
+            self.db = db
+            self.sort_order = None
+            self.asc = None
+
+        @classmethod
+        def new_empty(cls, db):
+            return cls(db)
+
+        def set_sort_order(self, sort_order, arg3, asc):
+            self.sort_order = sort_order
+            self.asc = asc
+
+        def __iter__(self):
+            yield [mock.Mock()]
+
 class GLib(object):
-    pass
+    class PtrArray(object):
+        pass
 
 class Peas(object):
     class Activatable(object):

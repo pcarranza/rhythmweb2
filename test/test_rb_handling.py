@@ -122,4 +122,3 @@ class RBTest(unittest.TestCase):
         rbplayer = RBHandler(self.shell)
         rbplayer.play_entry(1)
         self.player.play_entry.assert_called_with(entry, source)
-
