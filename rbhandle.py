@@ -55,16 +55,6 @@ class RBHandler(object):
         LINEAR_LOOP = "%s%s" % (ORDER_LINEAR, PLAY_LOOP)
         SHUFFLE_LOOP = "%s%s" % (ORDER_SHUFFLE, PLAY_LOOP)
         
-        self._play_orders = {
-            ORDER_LINEAR : ORDER_LINEAR,
-            ORDER_SHUFFLE : ORDER_SHUFFLE,
-            LINEAR_LOOP : LINEAR_LOOP,
-            SHUFFLE_LOOP : SHUFFLE_LOOP,
-            ORDER_SHUFFLE_EQUALS : ORDER_SHUFFLE_EQUALS,
-            ORDER_SHUFFLE_BY_AGE : ORDER_SHUFFLE_BY_AGE,
-            ORDER_SHUFFLE_BY_RATING : ORDER_SHUFFLE_BY_RATING,
-            ORDER_SHUFFLE_BY_AGE_AND_RATING: ORDER_SHUFFLE_BY_AGE_AND_RATING}
-        
         self._play_toggle_loop = {
             ORDER_LINEAR : LINEAR_LOOP,
             LINEAR_LOOP : ORDER_LINEAR,

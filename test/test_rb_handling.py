@@ -132,6 +132,6 @@ class RBTest(unittest.TestCase):
     def test_toggle_loop(self):
         rbplayer = RBHandler(self.shell)
         rbplayer.set_play_order(ORDER_SHUFFLE)
-        rbplayer.toggle_shuffle()
-        self.assertEquals(rbplayer.get_play_order(), ORDER_LINEAR)
+        rbplayer.toggle_loop()
+        self.assertEquals(rbplayer.get_play_order(), 'shuffle-loop')
 
