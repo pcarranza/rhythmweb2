@@ -1,7 +1,7 @@
 import unittest
 
 from mock import Mock, MagicMock, patch, call
-from rbhandle import RBHandler
+from rbhandle import RBHandler, InvalidQueryException
 
 
 @patch('gi.repository.RB.RhythmDBQueryModel.new_empty')
@@ -99,6 +99,15 @@ class TestRBHandleSearch(unittest.TestCase):
             call(array, 'GREATER_THAN', 7, 5.0),
             call(array, 'GREATER_THAN', 10, 2)])
 
+    def test_query_with_invalid_rating_fails(self, ptr_array, query_model):
+        rb = RBHandler(self.shell)
+        with self.assertRaises(InvalidQueryException):
+            rb.query({'rating': 'x'})
+
+    def test_query_with_invalid_play_count_fails(self, ptr_array, query_model):
+        rb = RBHandler(self.shell)
+        with self.assertRaises(InvalidQueryException):
+            rb.query({'play_count': 'x'})
 
 
 class ModelStub(object):
