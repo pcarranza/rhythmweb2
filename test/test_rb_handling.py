@@ -2,7 +2,7 @@ import unittest
 
 from contextlib import contextmanager
 from mock import Mock
-from rbhandle import RBHandler
+from rbhandle import RBHandler, ORDER_SHUFFLE, ORDER_LINEAR
 
 
 class RBBasicHandlerTest(unittest.TestCase):
@@ -122,3 +122,16 @@ class RBTest(unittest.TestCase):
         rbplayer = RBHandler(self.shell)
         rbplayer.play_entry(1)
         self.player.play_entry.assert_called_with(entry, source)
+
+    def test_toggle_shuffle(self):
+        rbplayer = RBHandler(self.shell)
+        rbplayer.set_play_order(ORDER_LINEAR)
+        rbplayer.toggle_shuffle()
+        self.assertEquals(rbplayer.get_play_order(), ORDER_SHUFFLE)
+
+    def test_toggle_loop(self):
+        rbplayer = RBHandler(self.shell)
+        rbplayer.set_play_order(ORDER_SHUFFLE)
+        rbplayer.toggle_shuffle()
+        self.assertEquals(rbplayer.get_play_order(), ORDER_LINEAR)
+
