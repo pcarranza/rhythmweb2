@@ -10,15 +10,10 @@ log = logging.getLogger(__name__)
 class CGIApplication(object):
 
     def __init__(self, path, config):
-        try:
-            log.debug('Application started')
-
-            self.config = config
-            self.web_path = os.path.join(path, 'web')
-            self.resources_path = os.path.join(path, 'resources')
-
-        except:
-            log.error('Exception intializing application', exc_info=True)
+        self.config = config
+        self.web_path = os.path.join(path, 'web')
+        self.resources_path = os.path.join(path, 'resources')
+        log.debug('Application started')
 
     def handle_request(self, environ, response):
         method = environ['REQUEST_METHOD']
@@ -27,35 +22,23 @@ class CGIApplication(object):
             if type(value) is str:
                 return bytes(value, 'UTF-8')
             return value
-
         try:
             return_value = ''
             if method == 'GET':
                 return_value = self.do_get(environ, response)
                 yield do_return(return_value)
-
             elif method == 'POST':
                 params = self.parse_post(environ)
-                if params is None:
-                    log.debug('No parameters in POST method')
                 decoded_params = {}
                 for key in params:
                     decoded_params[key.decode('UTF-8')] = [value.decode('UTF-8') for value in params[key]]
                 return_value = self.do_post(environ, decoded_params, response)
                 yield do_return(return_value)
-
             else:
-                self.send_error(
-                    500,
-                    '%s Not implemented' % method,
-                    response)
-
+                yield self.send_error(500, '%s Not implemented' % method, response)
         except Exception as e:
             log.error('Exception handling request', exc_info=True)
-            yield self.send_error(
-                 500,
-                 '%s Unknown exception' % e,
-                 response)
+            yield self.send_error(500, '%s Unknown exception' % e, response)
 
     def parse_post(self, environ):
         log.debug('Parsing post parameters')
@@ -130,47 +113,35 @@ class CGIApplication(object):
                     instance = self.create_instance(web_path)
                     the_method = 'do_' + request_method
                     if not hasattr(instance, the_method):
-                        raise ServerException(501, \
-                                              'Object %s does not have a %s method' % \
-                                                (instance, request_method))
-                        # NOT IMPLEMENTED
-
+                        raise ServerException(501, 'Object %s does not have a %s method' %
+                            (instance, request_method))
                     try:
                         method = getattr(instance, the_method)
                         if params is None:
                             return method(environ, response)
                         else:
                             return method(environ, params, response)
-
                     except Exception as e:
                         raise ServerException(500, '%s ERROR - %s' %
-                                              (request_method, e.message))
-
+                            (request_method, e.message))
                 elif self.is_resource_file(web_path):
                     log.debug('Handling web resource %s' % web_path)
                     resource = self.get_resource_handler(web_path)
                     return resource.handle(response, environ)
-
                 elif self.is_resource_file(resource_path):
                     log.debug('Handling file resource %s' % resource_path)
                     resource = self.get_resource_handler(resource_path)
                     return resource.handle(response, environ)
-
                 else:
                     continue
-
             log.debug('404 - Could not find resource %s' % request_path)
             raise ServerException(404, 'Could not find resource %s' % request_path)
-            # NOT FOUND
-
         except ServerException as e:
             log.error('Exception handling method %s' % request_method, exc_info=True)
             return self.send_error(e.code, e.message, response)
-
         except Exception as e:
             log.error('Exception handling method %s' % request_method, exc_info=True)
             return self.send_error(500, e.message, response)
-            # UNKNOWN ERROR
 
     def is_python_file(self, file):
         basename = os.path.basename(file)
@@ -196,20 +167,14 @@ class CGIApplication(object):
         class_path = class_path.replace('/', '.')
         class_path = 'web' + class_path
         log.debug('Importing class path %s' % class_path)
-
         mod = None
         try:
             mod = __import__(class_path, globals(), locals(), ['Page'])
         except Exception as e:
-            log.warn('Import error for file %s: %s' % (class_path, e))
-
-        if mod is None:
             raise ServerException(501, 'Could not load module %s' % page_path)
-
         klass = getattr(mod, 'Page')
         if not klass:
             raise ServerException(501, 'Module %s does not contains a Page class' % page_path)
-
         return klass()
 
     def send_error(self, code, message, response):
