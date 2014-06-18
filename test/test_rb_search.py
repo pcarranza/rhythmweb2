@@ -110,6 +110,21 @@ class TestRBHandleSearch(unittest.TestCase):
         with self.assertRaises(InvalidQueryException):
             rb.query({'play_count': 'x'})
 
+    def test_query_with_invalid_first_fails(self, ptr_array, query_model):
+        rb = RBHandler(self.shell)
+        with self.assertRaises(InvalidQueryException):
+            rb.query({'first': 'x'})
+
+    def test_query_with_invalid_limit_fails(self, ptr_array, query_model):
+        rb = RBHandler(self.shell)
+        with self.assertRaises(InvalidQueryException):
+            rb.query({'limit': 'x'})
+
+    def test_query_with_invalid_type_fails(self, ptr_array, query_model):
+        rb = RBHandler(self.shell)
+        with self.assertRaises(InvalidQueryException):
+            rb.query({'type': 'x'})
+
     def test_query_artist_works(self, ptr_array, query_model):
         item = Mock()
         array, model = Mock(), ModelStub(item)
@@ -157,5 +172,15 @@ class TestRBHandleSearch(unittest.TestCase):
         self.db.do_full_query_parsed.assert_called_with(model, array)
         self.db.query_append_params.assert_has_calls([
             call(array, 'FUZZY', 'GENRE_FOLDED', 'a nice genre')])
+
+    def test_search_with_no_filters_returns_empty_list(self, ptr_array, query_model):
+        rb = RBHandler(self.shell)
+        result = rb.query({})
+        self.assertListEqual(result, [])
+
+    def test_search_with_null_filters_returns_empty_list(self, ptr_array, query_model):
+        rb = RBHandler(self.shell)
+        result = rb.query(None)
+        self.assertListEqual(result, [])
 
 

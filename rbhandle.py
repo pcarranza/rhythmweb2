@@ -75,7 +75,6 @@ class RBHandler(object):
         for t in [TYPE_SONG, TYPE_RADIO, TYPE_PODCAST]:
             rb_type = self.db.entry_type_get_by_name(t)
             self.__media_types[t] = rb_type
-
         log.debug('rbhandler loaded')
 
     def get_playing_status(self):
@@ -126,6 +125,9 @@ class RBHandler(object):
             return None
         
         return self.get_entry_id(entry)
+
+    def get_entry_id(self, entry):
+        return entry.get_ulong(RB.RhythmDBPropType.ENTRY_ID)
     
     def get_playing_entry(self):
         '''
@@ -372,24 +374,9 @@ class RBHandler(object):
         rbentry.location = entry.get_string(RB.RhythmDBPropType.LOCATION)
         rbentry.bitrate = entry.get_ulong(RB.RhythmDBPropType.BITRATE)
         rbentry.last_played = entry.get_ulong(RB.RhythmDBPropType.LAST_PLAYED)
-
         log.debug('Entry {} loaded'.format(rbentry.id))
-
         return rbentry
         
-    def load_rb_entry(self, entry_id):
-        '''
-        Returns a RBEntry with the entry information fully loaded for the given id 
-        '''
-        log.debug('Loading entry %s' % str(entry_id))
-        entry = self.get_entry(entry_id)
-        if entry is None:
-            log.info('Entry %s not found' % str(entry_id))
-            return None
-       
-        return self.load_entry(entry)
-    
-    
     def set_rating(self, entry_id, rating):
         '''
         Sets the provided rating to the given entry id, int 0 to 5 
@@ -402,9 +389,6 @@ class RBHandler(object):
         if not entry is None:
             self.db.entry_set(entry, RB.RhythmDBPropType.RATING, rating)
     
-    def get_entry_id(self, entry):
-        return entry.get_ulong(RB.RhythmDBPropType.ENTRY_ID)
-
     # MODEL
     def loop_query_model(self, func, query_model, first=0, limit=0):
         '''
@@ -688,7 +672,6 @@ class RBHandler(object):
     
     def get_source(self, source_index):
         log.info('Getting source with index %d' % source_index)
-        
         if not type(source_index) is int:
             raise Exception('source_index parameter must be an int')
         index = 0
@@ -735,10 +718,8 @@ class RBHandler(object):
         Enqueues in the play queue the given playlist 
         '''
         log.info('Enqueuing source')
-        
         if not source:
             return 0
-        
         # playlist.add_to_queue(self.shell.props.queue_source)
         # This way we will know how many songs are added
         return self.loop_query_model(
