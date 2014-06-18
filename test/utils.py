@@ -14,6 +14,45 @@ class Stub(object):
             return self.key
         return name
 
+    def __str__(self):
+        return 'Stub key: "{}"'.format(self.key)
+
+
+class EntryStub(object):
+
+    def __init__(self, key):
+        self.key = key
+
+    def get_ulong(self, name):
+        return self.key
+
+    def get_string(self, name):
+        return name
+
+    def get_double(self, name):
+        return 1.0
+
+    def __str__(self):
+        return 'EntryStub key: "{}"'.format(self.key)
+
+
+class ModelStub(object):
+
+    def __init__(self, *rows):
+        self.rows = [[row] for row in rows]
+        self.sort_order = None
+        self.desc = None
+
+    def __getitem__(self, key):
+        return self.rows[key]
+
+    def __iter__(self):
+        for row in self.rows:
+            yield row
+
+    def set_sort_order(self, sort_order, arg3, desc):
+        self.sort_order = sort_order
+        self.desc = desc
 
 def cgi_application():
     base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))

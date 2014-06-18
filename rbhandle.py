@@ -270,7 +270,10 @@ class RBHandler(object):
         '''
         log.info('Getting play queue')
         entries = []
-        self.loop_query_model(func=entries.append, query_model=self.get_play_queue_model(), limit=queue_limit)
+        self.loop_query_model(func=entries.append, 
+                query_model=self.get_play_queue_model(), 
+                limit=queue_limit)
+        log.debug('Returning entries list {}'.format(entries))
         return entries
     
     def get_play_queue_model(self):
@@ -292,8 +295,9 @@ class RBHandler(object):
             log.debug('There are entries, actually shuffling the queue')
             random.shuffle(entries)
             
-            for i in range(0, len(entries) - 1):
-                entry = self.shell.props.db.entry_lookup_by_id(int(entries[i].id))
+            for i in range(0, len(entries)):
+                log.info('Moving entry {} to {}'.format(entries[i].id, i))
+                entry = self.shell.props.db.entry_lookup_by_id(entries[i].id)
                 self.move_entry_in_queue(entry, i)
     
     def move_entry_in_queue(self, entry, index):
@@ -313,7 +317,7 @@ class RBHandler(object):
                 self.shell.props.queue_source.add_entry(entry, -1)
 
         elif type(entry_ids) is int:
-            entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
+            entry = self.shell.props.db.entry_lookup_by_id(int(entry_ids))
             if not entry is None:
                 self.shell.props.queue_source.add_entry(entry, -1)
         else:
@@ -337,9 +341,8 @@ class RBHandler(object):
                 self.shell.props.queue_source.remove_entry(entry)
         elif type(entry_ids) is int:
             log.info('Removing entry %d from queue' % entry_ids)
-            entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
+            entry = self.shell.props.db.entry_lookup_by_id(int(entry_ids))
             if not entry is None:
-                location = str(entry.location)
                 self.shell.props.queue_source.remove_entry(entry)
                 
         self.shell.props.queue_source.queue_draw()
@@ -379,7 +382,9 @@ class RBHandler(object):
         rbentry.location = entry.get_string(RB.RhythmDBPropType.LOCATION)
         rbentry.bitrate = entry.get_ulong(RB.RhythmDBPropType.BITRATE)
         rbentry.last_played = entry.get_ulong(RB.RhythmDBPropType.LAST_PLAYED)
-        
+
+        log.debug('Entry {} loaded'.format(rbentry.id))
+
         return rbentry
         
     def load_rb_entry(self, entry_id):
@@ -428,13 +433,12 @@ class RBHandler(object):
         index = 0
         count = 0
         for row in query_model:
-            log.debug('Reading Row...')
-
             if index < first:
-                index += + 1
-                log.debug('Skipping row ')
+                log.debug('Skipping row {}'.format(index))
+                index += 1
                 continue
             
+            log.debug('Reading Row {}...'.format(index))
             entry = self.get_entry_from_row(row)
             entry_id = self.load_entry(entry)
             
@@ -444,7 +448,6 @@ class RBHandler(object):
             index += 1
             if limit != 0 and index >= limit:
                 break
-        
         return count
     
     def get_entry_from_row(self, row):

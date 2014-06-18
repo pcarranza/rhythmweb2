@@ -2,6 +2,7 @@ import unittest
 
 from mock import Mock, MagicMock, patch, call
 from rbhandle import RBHandler, InvalidQueryException
+from utils import ModelStub
 
 
 @patch('gi.repository.RB.RhythmDBQueryModel.new_empty')
@@ -19,7 +20,7 @@ class TestRBHandleSearch(unittest.TestCase):
 
     def test_search_song(self, ptr_array, query_model):
         item = Mock()
-        array, model = Mock(), ModelStub([item])
+        array, model = Mock(), ModelStub(item)
         query_model.return_value = model
         ptr_array.return_value = array
 
@@ -41,7 +42,7 @@ class TestRBHandleSearch(unittest.TestCase):
 
     def test_search_radio(self, ptr_array, query_model):
         item = Mock()
-        array, model = Mock(), ModelStub([item])
+        array, model = Mock(), ModelStub(item)
         query_model.return_value = model
         ptr_array.return_value = array
 
@@ -63,7 +64,7 @@ class TestRBHandleSearch(unittest.TestCase):
 
     def test_search_podcast(self, ptr_array, query_model):
         item = Mock()
-        array, model = Mock(), ModelStub([item])
+        array, model = Mock(), ModelStub(item)
         query_model.return_value = model
         ptr_array.return_value = array
 
@@ -85,7 +86,7 @@ class TestRBHandleSearch(unittest.TestCase):
 
     def test_query_with_rating_exact_match_and_play_count(self, ptr_array, query_model):
         item = Mock()
-        array, model = Mock(), ModelStub([item])
+        array, model = Mock(), ModelStub(item)
         query_model.return_value = model
         ptr_array.return_value = array
 
@@ -109,17 +110,52 @@ class TestRBHandleSearch(unittest.TestCase):
         with self.assertRaises(InvalidQueryException):
             rb.query({'play_count': 'x'})
 
+    def test_query_artist_works(self, ptr_array, query_model):
+        item = Mock()
+        array, model = Mock(), ModelStub(item)
+        query_model.return_value = model
+        ptr_array.return_value = array
 
-class ModelStub(object):
+        rb = RBHandler(self.shell)
+        rb.query({'artist': 'calabazas'})
+        self.db.do_full_query_parsed.assert_called_with(model, array)
+        self.db.query_append_params.assert_has_calls([
+            call(array, 'FUZZY', 'ARTIST_FOLDED', 'calabazas')])
 
-    def __init__(self, *rows):
-        self.rows = rows
-        self.sort_order = None
-        self.desc = None
+    def test_query_title_works(self, ptr_array, query_model):
+        item = Mock()
+        array, model = Mock(), ModelStub(item)
+        query_model.return_value = model
+        ptr_array.return_value = array
 
-    def __getitem__(self, key):
-        return self.rows[key]
+        rb = RBHandler(self.shell)
+        rb.query({'title': 'a song name'})
+        self.db.do_full_query_parsed.assert_called_with(model, array)
+        self.db.query_append_params.assert_has_calls([
+            call(array, 'FUZZY', 'TITLE_FOLDED', 'a song name')])
 
-    def set_sort_order(self, sort_order, arg3, desc):
-        self.sort_order = sort_order
-        self.desc = desc
+    def test_query_album_works(self, ptr_array, query_model):
+        item = Mock()
+        array, model = Mock(), ModelStub(item)
+        query_model.return_value = model
+        ptr_array.return_value = array
+
+        rb = RBHandler(self.shell)
+        rb.query({'album': 'an album name'})
+        self.db.do_full_query_parsed.assert_called_with(model, array)
+        self.db.query_append_params.assert_has_calls([
+            call(array, 'FUZZY', 'ALBUM_FOLDED', 'an album name')])
+
+    def test_query_genre_works(self, ptr_array, query_model):
+        item = Mock()
+        array, model = Mock(), ModelStub(item)
+        query_model.return_value = model
+        ptr_array.return_value = array
+
+        rb = RBHandler(self.shell)
+        rb.query({'genre': 'a nice genre'})
+        self.db.do_full_query_parsed.assert_called_with(model, array)
+        self.db.query_append_params.assert_has_calls([
+            call(array, 'FUZZY', 'GENRE_FOLDED', 'a nice genre')])
+
+
