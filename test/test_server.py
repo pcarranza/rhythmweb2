@@ -4,16 +4,16 @@ import unittest
 from mock import Mock
 from io import BytesIO
 from rhythmweb.server import Server
-from rhythmweb.view import app, route
+from rhythmweb.app import app, route
 
 class TestNewServer(unittest.TestCase):
 
     def test_create_server(self):
-        server = Server(Mock())
+        server = Server()
         self.assertIsNotNone(server)
 
     def test_get_index_file(self):
-        server = Server(Mock())
+        server = Server()
         response = Mock()
         server.handle_request({}, response)
         content = app.get_file('/index.html', 'default')
@@ -21,20 +21,20 @@ class TestNewServer(unittest.TestCase):
         response.reply_with_file.assert_called_with(content)
 
     def test_file_not_found(self):
-        server = Server(Mock())
+        server = Server()
         response = Mock()
         server.handle_request({}, response)
         app.get_file('/index.py', 'default')
         response.reply_with_not_found.assert_called_with()
 
     def test_return_dict_with_path_argument(self):
-        server = Server(Mock())
+        server = Server()
         response = Mock()
         server.handle_request({'PATH_INFO': '/something/myarg'}, response)
         response.reply_with_json.assert_called_with({'the_argument', 'myarg'})
 
     def test_post_plain_parameters(self):
-        server = Server(Mock())
+        server = Server()
         response = Mock()
         server.handle_request(
             {
@@ -48,7 +48,7 @@ class TestNewServer(unittest.TestCase):
             'key2': 'value2'})
 
     def test_post_list_parameters(self):
-        server = Server(Mock())
+        server = Server()
         response = Mock()
         server.handle_request(
             {

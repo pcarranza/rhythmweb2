@@ -1,7 +1,7 @@
 
 import unittest
 
-from rhythmweb.view import app, route
+from rhythmweb.app import app, route
 
 
 class TestPathParams(unittest.TestCase):

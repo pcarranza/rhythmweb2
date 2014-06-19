@@ -1,7 +1,7 @@
 import re
 import cgi
 
-from rhythmweb.view import app
+from rhythmweb.app import app
 
 import logging
 log = logging.getLogger(__name__)
@@ -12,9 +12,6 @@ app.mount('./resources/touch', 'mobile', ignore='/resources/touch')
 match_mobile = re.compile(r'(Android|iPhone)')
 
 class Server(object):
-
-    def __init__(self, rb):
-        self.rb = rb
 
     def handle_request(self, environ, response):
         method = environ.get('REQUEST_METHOD', 'GET')
