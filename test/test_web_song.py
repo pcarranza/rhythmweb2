@@ -3,6 +3,7 @@ import json
 
 from mock import Mock
 from rhythmweb import controller
+from rhythmweb.server import Server
 from utils import Stub, cgi_application, environ, handle_request
 
 class TestWebSong(unittest.TestCase):
@@ -12,6 +13,7 @@ class TestWebSong(unittest.TestCase):
         controller.rb_handler['rb'] = self.rb
         self.response = Mock()
         self.app = cgi_application()
+        # self.app = Server()
 
     def test_get_invalid_song_returns_not_found(self):
         self.rb.get_entry.return_value = None

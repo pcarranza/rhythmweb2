@@ -51,7 +51,7 @@ class App(object):
                     args = []
                 return route, args
             possible.pop()
-        log.debug('Route for path {} not found'.format(possible_path))
+        log.debug('Route for path {} not found'.format(path))
         raise NoRouteError()
 
     def parse_path_args(self, args, rules):

@@ -2,8 +2,9 @@ import unittest
 import json
 
 from mock import Mock
-from rhythmweb import controller
-from utils import Stub, cgi_application, environ, handle_request
+from rhythmweb import view, controller
+from utils import Stub, environ, handle_request
+from rhythmweb.server import Server
 
 class TestWebStatus(unittest.TestCase):
 
@@ -12,7 +13,7 @@ class TestWebStatus(unittest.TestCase):
         controller.rb_handler['rb'] = self.rb
         self.entry = Stub()
         self.response = Mock()
-        self.app = cgi_application()
+        self.app = Server()
 
     def test_get_status_when_not_playing_works(self):
         self.rb.get_playing_status.return_value = False

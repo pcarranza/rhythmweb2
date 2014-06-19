@@ -1,5 +1,6 @@
 import re
 import cgi
+import json
 
 from rhythmweb.app import app
 
@@ -17,25 +18,26 @@ class Server(object):
         method = environ.get('REQUEST_METHOD', 'GET')
         path = environ.get('PATH_INFO', '/index.html')
         group = 'mobile' if match_mobile.match(environ.get('HTTP_USER_AGENT', '')) else 'default'
+        response = Response(response)
         try:
             if method == 'GET':
                 content = app.get_file(path, group)
                 if content:
-                    response.reply_with_file(content)
+                    return response.reply_with_file(content)
                 content = app.route(path)
                 if content is None:
-                    response.reply_with_not_found()
-                response.reply_with_json(content)
+                    return response.reply_with_not_found()
+                return response.reply_with_json(content)
 
             if method == 'POST':
                 post = self.parse_post_parameters(environ)
                 content = app.route(path, **post)
                 if content is None:
-                    response.reply_with_not_found()
-                response.reply_with_json(content)
+                    return response.reply_with_not_found()
+                return response.reply_with_json(content)
 
         except ServerError as e:
-            response.reply_with_server_error(e)
+            return response.reply_with_server_error(e)
 
     def parse_post_parameters(self, environ):
         parsed = cgi.FieldStorage(
@@ -47,6 +49,26 @@ class Server(object):
         for key in parsed.keys():
             post[key] = parsed[key].value
         return post
+
+
+class Response(object):
+
+    def __init__(self, function):
+        self.function = function
+
+    def reply_with_json(self, content):
+        self.function('200 OK', [
+            ('Content-type', 'application/json; charset=UTF-8'), 
+            ('Cache-Control: ', 'no-cache; must-revalidate')])
+        return [bytes(json.dumps(content), 'UTF-8')]
+
+    def reply_with_not_found(self):
+        self.function('404 NOT FOUND', [
+            ('Content-type', 'text/html; charset=UTF-8')])
+        return []
+
+    def reply_with_file(self, content):
+        return content
 
 
 class ServerError(Exception):
