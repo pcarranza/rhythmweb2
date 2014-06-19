@@ -1,5 +1,6 @@
 import re
 import os
+import copy
 
 from functools import partial
 from collections import defaultdict
@@ -7,8 +8,10 @@ from collections import defaultdict
 import logging
 log = logging.getLogger(__name__)
 
+
 class NoRouteError(Exception):
     pass
+
 
 class App(object):
 
@@ -40,6 +43,7 @@ class App(object):
             if route:
                 log.debug('Found route {}'.format(possible_path))
                 if rules:
+                    rules = copy.copy(rules)
                     args = self.parse_path_args(path[len(possible_path):], rules)
                 else:
                     args = []
@@ -52,15 +56,22 @@ class App(object):
         log.debug('Looking for path arguments with this path {} and rules {}'.format(args, rules))
         slices = args.split('/')
         slices.reverse()
+        rules.reverse()
         parsed_args = []
         while rules and slices:
             arg = slices.pop()
             if not arg:
                 continue
             rule = rules.pop() # No use right now
+            log.debug('Rule {} resolves value {}'.format(rule, arg))
             parsed_args.append(arg)
-        if rules:
-            log.debug('Rules where not exausted, this is left: {}'.format(rules))
+        while rules:
+            rule = rules.pop()
+            log.debug('There are rules left: {}'.format(rule))
+            if '?' in rule:
+                parsed_args.append(None)
+            else:
+                raise NoRouteError()
         if slices:
             slices.reverse()
             log.debug('Path parts where not exausted, this is left: {}'.format(slices))
@@ -102,7 +113,7 @@ class App(object):
             log.debug('Registering route {} to read file {}'.format(route, path))
             self.file_groups[group][route] = partial(read_file, path)
         else:
-            raise FileNotFoundError(path)
+            raise IOError('{} does not exists'.format(path))
 
 
 def ignore_file(path):
@@ -120,6 +131,7 @@ def read_file(path):
     with open(path, 'r') as f:
         return f.read()
 
+
 def route(path):
     def decorate(func):
         app.add_route(path, func)
@@ -127,5 +139,3 @@ def route(path):
 
 
 app = App()
-
-

@@ -48,4 +48,3 @@ class RhythmWeb(GObject.Object, Peas.Activatable):
         if shell.server:
             shell.server.stop()
             log.info('RhythmWeb server stopped')
-

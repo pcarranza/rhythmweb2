@@ -52,6 +52,5 @@ class Server(object):
         return post
 
 
-
 class ServerError(Exception):
     pass
