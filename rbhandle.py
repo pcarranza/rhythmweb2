@@ -71,10 +71,10 @@ class RBHandler(object):
             ORDER_SHUFFLE_BY_RATING : ORDER_LINEAR,
             ORDER_SHUFFLE_BY_AGE_AND_RATING : ORDER_LINEAR}
 
-        self.__media_types = {}
-        for t in [TYPE_SONG, TYPE_RADIO, TYPE_PODCAST]:
-            rb_type = self.db.entry_type_get_by_name(t)
-            self.__media_types[t] = rb_type
+        self.media_types = {}
+        for entry_type in [TYPE_SONG, TYPE_RADIO, TYPE_PODCAST]:
+            rb_type = self.db.entry_type_get_by_name(entry_type)
+            self.media_types[entry_type] = rb_type
         log.debug('rbhandler loaded')
 
     def get_playing_status(self):
@@ -332,80 +332,16 @@ class RBHandler(object):
         filters['all'] = query
         return self.query(filters)
 
-    def query_all(self, media_type, min_play_count, min_rating, parameters, query_for_all=False):
-        """Performs the quey"""
-        db = self.db
-        query_model = RB.RhythmDBQueryModel.new_empty(db)
-        query_model.set_sort_order(RB.RhythmDBQueryModel.album_sort_func, None, False)
-
-        if media_type is None:
-            query_for_type = None
-        else:
-            query_for_type = (RB.RhythmDBQueryType.EQUALS,
-                RB.RhythmDBPropType.TYPE,
-                self.db.entry_type_get_by_name(media_type))
-
-        if query_for_all: # equivalent to use an OR (many queries)
-            log.info('Query for all parameters separatedly')
-            for parameter in parameters:
-                query = GLib.PtrArray()
-                if not query_for_type is None:
-                    log.info('Appending Query for type \"%s\"...' % media_type)
-                    db.query_append_params(query, query_for_type[0], query_for_type[1], query_for_type[2])
-                log.info('Appending Query for parameter "%s"~"%s"...' % (parameter[1], parameter[2]))
-                db.query_append_params(query, parameter[0], parameter[1], parameter[2]) # Append parameter
-
-                self.append_rating_query(query, min_rating) # Append
-                self.append_play_count_query(query, min_play_count)
-                log.info("Running query")
-                db.do_full_query_parsed(query_model, query) # Do query
-
-        else:
-            log.info('Query for all parameters in one only full search')
-            query = GLib.PtrArray()
-            if not query_for_type is None:
-                log.info('Appending Query for type \"%s\"...' % media_type)
-                db.query_append_params(query, query_for_type[0], query_for_type[1], query_for_type[2])
-            self.append_rating_query(query, min_rating)
-            self.append_play_count_query(query, min_play_count)
-            for parameter in parameters:
-                log.info('Appending Query for parameter "%s"~"%s"...' % (parameter[1], parameter[2]))
-                db.query_append_params(query, parameter[0], parameter[1], parameter[2])
-            log.info("Running query")
-            db.do_full_query_parsed(query_model, query)
-
-        return query_model
-
-    def append_play_count_query(self, query, play_count):
-        """Appends a min playcount filter to the given query"""
-        if play_count > 0:
-            log.info('Appending min play count %d' % play_count)
-            self.db.query_append_params(query, RB.RhythmDBQueryType.GREATER_THAN, RB.RhythmDBPropType.PLAY_COUNT, play_count)
-
-
-    def append_rating_query(self, query, rating):
-        """Appends a min rating filter to the given query"""
-        if rating > 0:
-            self.db.query_append_params(query,
-                    RB.RhythmDBQueryType.GREATER_THAN,
-                    RB.RhythmDBPropType.RATING,
-                    rating)
-
     def query(self, filters):
         """Performs a query with the provided filters"""
         log.debug('RBHandler.query...')
-        if filters is None or not filters:
+        if not filters:
             log.info('No filters, returning empty result')
             return []
 
-        media_type = None
-        rating = 0
-        play_count = 0
-        first = 0
-        limit = 100
-        query_all = None
-        searches = None
-        prop_match = RB.RhythmDBQueryType.FUZZY_MATCH
+        media_type = self.media_types[TYPE_SONG]
+        rating, play_count, first, limit = 0, 0, 0, 0
+        query = Query()
 
         if filters:
             for key in filters:
@@ -416,103 +352,49 @@ class RBHandler(object):
                     log.warning('Searching for %s but type is "%s"' % (key, type(value)))
 
             if 'exact-match' in filters:
-                prop_match = RB.RhythmDBQueryType.EQUALS
+                query.matcher = RB.RhythmDBQueryType.EQUALS
 
             if 'first' in filters:
-                first = str(filters['first'])
-                if not first.isdigit():
+                try:
+                    first = int(filters['first'])
+                except:
                     raise InvalidQueryException('Parameter first must be a number, it actually is \"%s\"' % first)
-                first = int(first)
 
             if 'limit' in filters:
-                limit = str(filters['limit'])
-                if not limit.isdigit():
+                try:
+                    limit = int(filters['limit'])
+                except:
                     raise InvalidQueryException('Parameter limit must be a number, it actually is \"%s\"' % limit)
-                limit = int(limit)
 
             if 'type' in filters:
-                media_type = filters['type']
-                log.debug('Appending query for type \"%s\"' % media_type)
-                if media_type not in self.__media_types:
-                    log.error('Media \"%s\" not found' % media_type)
-                    raise InvalidQueryException('Unknown media type \"%s\"' % media_type)
-                else:
-                    log.debug('Type %s added to query' % media_type)
+                media_type = self.media_types.get(filters['type'], None)
+                if not media_type:
+                    raise InvalidQueryException('Unknown type {}'.format(filters['type']))
 
             if 'rating' in filters:
-                rating = str(filters['rating'])
-                log.debug('Appending query for rating \"%s\"' % rating)
-                if not rating.isdigit():
+                try:
+                    rating = float(filters['rating'])
+                except:
                     raise InvalidQueryException('Parameter rating must be a float, it actually is \"%s\"' % rating)
-                rating = float(rating)
 
             if 'play_count' in filters:
-                play_count = str(filters['play_count'])
-                log.debug('Appending query for play_count \"%s\"' % play_count)
-                if not play_count.isdigit():
+                try:
+                    play_count = int(filters['play_count'])
+                except:
                     raise InvalidQueryException('Parameter play_count must be an int, it actually is \"%s\"' % play_count)
-                play_count = int(play_count)
 
             if 'all' in filters:
-                query_all = []
-                all_filter = filters['all'].lower()
-                log.debug('Append all kind of filters with value "%s"' % all_filter)
-                query_all.append((prop_match,
-                    RB.RhythmDBPropType.ARTIST_FOLDED,
-                    all_filter))
-                query_all.append((prop_match,
-                    RB.RhythmDBPropType.TITLE_FOLDED,
-                    all_filter))
-                query_all.append((prop_match,
-                    RB.RhythmDBPropType.ALBUM_FOLDED,
-                    all_filter))
-                query_all.append((prop_match,
-                    RB.RhythmDBPropType.GENRE_FOLDED,
-                    all_filter))
-
+                query.add_all(filters['all'])
             else:
-                searches = []
-                if 'artist' in filters:
-                    log.debug('Appending query for artist \"%s\"' % filters['artist'])
-                    searches.append((prop_match,
-                        RB.RhythmDBPropType.ARTIST_FOLDED,
-                        filters['artist'].lower()))
+                query.add_artist(filters.get('artist', None))
+                query.add_title(filters.get('title', None))
+                query.add_album(filters.get('album', None))
+                query.add_genre(filters.get('genre', None))
+            query.add_type(media_type)
+            query.add_rating(rating)
+            query.add_play_count(play_count)
 
-                if 'title' in filters:
-                    log.debug('Appending query for title \"%s\"' % filters['title'])
-                    searches.append((prop_match,
-                        RB.RhythmDBPropType.TITLE_FOLDED,
-                        filters['title'].lower()))
-
-                if 'album' in filters:
-                    log.debug('Appending query for album \"%s\"' % filters['album'])
-                    searches.append((prop_match,
-                        RB.RhythmDBPropType.ALBUM_FOLDED,
-                        filters['album'].lower()))
-
-                if 'genre' in filters:
-                    log.debug('Appending query for genre \"%s\"' % filters['genre'])
-                    searches.append((prop_match,
-                        RB.RhythmDBPropType.GENRE_FOLDED,
-                        filters['genre'].lower()))
-
-
-        if not query_all is None:
-            log.info('Querying for all...')
-            query_model = self.query_all(media_type, play_count, rating, query_all, True)
-
-        elif searches:
-            log.info('Querying for each...')
-            query_model = self.query_all(media_type, play_count, rating, searches)
-
-        elif media_type is None:
-            log.info('No search filter defined, querying for default')
-            query_model = self.query_all(TYPE_SONG, play_count, rating, searches)
-
-        else:
-            log.info('Search for type only, querying for type')
-            query_model = self.query_all(media_type, play_count, rating, searches)
-
+        query_model = query.execute(self.db)
         log.debug('RBHandler.query executed, loading results...')
         entries = []
         self.loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
@@ -568,6 +450,96 @@ class RBHandler(object):
         return self.loop_query_model(
                    func=self.enqueue,
                    query_model=source.query_model)
+
+
+class Query(object):
+
+    def __init__(self):
+        self.filters = []
+        self.static_filters = []
+        self.query_for_all = False
+        self.matcher = RB.RhythmDBQueryType.FUZZY_MATCH
+        self.sort_func = RB.RhythmDBQueryModel.album_sort_func
+
+    def add_artist(self, artist):
+        if not artist:
+            return
+        self.filters.append((self.matcher,
+            RB.RhythmDBPropType.ARTIST_FOLDED,
+            artist.lower()))
+
+    def add_title(self, title):
+        if not title:
+            return
+        self.filters.append((self.matcher,
+            RB.RhythmDBPropType.TITLE_FOLDED,
+            title.lower()))
+
+    def add_album(self, album):
+        if not album:
+            return
+        self.filters.append((self.matcher,
+            RB.RhythmDBPropType.ALBUM_FOLDED,
+            album.lower()))
+
+    def add_genre(self, genre):
+        if not genre:
+            return
+        self.filters.append((self.matcher,
+            RB.RhythmDBPropType.GENRE_FOLDED,
+            genre.lower()))
+
+    def add_all(self, value):
+        if not value:
+            return
+        self.add_artist(value)
+        self.add_title(value)
+        self.add_album(value)
+        self.add_genre(value)
+        self.query_for_all = True
+
+    def add_type(self, media_type):
+        self.static_filters.append((RB.RhythmDBQueryType.EQUALS,
+            RB.RhythmDBPropType.TYPE,
+            media_type))
+
+    def add_play_count(self, play_count):
+        if not play_count:
+            return
+        self.static_filters.append((RB.RhythmDBQueryType.GREATER_THAN,
+            RB.RhythmDBPropType.PLAY_COUNT,
+            play_count))
+
+    def add_rating(self, rating):
+        if not rating:
+            return
+        self.static_filters.append((RB.RhythmDBQueryType.GREATER_THAN,
+            RB.RhythmDBPropType.RATING,
+            rating))
+
+    def execute(self, db):
+        """Runs the query on the database"""
+        query_model = RB.RhythmDBQueryModel.new_empty(db)
+        query_model.set_sort_order(self.sort_func, None, False)
+
+        if self.query_for_all: # equivalent to use an OR (one query for each parameter)
+            log.info('Query for all parameters separatedly')
+            for parameter in self.filters:
+                query = GLib.PtrArray()
+                for static_filter in self.static_filters:
+                    db.query_append_params(query, static_filter[0], static_filter[1], static_filter[2])
+                db.query_append_params(query, parameter[0], parameter[1], parameter[2])
+                db.do_full_query_parsed(query_model, query)
+        else:
+            log.info('Query for all parameters in one only full search')
+            query = GLib.PtrArray()
+            for static_filter in self.static_filters:
+                db.query_append_params(query, static_filter[0], static_filter[1], static_filter[2]) # Append parameter
+            for parameter in self.filters:
+                db.query_append_params(query, parameter[0], parameter[1], parameter[2])
+            db.do_full_query_parsed(query_model, query)
+        return query_model
+
 
 
 class InvalidQueryException(Exception):
