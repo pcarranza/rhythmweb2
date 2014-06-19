@@ -40,6 +40,18 @@ class TestPathParams(unittest.TestCase):
     def test_route_without_mandatory_argument_returns_none(self):
         self.assertIsNone(app.route('/another/one'))
 
+    def test_parser_with_type_returns_int_and_float_value(self):
+        result1, result2 = app.route('/typed/route/1/2.1')
+        self.assertEquals(1, result1)
+        self.assertEquals(2.1, result2)
+
+    def test_parser_with_type_fails_with_invalid_int(self):
+        with self.assertRaises(ValueError):
+            app.route('/typed/route/x/2.1')
+
+    def test_parser_with_type_fails_with_invalid_float(self):
+        with self.assertRaises(ValueError):
+            app.route('/typed/route/1/2.1.3')
 
 @route('/test/<name>')
 def simple_test(name):
@@ -53,10 +65,13 @@ def slightly_harder_test(one, two):
 def route_with_kwargs(**kwargs):
     return kwargs['argument']
 
-@route('/another/<first>/<second>/<third?>/<fourth?>')
+@route('/another/<first:str>/<second:str>/<third?:str>/<fourth?:str>')
 def route_with_optional_path(one, two, three, four):
     return one, two, three, four
 
+@route('/typed/route/<one:int>/<two:float>')
+def route_with_type(int_value, float_value):
+    return int_value, float_value
 
 class TestMountFilesystem(unittest.TestCase):
 

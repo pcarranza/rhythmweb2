@@ -20,6 +20,8 @@ class App(object):
         self.file_groups = defaultdict(lambda: {})
         self.path_with_args_matcher = re.compile(r'(/.+?)<')
         self.args_matcher = re.compile(r'(<.*?>)')
+        self.typed_rule_matcher = re.compile(r'<([\w\?]+):(int|float|str)>')
+        self.simple_rule_matcher = re.compile(r'<([\w\?]+)>')
 
     def add_route(self, path, function):
         path, args = self.parse_route(path)
@@ -62,13 +64,11 @@ class App(object):
             arg = slices.pop()
             if not arg:
                 continue
-            rule = rules.pop() # No use right now
-            log.debug('Rule {} resolves value {}'.format(rule, arg))
-            parsed_args.append(arg)
+            parsed_args.append(self.validate_rule(rules.pop(), arg))
         while rules:
             rule = rules.pop()
             log.debug('There are rules left: {}'.format(rule))
-            if '?' in rule:
+            if rule['optional']:
                 parsed_args.append(None)
             else:
                 raise NoRouteError()
@@ -77,15 +77,40 @@ class App(object):
             log.debug('Path parts where not exausted, this is left: {}'.format(slices))
         return parsed_args
 
+    def parse_rule(self, rule):
+        typed_rule = self.typed_rule_matcher.match(rule)
+        if typed_rule:
+            name, kind = typed_rule.groups()
+        else:
+            name, kind = self.simple_rule_matcher.findall(rule)[0], 'str'
+        optional = name.endswith('?')
+        if optional:
+            name = name[:-1]
+        return {'name': name, 'type': kind, 'optional': optional}
+
+    def validate_rule(self, rule, value):
+        kind = rule['type']
+        try:
+            if kind == 'int':
+                return int(value)
+            elif kind == 'float':
+                return float(value)
+            else:
+                return str(value)
+        except:
+            raise ValueError('Value {} is invalid, {} expected'.format(value, kind))
+
     def parse_route(self, path):
         has_args = self.path_with_args_matcher.match(path)
-        args = []
+        rules = []
         if has_args:
             args = self.args_matcher.findall(path)
+            for arg in args:
+                rules.append(self.parse_rule(arg))
             path = has_args.groups()[0]
         if path[-1] == '/':
             path = path[:-1]
-        return path, args
+        return path, rules
 
     def get_file(self, path, group):
         readfile = self.file_groups[group].get(path, None)
