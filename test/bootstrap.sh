@@ -10,14 +10,36 @@ echo "
 import mock
 
 class GObject(object):
+    IO_IN = 'input'
+    keep_running = {'keep': True}
+
     class Object(object):
         pass
+
     class GObject(object):
         pass
 
     @classmethod
     def property(*args, **kwargs):
         return mock.Mock()
+
+    @classmethod
+    def io_add_watch(cls, socket, event, function):
+        cls.running = True
+        import threading
+        def do_the_work():
+            while cls.running:
+                values = select.select([socket], [], [])
+                if values:
+                    function.__self__._internal_server.handle_request()
+
+        t = threading.Thread(target=do_the_work)
+        t.start()
+        return 1
+
+    @classmethod
+    def source_remove(cls, source):
+        cls.running = False
 
 class RB(object):
     class RhythmDBPropType(object):

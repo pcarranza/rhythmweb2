@@ -18,6 +18,7 @@ class CGIServer(object):
         self._internal_server = None
         self._running = False
         self._proxy_server = None
+        self._watch_id = None
 
     def start(self):
         log.info('   STARTING SERVER')
@@ -31,22 +32,18 @@ class CGIServer(object):
         proxy_port = config.get_int('proxy.port')
         proxy_hostname = config.get_string('proxy.hostname')
 
-        if self._internal_server is None:
-            self._internal_server = make_server(
-                hostname,
-                port,
-                self._application.handle_request,
-                handler_class=WSGIRequestHandler)
+        self._internal_server = make_server(
+            hostname,
+            port,
+            self._application.handle_request,
+            handler_class=WSGIRequestHandler)
 
         self._watch_id = GObject.io_add_watch(
             self._internal_server.socket,
             GObject.IO_IN,
             self._idle_request_loop)
 
-        self._running = True
-        log.info('   SERVER STARTED')
-
-        if use_proxy == True:
+        if use_proxy:
             log.info('   PROXY_HOSTNAME %s' % proxy_hostname)
             log.info('   PROXY_PORT     %d' % proxy_port)
 
@@ -56,16 +53,19 @@ class CGIServer(object):
             self._proxy_server.start()
             log.info('   PROXY STARTED')
 
-    def stop(self):
-        log.info('   STOPPING SERVER')
-        GObject.source_remove(self._watch_id)
-        if self._internal_server is None:
-            return
+        self._running = True
+        log.info('   CGI SERVER STARTED')
 
-        if not self._proxy_server is None:
+    def stop(self):
+        if self._proxy_server:
             log.info('   STOPPING PROXY SERVER')
             self._proxy_server.stop()
 
+        if self._internal_server:
+            log.info('   STOPPING CGI SERVER')
+            GObject.source_remove(self._watch_id)
+            self._internal_server.shutdown()
+            self._internal_server.server_close()
         self._internal_server = None
         self._proxy_server = None
         self._running = False
