@@ -29,8 +29,6 @@ class BufferProxyServer(TCPServer):
         self.__is_shut_down = threading.Event()
         self.__shutdown_request = False
 
-       
-
     def serve_forever(self, poll_interval=0.5):
         """Handle one request at a time until shutdown.
         Polls for shutdown every poll_interval seconds. Ignores
@@ -50,11 +48,9 @@ class BufferProxyServer(TCPServer):
             self.__shutdown_request = False
             self.__is_shut_down.set()
     
-    
     def shutdown(self):                                                                        
         self.__shutdown_request = True
         self.__is_shut_down.wait()
-    
     
     def start(self):
         if not self.server_thread:
@@ -63,15 +59,14 @@ class BufferProxyServer(TCPServer):
             self.server_thread.start()
             log.debug('PROXY SERVER THREAD STARTED')
         
-        
     def stop(self):
         if self.server_thread:
             log.debug('STOPPING PROXY SERVER THREAD...')
             self.shutdown()
+            self.server_close()
             log.debug('PROXY SERVER THREAD STOPPED')
             
         self.server_thread = None
-        
         
     def clean_line(self, requestline):
         if requestline[-2:] == '\r\n':
@@ -80,11 +75,9 @@ class BufferProxyServer(TCPServer):
             return requestline[:-1]
         return requestline
 
-
     def handle_request(self):
         log.debug('HANDLING REQUEST')
         return self._handle_request_noblock(self)
-        
         
     def _handle_request_noblock(self):
         log.debug('HANDLING NON_BLOCKING REQUEST')
@@ -93,37 +86,28 @@ class BufferProxyServer(TCPServer):
             request, client_address = self.socket.accept()
         except Exception as e:
             log.error('Request buffer handle exception: %s' % e, exc_info=True)
-            
         t = threading.Thread(target = self.process_request_thread,
                      args = (request, client_address))
-        
         if self.daemon_threads:
             t.setDaemon (1)
-            
         t.start()
-        
         
     def process_request_thread(self, request, client_address):
         log.debug('Handling request with proxy from address %s' % client_address[0])
-        
         try:
             rfile = request.makefile('rb')
             try:
                 buffer = self.read_request(rfile)
             except CommandNotSupportedError as e:
                 return self.send_error(request, 405)
-                
             log.debug('Closing request...')
             rfile.close()
-            
             log.debug('Creating client socket')
-            
             try:
                 client = socket.socket()
                 client.connect(self.target_address)
             except Exception as e:
                 return self.send_error(request, 503, e)
-            
             log.debug('Writing request in client socket')
             wfile = client.makefile('wb')
             try:
@@ -134,11 +118,9 @@ class BufferProxyServer(TCPServer):
             finally:
                 log.debug('Closing client socket requests')
                 wfile.close()
-            
             wfile = request.makefile('wb')
             rfile = client.makefile('rwb')
             log.debug('Reading client response and writing to the main response')
-            
             try:
                 while True:
                     try:
@@ -146,20 +128,15 @@ class BufferProxyServer(TCPServer):
                         wfile.write(line)
                     except StopIteration:
                         break
-                    
                 return True
-            
             except Exception as e:
                 log.error(e, exc_info=True)
-                
             finally:
                 log.debug('Closing client response and request socket')
                 rfile.close()
                 wfile.close()
-            
         except Exception as e:
             return self.send_error(request, 500, e)
-        
         
     def send_error(self, request, code, message=None):
         if code not in ERRORS:
@@ -213,10 +190,8 @@ class BufferProxyServer(TCPServer):
                 available = 1024
             else:
                 available = length
-
             if available == 0:
                 break
-                
             line = rfile.read(available).decode('UTF-8')
             buffer.append(line)
             length -= len(line)
@@ -229,17 +204,9 @@ class CommandNotSupportedError(RuntimeError):
     pass
 
 
-def __debug(message):
-    
-    sys.stdout.write(message)
-    if not str(message).endswith('\n'):
-        sys.stdout.write('\n')
-
-
 if __name__ == '__main__':
     bs = BufferProxyServer('0.0.0.0', 7001, 7000)
     bs.start()
     while True:
         sys.stdout.write('Waiting connections...\n')
         time.sleep(50)
-    

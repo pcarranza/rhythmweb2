@@ -64,7 +64,6 @@ class CGIServer(object):
         if self._internal_server:
             log.info('   STOPPING CGI SERVER')
             GObject.source_remove(self._watch_id)
-            self._internal_server.shutdown()
             self._internal_server.server_close()
         self._internal_server = None
         self._proxy_server = None

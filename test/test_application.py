@@ -24,15 +24,15 @@ class TestCGIServer(unittest.TestCase):
 
     def test_handle_request(self):
         config = Configuration()
-        config.parser.set('server', 'proxy', 'False')
+        # config.parser.set('server', 'proxy', 'False')
 
         app = CGIApplication(os.path.abspath('.'), config)
         server = CGIServer(app)
         try:
             server.start()
-            response = urlopen('http://localhost:7001')
+            response = urlopen('http://localhost:7000')
             self.assertEquals(response.code, 200)
             html = response.read().decode('UTF-8')
             self.assertTrue('html' in html)
-        except:
+        finally:
             server.stop()
