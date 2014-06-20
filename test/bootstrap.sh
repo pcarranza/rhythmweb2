@@ -26,12 +26,11 @@ class GObject(object):
     @classmethod
     def io_add_watch(cls, socket, event, function):
         cls.running = True
-        import threading
+        import threading, select
         def do_the_work():
-            while cls.running:
-                values = select.select([socket], [], [])
-                if values:
-                    function.__self__._internal_server.handle_request()
+            values = select.select([socket], [], [])
+            if values:
+                function.__self__._internal_server.handle_request()
 
         t = threading.Thread(target=do_the_work)
         t.start()

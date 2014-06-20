@@ -43,7 +43,7 @@ class CGIServer(object):
             GObject.IO_IN,
             self._idle_request_loop)
 
-        if use_proxy:
+        if use_proxy == True:
             log.info('   PROXY_HOSTNAME %s' % proxy_hostname)
             log.info('   PROXY_PORT     %d' % proxy_port)
 
