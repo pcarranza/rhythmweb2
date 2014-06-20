@@ -29,9 +29,12 @@ class Song(object):
         return get_song(entry)
 
     def rate(self, song):
+        self.set_rating(song, song['rating'])
+
+    def set_rating(self, song, rating):
         song_id = song['id']
-        rating = song['rating']
         self.rb.set_rating(song_id, rating)
+        song['rating'] = rating
         log.debug('Song %d rated as %d', song_id, rating)
 
 

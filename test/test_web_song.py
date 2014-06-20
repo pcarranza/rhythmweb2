@@ -2,7 +2,7 @@ import unittest
 import json
 
 from mock import Mock
-from rhythmweb import controller
+from rhythmweb import view, controller
 from rhythmweb.server import Server
 from utils import Stub, cgi_application, environ, handle_request
 
@@ -12,8 +12,7 @@ class TestWebSong(unittest.TestCase):
         self.rb = Mock()
         controller.rb_handler['rb'] = self.rb
         self.response = Mock()
-        self.app = cgi_application()
-        # self.app = Server()
+        self.app = Server()
 
     def test_get_invalid_song_returns_not_found(self):
         self.rb.get_entry.return_value = None
@@ -50,7 +49,7 @@ class TestWebSong(unittest.TestCase):
 
     def test_post_invalid_song_id_errs(self):
         result = handle_request(self.app, environ('/rest/song/X', post_data='rating=5'), self.response)
-        self.response.assert_called_with('400 Bad Request: song id is not a number',
+        self.response.assert_called_with('400 Bad Request: X is invalid as value for song, int expected',
                 [('Content-type', 'text/html; charset=UTF-8')])
 
     def test_post_invalid_rating_errs(self):

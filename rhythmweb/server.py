@@ -36,6 +36,9 @@ class Server(object):
                     return response.reply_with_not_found()
                 return response.reply_with_json(content)
 
+        except ValueError as e:
+            return response.reply_with_client_error(e)
+
         except ServerError as e:
             return response.reply_with_server_error(e)
 
@@ -69,6 +72,12 @@ class Response(object):
 
     def reply_with_file(self, content):
         return content
+
+    def reply_with_client_error(self, e):
+        self.function('400 Bad Request: {}'.format(e), [
+            ('Content-type', 'text/html; charset=UTF-8')])
+        return []
+
 
 
 class ServerError(Exception):

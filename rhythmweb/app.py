@@ -98,7 +98,7 @@ class App(object):
             else:
                 return str(value)
         except:
-            raise ValueError('Value {} is invalid, {} expected'.format(value, kind))
+            raise ValueError('{} is invalid as value for {}, {} expected'.format(value, rule['name'], kind))
 
     def parse_route(self, path):
         has_args = self.path_with_args_matcher.match(path)
