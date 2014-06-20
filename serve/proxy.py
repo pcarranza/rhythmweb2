@@ -24,40 +24,16 @@ class BufferProxyServer(TCPServer):
         TCPServer.__init__(self, (proxy_host, proxy_port), socketserver.StreamRequestHandler)
         self.target_address = (target_host, target_port)
         self.server_thread = None
-        self.daemon_threads = False
         self.default_buffer_size = 1024
-        self.__is_shut_down = threading.Event()
-        self.__shutdown_request = False
-
-    def serve_forever(self, poll_interval=0.5):
-        """Handle one request at a time until shutdown.
-        Polls for shutdown every poll_interval seconds. Ignores
-        self.timeout. If you need to do periodic tasks, do them in
-        another thread.
-        """
-        self.__is_shut_down.clear()
-        try:
-            while not self.__shutdown_request:
-                try:
-                    r, w, e = select.select([self], [], [], poll_interval)
-                    if self in r:
-                        self._handle_request_noblock()
-                except Exception as e:
-                    log.error('Exception handling request: %s' % e, exc_info=True)
-        finally:
-            self.__shutdown_request = False
-            self.__is_shut_down.set()
-    
-    def shutdown(self):                                                                        
-        self.__shutdown_request = True
-        self.__is_shut_down.wait()
     
     def start(self):
-        if not self.server_thread:
-            log.debug('STARTING PROXY SERVER THREAD')
-            self.server_thread = threading.Thread(target=self.serve_forever)
-            self.server_thread.start()
-            log.debug('PROXY SERVER THREAD STARTED')
+        if self.server_thread:
+            return
+
+        log.debug('STARTING PROXY SERVER THREAD')
+        self.server_thread = threading.Thread(target=self.serve_forever)
+        self.server_thread.start()
+        log.debug('PROXY SERVER THREAD STARTED')
         
     def stop(self):
         if self.server_thread:
@@ -75,21 +51,14 @@ class BufferProxyServer(TCPServer):
             return requestline[:-1]
         return requestline
 
-    def handle_request(self):
-        log.debug('HANDLING REQUEST')
-        return self._handle_request_noblock(self)
-        
     def _handle_request_noblock(self):
         log.debug('HANDLING NON_BLOCKING REQUEST')
-        
         try:
             request, client_address = self.socket.accept()
         except Exception as e:
             log.error('Request buffer handle exception: %s' % e, exc_info=True)
         t = threading.Thread(target = self.process_request_thread,
                      args = (request, client_address))
-        if self.daemon_threads:
-            t.setDaemon (1)
         t.start()
         
     def process_request_thread(self, request, client_address):
@@ -202,11 +171,3 @@ class BufferProxyServer(TCPServer):
 
 class CommandNotSupportedError(RuntimeError):
     pass
-
-
-if __name__ == '__main__':
-    bs = BufferProxyServer('0.0.0.0', 7001, 7000)
-    bs.start()
-    while True:
-        sys.stdout.write('Waiting connections...\n')
-        time.sleep(50)
