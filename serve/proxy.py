@@ -24,25 +24,23 @@ class BufferProxyServer(TCPServer):
         TCPServer.__init__(self, (proxy_host, proxy_port), socketserver.StreamRequestHandler)
         self.target_address = (target_host, target_port)
         self.server_thread = None
-        self.default_buffer_size = 1024
     
     def start(self):
         if self.server_thread:
             return
 
-        log.debug('STARTING PROXY SERVER THREAD')
+        log.debug('STARTING PROXY SERVER')
         self.server_thread = threading.Thread(target=self.serve_forever)
         self.server_thread.start()
-        log.debug('PROXY SERVER THREAD STARTED')
+        log.debug('PROXY SERVER STARTED')
         
     def stop(self):
         if self.server_thread:
-            log.debug('STOPPING PROXY SERVER THREAD...')
+            log.debug('STOPPING PROXY SERVER...')
             self.shutdown()
             self.server_close()
-            log.debug('PROXY SERVER THREAD STOPPED')
-            
-        self.server_thread = None
+            self.server_thread = None
+            log.debug('PROXY SERVER STOPPED')
         
     def clean_line(self, requestline):
         if requestline[-2:] == '\r\n':
@@ -72,18 +70,13 @@ class BufferProxyServer(TCPServer):
             log.debug('Closing request...')
             rfile.close()
             log.debug('Creating client socket')
-            try:
-                client = socket.socket()
-                client.connect(self.target_address)
-            except Exception as e:
-                return self.send_error(request, 503, e)
+            client = socket.socket()
+            client.connect(self.target_address)
             log.debug('Writing request in client socket')
             wfile = client.makefile('wb')
             try:
                 for line in buffer:
                     wfile.write(bytes(line, 'UTF-8'))
-            except Exception as e:
-                return self.send_error(request, 503, e)
             finally:
                 log.debug('Closing client socket requests')
                 wfile.close()
@@ -113,16 +106,11 @@ class BufferProxyServer(TCPServer):
             code = 500
         else:
             error = ERRORS[code]
-            
-        if not message is None:
+        if message:
             error = '%s %s' % (error, message)
-            
         log.error(error, exc_info=True)
-        
-        error = 'HTTP/1.1 %d %s' % (code, error)
-        
         wfile = request.makefile('wb')
-        wfile.write(bytes(error, 'UTF-8'))
+        wfile.write(bytes('HTTP/1.1 %d %s' % (code, error), 'UTF-8'))
         wfile.close()
         return False
         
@@ -135,13 +123,11 @@ class BufferProxyServer(TCPServer):
             try:
                 line = next(rfile).decode('UTF-8')
                 buffer.append(line)
-                
                 if command is None:
                     command = str(line).split(' ')[0]
                     if command not in ['GET', 'POST']:
                         raise CommandNotSupportedError('Command %s is not supported' % command)
                         log.debug('command: {}'.format(command))
-                
                 if length == 0: 
                     if line.startswith('Content-Length:'):
                         length = int(line.split(' ')[1])
@@ -149,10 +135,8 @@ class BufferProxyServer(TCPServer):
                 
                 if not self.clean_line(line):
                     break
-                
             except StopIteration:
                 break
-        
         log.debug('Reading Content up to {} chars'.format(length))
         while length > 0:
             if length > 1024:
@@ -164,7 +148,6 @@ class BufferProxyServer(TCPServer):
             line = rfile.read(available).decode('UTF-8')
             buffer.append(line)
             length -= len(line)
-
         log.debug('request from client read, size {}'.format(len(buffer)))
         return buffer
     
