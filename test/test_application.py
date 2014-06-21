@@ -8,6 +8,7 @@ from urllib.request import urlopen, HTTPError
 
 from rhythmweb.conf import Configuration
 from rhythmweb import controller
+from utils import Stub
 
 class TestCGIApplication(unittest.TestCase):
 
@@ -65,5 +66,19 @@ class TestCGIServer(unittest.TestCase):
             self.assertTrue(False)
         except HTTPError as e:
             self.assertEquals(e.code, 500)
+        finally:
+            server.stop()
+
+    def test_full_server_stack_post_handling(self):
+        rb = Mock()
+        rb.load_entry.return_value = Stub(2)
+        controller.rb_handler['rb'] = rb
+        config = Configuration()
+        app = CGIApplication(os.path.abspath('.'), config)
+        server = CGIServer(app)
+        try:
+            server.start()
+            response = urlopen('http://localhost:7000/rest/song/2', data=bytes('rating=5', 'UTF-8'))
+            self.assertEquals(response.code, 200)
         finally:
             server.stop()
