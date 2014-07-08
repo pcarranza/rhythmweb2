@@ -4,7 +4,7 @@ import json
 from mock import Mock
 from rhythmweb import view, controller
 from rhythmweb.server import Server
-from utils import Stub, cgi_application, environ, handle_request
+from utils import Stub, environ, handle_request
 
 class TestWebSong(unittest.TestCase):
 

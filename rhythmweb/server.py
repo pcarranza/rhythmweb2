@@ -39,6 +39,9 @@ class Server(object):
         except ValueError as e:
             return response.reply_with_client_error(e)
 
+        except TypeError:
+            return response.reply_with_method_not_allowed(method)
+
         except ServerError as e:
             return response.reply_with_server_error(e)
 
@@ -78,6 +81,10 @@ class Response(object):
             ('Content-type', 'text/html; charset=UTF-8')])
         return []
 
+    def reply_with_method_not_allowed(self, method):
+        self.function('405 method {} not allowed'.format(method), [
+            ('Content-type', 'text/html; charset=UTF-8')])
+        return []
 
 
 class ServerError(Exception):

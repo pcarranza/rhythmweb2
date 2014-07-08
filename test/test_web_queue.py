@@ -2,8 +2,9 @@ import unittest
 import json
 
 from mock import Mock
-from rhythmweb import controller
-from utils import Stub, cgi_application, environ, handle_request
+from rhythmweb import view, controller
+from rhythmweb.server import Server
+from utils import Stub, environ, handle_request
 
 class TestWebQueue(unittest.TestCase):
 
@@ -11,7 +12,7 @@ class TestWebQueue(unittest.TestCase):
         self.rb = Mock()
         controller.rb_handler['rb'] = self.rb
         self.response = Mock()
-        self.app = cgi_application()
+        self.app = Server()
 
     def test_basic_do_get(self):
         self.rb.get_play_queue.return_value = [Stub(1), Stub(2), Stub(3)]
