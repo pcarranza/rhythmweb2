@@ -1,8 +1,9 @@
 import unittest
 
 from mock import Mock
-from rhythmweb import controller
-from utils import Stub, cgi_application, environ, handle_request
+from rhythmweb import view, controller
+from rhythmweb.server import Server
+from utils import Stub, environ, handle_request
 
 class TestWebPlayer(unittest.TestCase):
 
@@ -11,11 +12,25 @@ class TestWebPlayer(unittest.TestCase):
         controller.rb_handler['rb'] = self.rb
         self.rb.load_entry.return_value = Stub()
         self.response = Mock()
-        self.app = cgi_application()
+        self.app = Server()
 
     def test_do_get_errs(self):
         result = handle_request(self.app, environ('/rest/player'), self.response)
         self.response.assert_called_with('405 method GET not allowed',
+                [('Content-type', 'text/html; charset=UTF-8')])
+
+    def test_post_without_action_fails(self):
+        result = handle_request(self.app, 
+                environ('/rest/player', post_data='actions=invalid'),
+                self.response)
+        self.response.assert_called_with('400 Bad Request: No action', 
+                [('Content-type', 'text/html; charset=UTF-8')])
+
+    def test_post_invalid_action_fails(self):
+        result = handle_request(self.app, 
+                environ('/rest/player', post_data='action=invalid'),
+                self.response)
+        self.response.assert_called_with('400 Bad Request: action "invalid" is not supported', 
                 [('Content-type', 'text/html; charset=UTF-8')])
 
     def test_post_play_pause_works(self):

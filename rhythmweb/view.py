@@ -1,7 +1,7 @@
 
 from rhythmweb.app import route
 from rhythmweb.controller import Player, Song, Queue, Query
-from rhythmweb.utils import to_int
+from rhythmweb.utils import to_int, to_float
 
 import logging
 log = logging.getLogger(__name__)
@@ -81,3 +81,45 @@ def validate_query(query):
     if 'type' in query:
         query['type'] = query['type'] if query['type'] in MEDIA_TYPES else None
 
+
+@route('/rest/player')
+def play(**kwargs):
+    if not kwargs:
+        raise TypeError
+    action = kwargs.get('action', None)
+    if not action:
+        raise ValueError('No action')
+    log.debug('Calling action "{}"'.format(action))
+    player = Player()
+    if action in ('play_pause', 'next', 'previous', 'seek', 'play_entry',
+                    'mute', 'set_volume'):
+        method = getattr(player, action)
+        method(**parse_player_args(kwargs))
+    elif action in ('enqueue', 'dequeue', 'shuffle_queue', 'clear_queue'):
+        queue = Queue()
+        method = getattr(queue, action)
+        method(**parse_player_args(kwargs))
+    else:
+        raise ValueError('action "{}" is not supported'.format(action))
+    status = player.status()
+    status['last_action'] = action
+    return status
+    
+
+def parse_player_args(player_arguments):
+    log.debug('parsing player arguments {}'.format(player_arguments))
+    kwargs = {}
+    if 'time' in player_arguments:
+        kwargs['time'] = to_int(player_arguments['time'],
+                'time must be a number')
+    if 'entry_id' in player_arguments:
+        entry_id = player_arguments['entry_id']
+        if ',' in entry_id:
+            entries = [int(entry) for entry in entry_id.split(',')]
+        else:
+            entries = int(entry_id)
+        kwargs['entry_id'] = entries
+    if 'volume' in player_arguments:
+        kwargs['volume'] = to_float(player_arguments['volume'],
+            'volume must be number')
+    return kwargs
