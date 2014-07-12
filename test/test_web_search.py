@@ -2,9 +2,10 @@ import unittest
 import json
 
 from mock import Mock
-from rhythmweb import controller
+from rhythmweb import view, controller
+from rhythmweb.server import Server
 from rbhandle import InvalidQueryException
-from utils import Stub, cgi_application, environ, handle_request
+from utils import Stub, environ, handle_request
 
 from utils import Stub
 
@@ -15,7 +16,7 @@ class TestWebSearch(unittest.TestCase):
         controller.rb_handler['rb'] = self.rb
         self.entry = Stub()
         self.response = Mock()
-        self.app = cgi_application()
+        self.app = Server()
 
     def test_basic_do_get(self):
         self.rb.query.return_value = [self.entry]
@@ -76,7 +77,7 @@ class TestWebSearch(unittest.TestCase):
         expected = json.loads('{ "entries" : [ { "duration" : "duration" , "location" : "location" , "last_played" : "last_played" , "album" : "album" , "title" : "title" , "genre" : "genre" , "year" : "year" , "rating" : "rating" , "id" : "id" , "track_number" : "track_number" , "play_count" : "play_count" , "bitrate" : "bitrate" , "artist" : "artist"  } ] }')
         returned = json.loads(result)
         self.assertEquals(expected, returned)
-        self.rb.query.assert_called_with({'type': 'song', 'limit': '10', 'rating': 4, 'album': 'calabaza', 'title': 'oruga', 'first': '1', 'genre': 'classic', 'artist': 'uno'})
+        self.rb.query.assert_called_with({'album': 'calabaza', 'rating': '4', 'title': 'oruga', 'artist': 'uno', 'limit': '10', 'genre': 'classic', 'type': 'song', 'first': '1'})
 
     def test_post_invalid_type(self):
         self.rb.query.return_value = [self.entry]
@@ -96,6 +97,6 @@ class TestWebSearch(unittest.TestCase):
         result = handle_request(self.app, 
                 environ('/rest/search/song'), 
                 self.response)
-        self.response.assert_called_with('400 Bad request: Invalid query', 
+        self.response.assert_called_with('400 Bad Request: Invalid query', 
                 [('Content-type', 'text/html; charset=UTF-8')])
         self.rb.query.assert_called_with({'type': 'song'})
