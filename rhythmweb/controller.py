@@ -1,7 +1,7 @@
 
 from collections import defaultdict
 
-from rhythmweb.model import get_song
+from rhythmweb.model import get_song, get_playlist
 from rbhandle import RBHandler
 
 import logging
@@ -140,6 +140,12 @@ class Source(object):
         if not source:
             return False
         return self.rb.play_source(source)
+
+    def get_playlist(self, playlist_id):
+        return get_playlist(self.get_source(playlist_id))
+
+    def get_playlists(self):
+        return [get_playlist(source) for source in self.get_sources()]
 
 
 def as_list(value):

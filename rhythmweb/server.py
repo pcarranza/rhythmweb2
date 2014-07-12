@@ -82,6 +82,7 @@ class Response(object):
         return []
 
     def reply_with_method_not_allowed(self, method):
+        log.debug('Error while running method {}'.format(method), exc_info=True)
         self.function('405 method {} not allowed'.format(method), [
             ('Content-type', 'text/html; charset=UTF-8')])
         return []

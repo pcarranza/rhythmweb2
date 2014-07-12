@@ -1,6 +1,6 @@
 
 from rhythmweb.app import route
-from rhythmweb.controller import Player, Song, Queue, Query
+from rhythmweb.controller import Player, Song, Queue, Query, Source
 from rhythmweb.utils import to_int, to_float
 
 import logging
@@ -145,3 +145,31 @@ def library(*args):
     library[search_type] = value
     return library
     
+@route('/rest/playlists/<id?:int>')
+def playlists(playlist_id, **kwargs):
+    source = Source()
+    if kwargs: # POST
+        action = kwargs.get('action', None)
+        if not action:
+            raise ValueError('no "action" parameter')
+        if action not in ['enqueue', 'play_source']:
+            raise ValueError('Unknown action {}'.format(action))
+        playlist_id = kwargs['playlist'] if 'playlist' in kwargs else kwargs.get('source', None)
+        if playlist_id is None:
+            raise ValueError('no "source" parameter')
+        playlist_id = to_int(playlist_id, 'playlist id must be a number')
+        try:
+            if action == 'enqueue':
+                count = source.enqueue_by_id(playlist_id)
+                return {'result': 'BAD'} if count is None else {'count': count, 'result': 'OK'}
+            # elif action == 'play_source':
+            return {'result': 'OK'} if source.play_source(playlist_id) else {'result': 'BAD'}
+        except IndexError:
+            raise ValueError('there is no playlist with id {}'.format(playlist_id))
+    elif playlist_id is None: # GET
+        return {'playlists': source.get_playlists()}
+    else:
+        try:
+            return source.get_playlist(playlist_id)
+        except IndexError:
+            raise ValueError('there is no playlist with id {}'.format(playlist_id))
