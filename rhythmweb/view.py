@@ -13,6 +13,9 @@ MEDIA_TYPES = {'song' : 'song',
                 'podcast' : 'podcast-post',
                 'podcast-post' : 'podcast-post'}
 
+SEARCH_TYPES = {'artists' : 'artist', 
+                'genres' : 'genre', 
+                'albums' : 'album'}
 
 @route('/rest/status')
 def status():
@@ -52,8 +55,6 @@ def search(*args, **kwargs):
         
 
 def parse_search_args(args):
-    if not args:
-        return {}
     query = {}
     query_type = MEDIA_TYPES.get(args[0], None)
     if not query_type:
@@ -123,3 +124,24 @@ def parse_player_args(player_arguments):
         kwargs['volume'] = to_float(player_arguments['volume'],
             'volume must be number')
     return kwargs
+
+
+@route('/rest/library/<constraint?>/<value?>')
+def library(*args):
+    search_by, value = args
+    if not search_by or not value:
+        raise ValueError('no parameters')
+    if search_by not in SEARCH_TYPES:
+        raise ValueError('Invalid library filter "{}"'.format(search_by))
+    value = str(value).replace('+', ' ')
+    search_type = SEARCH_TYPES[search_by]
+    query = {
+            'type': 'song',
+            search_type: value,
+            'exact-match': True,
+            'limit': 0
+            }
+    library = Query().query(query)
+    library[search_type] = value
+    return library
+    
