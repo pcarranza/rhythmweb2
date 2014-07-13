@@ -2,7 +2,7 @@ import os
 from mock import Mock
 from io import BytesIO
 from collections import defaultdict
-from serve.app import CGIApplication
+
 
 class Stub(object):
 

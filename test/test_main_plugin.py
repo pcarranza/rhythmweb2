@@ -10,14 +10,11 @@ class TestPluginLoading(unittest.TestCase):
     def test_creating_the_plugin_works(self):
         rw = RhythmWeb()
         self.assertIsNotNone(rw)
-        self.assertEquals(path.abspath(path.join(
-            path.dirname(__file__), '..')), rw.base_path)
         self.assertIsNotNone(rw.config)
 
-    @patch('rhythmweb.CGIApplication')
     @patch('rhythmweb.CGIServer')
     @patch('rhythmweb.logging')
-    def test_activation_creates_cgi_app(self, logging, server_class, app_patch):
+    def test_activation_creates_cgi_app(self, logging, server_class):
         log = Mock()
         logging.getLogger.return_value = log
         rb = RhythmWeb()

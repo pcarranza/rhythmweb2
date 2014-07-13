@@ -6,7 +6,6 @@ from rhythmweb import view, controller
 from rhythmweb.server import Server
 
 from serve import CGIServer
-# from serve.app import CGIApplication
 
 import os
 import logging
