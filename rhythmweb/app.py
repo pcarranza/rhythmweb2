@@ -153,8 +153,8 @@ def ignore_file(path):
 
 
 def read_file(path):
-    with open(path, 'r') as f:
-        return f.read()
+    with open(path, 'rb') as f:
+        return f.readlines()
 
 
 def route(path):

@@ -17,7 +17,7 @@ class TestNewServer(unittest.TestCase):
         server.handle_request({}, Mock())
         content = app.get_file('/index.html', 'default')
         self.assertIsNotNone(content)
-        response.reply_with_file.assert_called_with(content)
+        response.reply_with_file.assert_called_with('/index.html',content)
 
     def test_file_not_found(self, response_class):
         server = Server()

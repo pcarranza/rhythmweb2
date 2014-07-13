@@ -2,10 +2,11 @@ from gi.repository import GObject, Peas
 from rbhandle import RBHandler
 
 from rhythmweb.conf import Configuration
-from rhythmweb import controller
+from rhythmweb import view, controller
+from rhythmweb.server import Server
 
 from serve import CGIServer
-from serve.app import CGIApplication
+# from serve.app import CGIApplication
 
 import os
 import logging
@@ -19,14 +20,10 @@ class RhythmWeb(GObject.Object, Peas.Activatable):
 
     def __init__(self):
         GObject.Object.__init__(self)
-        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
         config = Configuration()
         logging.basicConfig(filename=config.get_string('log.file'),
                             level=config.get_string('log.level'),
                             format=config.get_string('log.format'))
-
-        self.base_path = base_path
         self.config = config
         log.info('RhythmWeb plugin created')
 
@@ -36,7 +33,8 @@ class RhythmWeb(GObject.Object, Peas.Activatable):
         config.print_configuration()
         controller.set_shell(shell)
 
-        application = CGIApplication(self.base_path, config)
+        application = Server()
+        application.config = config
         server = CGIServer(application)
 
         server.start()

@@ -12,18 +12,33 @@ app.mount('./resources/touch', 'mobile', ignore='/resources/touch')
 
 match_mobile = re.compile(r'(Android|iPhone)')
 
+CONTENT_TYPES = {
+    '.css': 'text/css',
+    '.htm': 'text/html',
+    '.html': 'text/html',
+    '.gif': 'image/gif',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.ico': 'image/ico',
+    '.svg': 'image/svg+xml',
+    '.js': 'application/x-javascript',
+}
+
 class Server(object):
 
     def handle_request(self, environ, response):
         method = environ.get('REQUEST_METHOD', 'GET')
-        path = environ.get('PATH_INFO', '/index.html')
+        path = environ.get('PATH_INFO', '/')
+        if path == '/':
+            path = '/index.html'
         group = 'mobile' if match_mobile.match(environ.get('HTTP_USER_AGENT', '')) else 'default'
         response = Response(response)
         try:
             if method == 'GET':
                 content = app.get_file(path, group)
                 if content:
-                    return response.reply_with_file(content)
+                    return response.reply_with_file(path, content)
                 content = app.route(path)
                 if content is None:
                     return response.reply_with_not_found()
@@ -73,7 +88,9 @@ class Response(object):
             ('Content-type', 'text/html; charset=UTF-8')])
         return []
 
-    def reply_with_file(self, content):
+    def reply_with_file(self, path, content):
+        self.function('200 OK', [('Content-type', 
+            CONTENT_TYPES.get(path.split('.')[-1].lower(), 'text/plain'))])
         return content
 
     def reply_with_client_error(self, e):
@@ -86,6 +103,7 @@ class Response(object):
         self.function('405 method {} not allowed'.format(method), [
             ('Content-type', 'text/html; charset=UTF-8')])
         return []
+
 
 
 class ServerError(Exception):
