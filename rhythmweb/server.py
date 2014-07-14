@@ -15,7 +15,7 @@ touch_resource = os.path.join(base_path, 'resources/touch')
 app.mount(default_resource, 'default', ignore=default_resource)
 app.mount(touch_resource, 'mobile', ignore=touch_resource)
 
-match_mobile = re.compile(r'(Android|iPhone)')
+match_mobile = re.compile(r'.*?(Android|iPhone).*?')
 
 CONTENT_TYPES = {
     'css': 'text/css',
@@ -37,9 +37,10 @@ class Server(object):
         path = environ.get('PATH_INFO', '/')
         if path == '/':
             path = '/index.html'
-        group = 'mobile' if match_mobile.match(environ.get('HTTP_USER_AGENT', '')) else 'default'
+        agent = environ.get('HTTP_USER_AGENT', '')
+        group = 'mobile' if match_mobile.match(agent) else 'default'
         response = Response(response)
-        log.debug('Handling request {} {}'.format(method, path))
+        log.debug('Handling request {} {} for agent {} ({})'.format(method, path, agent, group))
         try:
             if method == 'GET':
                 content = app.get_file(path, group)
