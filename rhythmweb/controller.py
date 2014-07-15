@@ -127,7 +127,10 @@ class Source(object):
 
     def get_source(self, source_id):
         sources = self.rb.get_playlists()
-        return sources[source_id] if sources else None
+        source = sources[source_id] if sources else None
+        if source:
+            self.rb.load_source_entries(source)
+        return source
 
     def enqueue_by_id(self, source_id):
         playlist = self.get_source(source_id) 

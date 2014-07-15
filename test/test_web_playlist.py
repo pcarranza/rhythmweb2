@@ -16,23 +16,25 @@ class TestWebPlaylist(unittest.TestCase):
         self.app = Server()
 
     def test_basic_do_get_list_returns_one_element(self):
+        self.playlist = Stub(entries=[Stub()])
         self.rb.get_playlists.return_value = [self.playlist]
         result = handle_request(self.app, environ('/rest/playlists'), self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
-        expected = json.loads('{ "playlists" : [ { "id" : "id" , "name" : "name" , "type" : "source_type" , "is_group" : "is_group" , "is_playing" : "is_playing" , "visibility" : "visibility"  } ] }')
+        expected = json.loads('{"playlists": [{"entries": [{"title": "title", "album": "album", "last_played": "last_played", "duration": "duration", "artist": "artist", "play_count": "play_count", "rating": "rating", "location": "location", "bitrate": "bitrate", "track_number": "track_number", "id": "id", "genre": "genre", "year": "year"}], "is_playing": "is_playing", "is_group": "is_group", "type": "source_type", "id": "id", "name": "name", "visibility": "visibility"}]}')
         returned = json.loads(result)
         self.assertEquals(expected, returned)
         self.rb.get_playlists.assert_called_with()
 
     def test_basic_do_get_with_playlist_returns_right_element(self):
+        self.playlist = Stub(entries=[Stub()])
         self.rb.get_playlists.return_value = [self.playlist]
         result = handle_request(self.app, environ('/rest/playlists/0'), self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
-        expected = json.loads('{ "id" : "id" , "name" : "name" , "type" : "source_type" , "is_group" : "is_group" , "is_playing" : "is_playing" , "visibility" : "visibility"  }')
+        expected = json.loads('{ "id" : "id" , "name" : "name" , "type" : "source_type" , "is_group" : "is_group" , "is_playing" : "is_playing" , "visibility" : "visibility" , "entries" : [{"last_played": "last_played", "title": "title", "genre": "genre", "album": "album", "bitrate": "bitrate", "track_number": "track_number", "id": "id", "duration": "duration", "year": "year", "play_count": "play_count", "location": "location", "artist": "artist", "rating": "rating"}]}')
         returned = json.loads(result)
         self.assertEquals(expected, returned)
         self.rb.get_playlists.assert_called_with()
@@ -45,6 +47,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.rb.get_playlists.assert_called_with()
 
     def test_basic_do_get_with_wrong_playlist_id_returns_client_error(self):
+        self.playlist = Stub(entries=[Stub()])
         self.rb.get_playlists.return_value = [self.playlist]
         result = handle_request(self.app, environ('/rest/playlists/1'), self.response)
         self.response.assert_called_with('400 Bad Request: there is no playlist with id 1',

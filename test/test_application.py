@@ -61,7 +61,7 @@ class TestServer(unittest.TestCase):
             server.stop()
 
     def test_full_server_stack_post_handling(self):
-        self.rb.load_entry.return_value = Stub(2)
+        self.rb.load_entry.return_value = Stub(id=2)
         server = CGIServer(self.app)
         try:
             server.start()

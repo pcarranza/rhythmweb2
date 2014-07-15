@@ -17,7 +17,7 @@ def get_song(entry):
     song['location'] = entry.location
     return song
 
-def get_playlist(playlist, entries=None):
+def get_playlist(playlist):
     if not playlist:
         return None
     plst = {}
@@ -27,6 +27,8 @@ def get_playlist(playlist, entries=None):
     plst['is_group'] = playlist.is_group
     plst['is_playing'] = playlist.is_playing
     plst['type'] = playlist.source_type
-    if entries:
-        plst['entries'] = entries
+    if playlist.entries:
+        plst['entries'] = [get_song(entry) for entry in playlist.entries]
+    else:
+        plst['entries'] = []
     return plst

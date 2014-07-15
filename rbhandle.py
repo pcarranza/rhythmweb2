@@ -421,13 +421,14 @@ class RBHandler(object):
             index += 1
         return None
 
-    def get_source_entries(self, source, limit=100):
+    def load_source_entries(self, source, limit=100):
+        if source is None:
+            return
         entries = []
-        if not source is None:
-            self.loop_query_model(func=entries.append,
-                                   query_model=source.query_model,
-                                   limit=limit)
-        return entries
+        self.loop_query_model(func=entries.append,
+                                query_model=source.query_model,
+                                limit=limit)
+        source.entries = entries
 
     def get_playlists(self):
         """Returns all registered playlists"""
@@ -573,10 +574,10 @@ class RBSource(object):
         self.index = index
         self.source_type = source_type
         self.is_playing = False # entry[RB_SOURCELIST_MODEL_COLUMN_PLAYING] (Check agains shell.get_playing_source)
-        self.pixbuf = entry.props.pixbuf # entry[RB_SOURCELIST_MODEL_COLUMN_PIXBUF]
         self.name = entry.props.name # entry[RB_SOURCELIST_MODEL_COLUMN_NAME]
         self.source = entry
         self.query_model = entry.props.query_model
+        self.entries = None
         self.attributes = None # entry[RB_SOURCELIST_MODEL_COLUMN_ATTRIBUTES]
         self.visibility = None # entry[RB_SOURCELIST_MODEL_COLUMN_VISIBILITY]
         self.is_group = False # entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]

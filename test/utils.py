@@ -6,16 +6,16 @@ from collections import defaultdict
 
 class Stub(object):
 
-    def __init__(self, key=None):
-        self.key = key
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
 
     def __getattr__(self, name):
-        if name == 'id' and self.key:
-            return self.key
+        if name in self.kwargs:
+            return self.kwargs[name]
         return name
 
     def __str__(self):
-        return 'Stub key: "{}"'.format(self.key)
+        return 'Stub: "{}"'.format(self.kwargs)
 
 
 class EntryStub(object):

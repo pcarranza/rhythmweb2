@@ -21,7 +21,7 @@ class TestWebSong(unittest.TestCase):
                 [('Content-type', 'text/html; charset=UTF-8')])
 
     def test_get_song_success(self):
-        self.rb.load_entry.return_value = Stub(1)
+        self.rb.load_entry.return_value = Stub(id=1)
         result = handle_request(self.app, environ('/rest/song/1'), self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
@@ -37,7 +37,7 @@ class TestWebSong(unittest.TestCase):
                 [('Content-type', 'text/html; charset=UTF-8')])
 
     def test_rate_song_success(self):
-        self.rb.load_entry.return_value = Stub(2)
+        self.rb.load_entry.return_value = Stub(id=2)
         result = handle_request(self.app, environ('/rest/song/2', post_data='rating=5'), self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),

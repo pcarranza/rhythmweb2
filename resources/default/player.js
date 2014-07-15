@@ -1,21 +1,3 @@
-/*
-# Rhythmweb - Rhythmbox web REST + Ajax environment for remote control
-# Copyright (C) 2010  Pablo Carranza
-# 
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# 
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 var timers = [];
 var clear_status = null;
 var volume = null;
@@ -83,15 +65,15 @@ $(document).ready(function() {
 //		$('#tags').removeClass('hide');
 //	});
 //	
-//	$('#tab_sources').click(function() {
-//		clear_tabs();
-//		hide_all()
-//		$(this).addClass('selected');
-//		
-//		load_sources();
-//		
-//		$('#sources').removeClass('hide');
-//	});
+	$('#tab_sources').click(function() {
+		clear_tabs();
+		hide_all()
+		$(this).addClass('selected');
+		
+		load_sources();
+		
+		$('#sources').removeClass('hide');
+	});
 
 	
 	$('#tab_search').click(function () {
@@ -542,7 +524,7 @@ function clear_tabs() {
 	$('#tab_queue').removeClass('selected');
 	$('#tab_search').removeClass('selected');
 //	$('#tab_tags').removeClass('selected');
-//	$('#tab_sources').removeClass('selected');
+	$('#tab_sources').removeClass('selected');
 }
 
 
@@ -550,7 +532,7 @@ function hide_all() {
 	$('#queue').addClass('hide');
 	$('#search').addClass('hide');
 //	$('#tags').addClass('hide');
-//	$('#sources').addClass('hide');
+	$('#sources').addClass('hide');
 }
 
 function load_tag_cloud() {

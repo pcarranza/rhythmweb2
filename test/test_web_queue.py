@@ -15,7 +15,7 @@ class TestWebQueue(unittest.TestCase):
         self.app = Server()
 
     def test_basic_do_get(self):
-        self.rb.get_play_queue.return_value = [Stub(1), Stub(2), Stub(3)]
+        self.rb.get_play_queue.return_value = [Stub(id=1), Stub(id=2), Stub(id=3)]
         result = handle_request(self.app, environ('/rest/queue'), self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),

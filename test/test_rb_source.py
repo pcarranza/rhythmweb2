@@ -22,7 +22,8 @@ class TestRBSource(unittest.TestCase):
         rb = RBHandler(self.shell)
         source = Mock()
         source.query_model =  ModelStub(EntryStub(1), EntryStub(2), EntryStub(3))
-        entries = rb.get_source_entries(source)
+        rb.load_source_entries(source)
+        entries = source.entries
         entries = [entry.id for entry in entries]
         self.assertListEqual(entries, [1, 2, 3])
 

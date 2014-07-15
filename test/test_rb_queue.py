@@ -28,7 +28,7 @@ class TestRBHandleQueue(unittest.TestCase):
 
     def test_enqueue_rb_entry_ok(self):
         rb = RBHandler(self.shell)
-        rb.enqueue(Stub(1))
+        rb.enqueue(Stub(id=1))
         self.shell.props.queue_source.add_entry.assert_has_calls([
             call(1, -1)])
 
