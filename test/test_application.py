@@ -19,7 +19,10 @@ class TestServer(unittest.TestCase):
         self.entry = Stub()
         self.response = Mock()
         self.app = Server()
-        self.app.config = Configuration()
+        conf = Configuration()
+        conf.parser.set('server', 'port', '7002')
+        conf.parser.set('server', 'proxy.port', '7003')
+        self.app.config = conf
 
     def test_build_server(self):
         server = CGIServer(self.app)
@@ -29,7 +32,7 @@ class TestServer(unittest.TestCase):
         server = CGIServer(self.app)
         try:
             server.start()
-            response = urlopen('http://localhost:7000')
+            response = urlopen('http://localhost:7002')
             self.assertEquals(response.code, 200)
             html = response.read().decode('UTF-8')
             self.assertTrue('html' in html)
@@ -41,7 +44,7 @@ class TestServer(unittest.TestCase):
         server = CGIServer(self.app)
         try:
             server.start()
-            urlopen('http://localhost:7000/rest/song/1')
+            urlopen('http://localhost:7002/rest/song/1')
             self.assertTrue(False)
         except HTTPError as e:
             self.assertEquals(e.code, 404)
@@ -53,7 +56,7 @@ class TestServer(unittest.TestCase):
         server = CGIServer(self.app)
         try:
             server.start()
-            urlopen('http://localhost:7000/rest/song/1')
+            urlopen('http://localhost:7002/rest/song/1')
             self.assertTrue(False)
         except HTTPError as e:
             self.assertEquals(e.code, 500)
@@ -65,7 +68,7 @@ class TestServer(unittest.TestCase):
         server = CGIServer(self.app)
         try:
             server.start()
-            response = urlopen('http://localhost:7000/rest/song/2', data=bytes('rating=5', 'UTF-8'))
+            response = urlopen('http://localhost:7002/rest/song/2', data=bytes('rating=5', 'UTF-8'))
             self.assertEquals(response.code, 200)
         finally:
             server.stop()

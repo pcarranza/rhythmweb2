@@ -27,6 +27,7 @@ Basically this is what is in my head regarding this project:
 * ~~Simplify route handling, stop loading code dinamically, register routes with decorators and move current pages to a controller scheme~~
 * ~~Recover playlist handling~~
 * ~~Maintain compatibility with the front end.~~
+* ~~Fix radio sources playing from the page~~
 * Refactor all the backend code for simplification (focusing on decoupling and single responsibility)
 * Refactor the web serving layer, one port only, interprocess communication using pipes or maybe a socket file, whatever is simpler.
 * Simplify configuration to "no configuration at all"

@@ -75,6 +75,7 @@ class RBHandler(object):
         for entry_type in [TYPE_SONG, TYPE_RADIO, TYPE_PODCAST]:
             rb_type = self.db.entry_type_get_by_name(entry_type)
             self.media_types[entry_type] = rb_type
+        self.media_types['radio'] = self.media_types[TYPE_RADIO]
         log.debug('rbhandler loaded')
 
     def get_playing_status(self):
@@ -154,9 +155,7 @@ class RBHandler(object):
             return
         if self.get_playing_status():
             self.play_pause()
-        playing_source = self.player.get_playing_source()
-        if not self.player.get_playing_source():
-            playing_source = self.player.props.queue_source
+        playing_source = self.shell.get_source_by_entry_type(entry.get_entry_type())
         self.player.play_entry(entry, playing_source)
 
     def get_play_order(self):
