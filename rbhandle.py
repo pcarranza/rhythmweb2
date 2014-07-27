@@ -71,11 +71,11 @@ class RBHandler(object):
             ORDER_SHUFFLE_BY_RATING : ORDER_LINEAR,
             ORDER_SHUFFLE_BY_AGE_AND_RATING : ORDER_LINEAR}
 
-        self.media_types = {}
+        self.entry_types = {}
         for entry_type in [TYPE_SONG, TYPE_RADIO, TYPE_PODCAST]:
             rb_type = self.db.entry_type_get_by_name(entry_type)
-            self.media_types[entry_type] = rb_type
-        self.media_types['radio'] = self.media_types[TYPE_RADIO]
+            self.entry_types[entry_type] = rb_type
+        self.entry_types['radio'] = self.entry_types[TYPE_RADIO]
         log.debug('rbhandler loaded')
 
     def get_playing_status(self):
@@ -155,7 +155,10 @@ class RBHandler(object):
             return
         if self.get_playing_status():
             self.play_pause()
-        playing_source = self.shell.get_source_by_entry_type(entry.get_entry_type())
+        playing_source = self.player.props.queue_source
+        if entry.get_entry_type() == self.entry_types['radio']:
+            playing_source = self.shell.get_source_by_entry_type(self.entry_types['radio'])
+        self.player.set_playing_source(playing_source)
         self.player.play_entry(entry, playing_source)
 
     def get_play_order(self):
@@ -338,7 +341,7 @@ class RBHandler(object):
             log.info('No filters, returning empty result')
             return []
 
-        media_type = self.media_types[TYPE_SONG]
+        media_type = self.entry_types[TYPE_SONG]
         rating, play_count, first, limit = 0, 0, 0, 0
         query = Query()
 
@@ -366,7 +369,7 @@ class RBHandler(object):
                     raise InvalidQueryException('Parameter limit must be a number, it actually is \"%s\"' % limit)
 
             if 'type' in filters:
-                media_type = self.media_types.get(filters['type'], None)
+                media_type = self.entry_types.get(filters['type'], None)
                 if not media_type:
                     raise InvalidQueryException('Unknown type {}'.format(filters['type']))
 
@@ -405,7 +408,7 @@ class RBHandler(object):
         log.info('Set source playing')
         if self.get_playing_status():
             self.play_pause()
-        self.shell.props.shell_player.set_playing_source(source.source)
+        self.player.set_playing_source(source.source)
         return self.play_pause()
 
     def get_source(self, source_index):

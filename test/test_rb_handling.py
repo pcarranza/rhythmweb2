@@ -116,13 +116,12 @@ class RBTest(unittest.TestCase):
     def test_play_entry_with_valid_id_works(self):
         entry = Mock()
         source = Mock()
-        self.shell.get_source_by_entry_type.return_value = source
+        self.player.props.queue_source = source
         self.player.get_playing.return_value = (None, True)
         self.db.entry_lookup_by_id.return_value = entry
         rbplayer = RBHandler(self.shell)
         rbplayer.play_entry(1)
         self.player.play_entry.assert_called_with(entry, source)
-        self.shell.get_source_by_entry_type.assert_called_with(entry.get_entry_type())
 
     def test_toggle_shuffle(self):
         rbplayer = RBHandler(self.shell)
