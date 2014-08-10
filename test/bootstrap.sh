@@ -30,7 +30,7 @@ class GObject(object):
         def do_the_work():
             values = select.select([socket], [], [])
             if values:
-                function.__self__._internal_server.handle_request()
+                function.__self__.cgi_server.handle_request()
 
         t = threading.Thread(target=do_the_work)
         t.start()

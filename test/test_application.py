@@ -1,8 +1,7 @@
 import os
 import unittest
 
-from mock import Mock
-from serve import CGIServer
+from mock import Mock, patch
 from urllib.request import urlopen, HTTPError
 
 from rhythmweb.conf import Configuration
@@ -18,18 +17,17 @@ class TestServer(unittest.TestCase):
         controller.rb_handler['rb'] = self.rb
         self.entry = Stub()
         self.response = Mock()
-        self.app = Server()
         conf = Configuration()
-        conf.parser.set('server', 'port', '7002')
-        conf.parser.set('server', 'proxy.port', '7003')
-        self.app.config = conf
+        conf.parser.set('server', 'port', '7003')
+        self.conf_patch = patch('rhythmweb.server.Configuration')
+        conf_mock = self.conf_patch.start()
+        conf_mock.return_value = conf
 
-    def test_build_server(self):
-        server = CGIServer(self.app)
-        self.assertIsNotNone(server)
+    def tearDown(self):
+        self.conf_patch.stop()
 
     def test_full_server_stack(self):
-        server = CGIServer(self.app)
+        server = Server()
         try:
             server.start()
             response = urlopen('http://localhost:7003')
@@ -41,7 +39,7 @@ class TestServer(unittest.TestCase):
 
     def test_full_server_stack_not_found_handling(self):
         self.rb.get_entry.return_value = None
-        server = CGIServer(self.app)
+        server = Server()
         try:
             server.start()
             urlopen('http://localhost:7003/rest/song/1')
@@ -53,7 +51,7 @@ class TestServer(unittest.TestCase):
 
     def test_full_server_stack_error_handling(self):
         self.rb.get_entry.side_effect = RuntimeError('just because')
-        server = CGIServer(self.app)
+        server = Server()
         try:
             server.start()
             urlopen('http://localhost:7003/rest/song/1')
@@ -65,7 +63,7 @@ class TestServer(unittest.TestCase):
 
     def test_full_server_stack_post_handling(self):
         self.rb.load_entry.return_value = Stub(id=2)
-        server = CGIServer(self.app)
+        server = Server()
         try:
             server.start()
             response = urlopen('http://localhost:7003/rest/song/2', data=bytes('rating=5', 'UTF-8'))

@@ -3,7 +3,12 @@ import re
 import cgi
 import json
 
+from gi.repository import GObject
+from wsgiref.simple_server import WSGIRequestHandler
+from wsgiref.simple_server import make_server
+
 from rhythmweb.app import app
+from rhythmweb.conf import Configuration
 
 import logging
 log = logging.getLogger(__name__)
@@ -31,6 +36,45 @@ CONTENT_TYPES = {
 }
 
 class Server(object):
+
+    def __init__(self):
+        self.config = Configuration()
+        self.cgi_server = None
+        self.is_running = False
+        self._watch_id = None
+
+    def start(self):
+        log.info('   STARTING SERVER')
+        hostname = self.config.get_string('hostname')
+        port = self.config.get_int('port')
+        self.cgi_server = make_server(
+            hostname,
+            port,
+            self.handle_request,
+            handler_class=WSGIRequestHandler)
+        self._watch_id = GObject.io_add_watch(
+            self.cgi_server.socket,
+            GObject.IO_IN,
+            self.io_watch_handle_request)
+        self.is_running = True
+        log.info('   CGI SERVER STARTED')
+
+    def stop(self):
+        if self.cgi_server:
+            log.info('   STOPPING CGI SERVER')
+            GObject.source_remove(self._watch_id)
+            self.cgi_server.server_close()
+        self.cgi_server = None
+        self.is_running = False
+        log.info('   SERVER STOPPED')
+
+    def io_watch_handle_request(self, source, cb_condition):
+        log.debug('Handling request')
+        if not self.is_running:
+            log.fatal('NOT RUNNING')
+            return False
+        self.cgi_server.handle_request()
+        return True
 
     def handle_request(self, environ, response):
         method = environ.get('REQUEST_METHOD', 'GET')

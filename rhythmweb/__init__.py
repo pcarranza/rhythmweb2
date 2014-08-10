@@ -1,11 +1,8 @@
 from gi.repository import GObject, Peas
 from rbhandle import RBHandler
 
-from rhythmweb.conf import Configuration
 from rhythmweb import view, controller
 from rhythmweb.server import Server
-
-from serve import CGIServer
 
 import os
 import logging
@@ -20,18 +17,12 @@ class RhythmWeb(GObject.Object, Peas.Activatable):
 
     def __init__(self):
         GObject.Object.__init__(self)
-        config = Configuration()
-        config.configure_logger()
-        self.config = config
         log.info('RhythmWeb plugin created')
 
     def do_activate(self):
         shell = self.object
         controller.set_shell(shell)
-        application = Server()
-        application.config = self.config
-        server = CGIServer(application)
-
+        server = Server()
         server.start()
         shell.server = server
         log.info('RhythmWeb server started')
