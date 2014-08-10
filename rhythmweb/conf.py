@@ -2,8 +2,7 @@ from os import path
 from configparser import SafeConfigParser
 
 import logging
-
-log = logging.getLogger(__name__)
+import logging.handlers
 
 class Configuration(object):
 
@@ -17,7 +16,7 @@ class Configuration(object):
             'proxy.hostname' : '0.0.0.0',
             'proxy.port' : '7000',
             'log.file' : '/tmp/rb-serve.log',
-            'log.level' : 'DEBUG',
+            'log.level' : 'INFO',
             'log.format' : '%(levelname)s	%(asctime)s	%(name)s: %(message)s',
             'debug' : 'False',
             })
@@ -33,9 +32,21 @@ class Configuration(object):
     def get_boolean(self, key):
         return self.parser.getboolean('server', key)
 
-    def print_configuration(self):
-        log.info('Showing app configuration:')
-        for section_name in self.parser.sections():
-            log.info('Section: %s' % section_name)
-            for key in self.parser.options(section_name):
-                log.info('  %s = %s' % (key, self.parser.get(section_name, key, raw=True)))
+    def configure_logger(self):
+        root = logging.getLogger()
+        root.setLevel(self.get_string('log.level'))
+        handler = logging.handlers.RotatingFileHandler(
+                self.get_string('log.file'),
+                backupCount=5, 
+                maxBytes=1024*1024)
+        handler.setFormatter(logging.Formatter(fmt=self.get_string('log.format')))
+        root.addHandler(handler)
+
+        if root.isEnabledFor(logging.DEBUG):
+            root.debug('Logger configured')
+            root.debug('Showing app configuration:')
+            for section_name in self.parser.sections():
+                root.debug('Section: %s' % section_name)
+                for key in self.parser.options(section_name):
+                    root.debug('  %s = %s' % (key, self.parser.get(section_name, key, raw=True)))
+

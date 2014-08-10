@@ -9,6 +9,7 @@ from serve import CGIServer
 
 import os
 import logging
+
 log = logging.getLogger(__name__)
 
 
@@ -20,20 +21,15 @@ class RhythmWeb(GObject.Object, Peas.Activatable):
     def __init__(self):
         GObject.Object.__init__(self)
         config = Configuration()
-        logging.basicConfig(filename=config.get_string('log.file'),
-                            level=config.get_string('log.level'),
-                            format=config.get_string('log.format'))
+        config.configure_logger()
         self.config = config
         log.info('RhythmWeb plugin created')
 
     def do_activate(self):
         shell = self.object
-        config = self.config
-        config.print_configuration()
         controller.set_shell(shell)
-
         application = Server()
-        application.config = config
+        application.config = self.config
         server = CGIServer(application)
 
         server.start()

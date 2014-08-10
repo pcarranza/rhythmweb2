@@ -30,13 +30,16 @@ def song(song_id, **kwargs):
     if song:
         rating = to_int(kwargs.get('rating', None), 'rating must be a number')
         if not rating is None:
+            log.info('Setting rating for song %d=%d', song_id, rating)
             handler.set_rating(song, rating)
+    log.debug('Returning song %s', song)
     return song
 
 
 @route('/rest/queue')
 def queue():
     handler = Queue()
+    log.debug('Returning queue')
     return handler.get_queue()
 
 
@@ -47,7 +50,7 @@ def search(*args, **kwargs):
         if kwargs:
             query.update(kwargs)
         validate_query(query)
-        log.debug('Running query {}'.format(query))
+        log.info('Running query {}'.format(query))
         return Query().query(query)
     except:
         log.error('Error while running query', exc_info=True)
@@ -58,7 +61,7 @@ def parse_search_args(args):
     query = {}
     query_type = MEDIA_TYPES.get(args[0], None)
     if not query_type:
-        log.debug('No media type for "%s"' % args[0])
+        log.warn('No media type for "%s"' % args[0])
         values = args
     else:
         log.debug('Searching for media type "%s"' % args[0])
@@ -95,10 +98,12 @@ def play(**kwargs):
     if action in ('play_pause', 'next', 'previous', 'seek', 'play_entry',
                     'mute', 'set_volume'):
         method = getattr(player, action)
+        log.info('Running player action {} with args {}'.format(action, kwargs))
         method(**parse_player_args(kwargs))
     elif action in ('enqueue', 'dequeue', 'shuffle_queue', 'clear_queue'):
         queue = Queue()
         method = getattr(queue, action)
+        log.info('Running queue action {} with args {}'.format(action, kwargs))
         method(**parse_player_args(kwargs))
     else:
         raise ValueError('action "{}" is not supported'.format(action))
@@ -141,6 +146,7 @@ def library(*args):
             'exact-match': True,
             'limit': 0
             }
+    log.info('Running query {}'.format(query))
     library = Query().query(query)
     library[search_type] = value
     return library
@@ -161,8 +167,10 @@ def playlists(playlist_id, **kwargs):
         try:
             if action == 'enqueue':
                 count = source.enqueue_by_id(playlist_id)
+                log.info('Enqueued source {}, {} entries'.format(playlist_id, count))
                 return {'result': 'BAD'} if count is None else {'count': count, 'result': 'OK'}
             # elif action == 'play_source':
+            log.info('Playing source {}'.format(playlist_id))
             return {'result': 'OK'} if source.play_source(playlist_id) else {'result': 'BAD'}
         except IndexError:
             raise ValueError('there is no playlist with id {}'.format(playlist_id))
