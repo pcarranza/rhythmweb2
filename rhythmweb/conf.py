@@ -10,11 +10,8 @@ class Configuration(object):
         self.parser = SafeConfigParser(defaults={
             'theme' : 'default',
             'theme.mobile' : 'touch',
-            'hostname' : '127.0.0.1',
-            'port' : '7001',
-            'proxy' : 'True',
-            'proxy.hostname' : '0.0.0.0',
-            'proxy.port' : '7000',
+            'hostname' : '0.0.0.0',
+            'port' : '7000',
             'log.file' : '/tmp/rb-serve.log',
             'log.level' : 'INFO',
             'log.format' : '%(levelname)s	%(asctime)s	%(name)s: %(message)s',
