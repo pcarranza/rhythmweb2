@@ -215,7 +215,9 @@ class RBHandler(object):
 
     def clear_play_queue(self):
         """Cleans the playing queue"""
+        log.debug("Cleaning playing queue")
         self.loop_query_model(func=self.dequeue, query_model=self.get_play_queue_model())
+        log.debug("Playing queue cleared")
 
     def shuffle_queue(self):
         entries = self.get_play_queue()
@@ -246,6 +248,7 @@ class RBHandler(object):
 
     def dequeue(self, entry_ids):
         """Removes the given entry id or ids from the playing queue"""
+        log.debug("Dequeuing {}".format(entry_ids))
         if type(entry_ids) is list:
             for entry_id in entry_ids:
                 entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
@@ -254,6 +257,10 @@ class RBHandler(object):
                 self.shell.props.queue_source.remove_entry(entry)
         elif type(entry_ids) is int:
             entry = self.shell.props.db.entry_lookup_by_id(int(entry_ids))
+            if not entry is None:
+                self.shell.props.queue_source.remove_entry(entry)
+        elif type(entry_ids) is RBEntry:
+            entry = self.shell.props.db.entry_lookup_by_id(entry_ids.id)
             if not entry is None:
                 self.shell.props.queue_source.remove_entry(entry)
         self.shell.props.queue_source.queue_draw()
@@ -294,11 +301,9 @@ class RBHandler(object):
                 log.debug('Skipping row {}'.format(index))
                 index += 1
                 continue
-            log.debug('Reading Row {}...'.format(index))
             entry = self.get_entry_from_row(row)
             rb_entry = self.load_entry(entry)
-
-            func(rb_entry)
+            log.debug("Calling {} on {}: {}".format(func, entry, func(rb_entry)))
             count += 1
             index += 1
             if limit != 0 and index >= limit:
