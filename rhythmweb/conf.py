@@ -19,6 +19,7 @@ class Configuration(object):
             })
         self.parser.add_section('server')
         self.parser.read(path.expanduser('~/.rhythmweb'))
+        self.configure_logger()
 
     def get_string(self, key):
         return self.parser.get('server', key, raw=True)
@@ -46,4 +47,3 @@ class Configuration(object):
                 root.debug('Section: %s' % section_name)
                 for key in self.parser.options(section_name):
                     root.debug('  %s = %s' % (key, self.parser.get(section_name, key, raw=True)))
-
