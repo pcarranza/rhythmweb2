@@ -31,10 +31,11 @@ Basically this is what is in my head regarding this project:
 * ~~Refactor the web serving layer, one port only, interprocess communication using pipes or maybe a socket file, whatever is simpler.~~
 * ~~Simplify configuration to "no configuration at all"~~
 * ~~Recover ability to play radio~~ search by type radio and play :smile:
-* ~~Refactor all the backend code for simplification (focusing on decoupling and single responsibility)~~
+* ~~Recover source selection and handling (I miss using radio)~~
+* ~~Refactor all the backend code for simplification (focusing on decoupling and single responsibility) -> Controllers~~
+* Refactor all the backend code for simplification -> rbhandler
 * Fix some usability issues in the mobile skin
 * Recover the artits/genre cloud
-* Recover source selection and handling (I miss using radio)
 
 ### Some notes on the instalation process:
 
