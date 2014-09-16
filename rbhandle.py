@@ -207,11 +207,8 @@ class RBHandler(object):
     # QUEUE
     def get_play_queue(self, queue_limit=100):
         log.debug('get play queue, limit: {}'.format(queue_limit))
-        entries = []
-        self.loop_query_model(func=entries.append,
-                query_model=self.get_play_queue_model(),
-                limit=queue_limit)
-        return entries
+        return [entry for entry in self.loop_query_model(
+            query_model=self.get_play_queue_model(), limit=queue_limit)]
 
     def get_play_queue_model(self):
         log.debug('get play queue model')
@@ -219,8 +216,8 @@ class RBHandler(object):
 
     def clear_play_queue(self):
         log.debug("Cleaning playing queue")
-        self.loop_query_model(func=self.dequeue, 
-                query_model=self.get_play_queue_model())
+        for entry in self.loop_query_model(query_model=self.get_play_queue_model()):
+            self.dequeue(entry)
         log.debug("Playing queue cleared")
 
     def shuffle_queue(self):
@@ -270,34 +267,22 @@ class RBHandler(object):
         if not entry is None:
             self.db.entry_set(entry, RB.RhythmDBPropType.RATING, rating)
 
-    def loop_query_model(self, func, query_model, first=0, limit=0):
-        """Loops a query model object and invokes the given function for every row, can also receive a first and a limit to 'page'"""
-        if func is None:
-            raise ValueError('Function to call cannot be None')
+    def loop_query_model(self, query_model, first=0, limit=0):
         if query_model is None:
             raise ValueError('Query Model cannot be None')
-        if first != 0:
+        if first:
             limit = limit + first
         index, count = 0, 0
         for row in query_model:
             if index < first:
-                log.debug('Skipping row {}'.format(index))
                 index += 1
                 continue
-            entry = self.get_entry_from_row(row)
-            rb_entry = self.load_entry(entry)
-            log.debug("Calling {} on {}: {}".format(func, entry, func(rb_entry)))
+            yield self.load_entry(row[0])
             count += 1
             index += 1
-            if limit != 0 and index >= limit:
+            if limit and index >= limit:
                 break
         return count
-
-    def get_entry_from_row(self, row):
-        """Returns the entry id for a given row from a query model"""
-        if row is None:
-            raise ValueError('Row from query model cannot be None')
-        return row[0]
 
     # Query
     def search_song(self, query):
@@ -386,8 +371,7 @@ class RBHandler(object):
 
         query_model = query.execute(self.db)
         log.debug('RBHandler.query executed, loading results...')
-        entries = []
-        self.loop_query_model(func=entries.append, query_model=query_model, first=first, limit=limit)
+        entries = [entry for entry in self.loop_query_model(query_model, first, limit)]
         log.debug('RBHandler.query executed, returning results...')
         return entries
 
@@ -414,11 +398,7 @@ class RBHandler(object):
     def load_source_entries(self, source, limit=100):
         if source is None:
             return
-        entries = []
-        self.loop_query_model(func=entries.append,
-                                query_model=source.query_model,
-                                limit=limit)
-        source.entries = entries
+        source.entries = [entry for entry in self.loop_query_model(query_model=source.query_model, limit=limit)]
 
     def get_playlists(self):
         """Returns all registered playlists"""
@@ -438,9 +418,8 @@ class RBHandler(object):
             return 0
         # playlist.add_to_queue(self.queue_source)
         # This way we will know how many songs are added
-        return self.loop_query_model(
-                   func=self.enqueue,
-                   query_model=source.query_model)
+        for entry in self.loop_query_model(query_model=source.query_model):
+            self.enqueue(entry)
 
 
 class Query(object):
