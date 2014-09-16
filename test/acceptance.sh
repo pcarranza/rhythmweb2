@@ -190,3 +190,12 @@ Test 12 - Rate a song
 curl -d rating=1 http://$host:$port/rest/song/2
 
 EOF
+
+echo "------------------------------------------"
+
+cat <<EOF
+Test 13 - Shuffle queue
+
+curl -d action=shuffle_queue http://$host:$port/rest/player
+
+EOF

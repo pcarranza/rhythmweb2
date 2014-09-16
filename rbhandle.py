@@ -3,6 +3,7 @@ import logging
 log = logging.getLogger(__name__)
 
 from gi.repository import RB, GLib
+from rhythmweb.utils import to_list
 
 ORDER_LINEAR = 'linear'
 ORDER_SHUFFLE = 'shuffle'
@@ -44,13 +45,14 @@ class RBHandler(object):
         by parameter
         """
         if not shell:
-            raise Exception('Shell object cannot be null')
+            raise ValueError('Shell object cannot be null')
 
-        log.debug('Setting shell object')
+        log.debug('Loading rb handler')
 
         self.shell = shell
         self.player = shell.props.shell_player
         self.db = shell.props.db
+        self.queue_source = self.shell.props.queue_source
 
         LINEAR_LOOP = "%s%s" % (ORDER_LINEAR, PLAY_LOOP)
         SHUFFLE_LOOP = "%s%s" % (ORDER_SHUFFLE, PLAY_LOOP)
@@ -76,112 +78,114 @@ class RBHandler(object):
             rb_type = self.db.entry_type_get_by_name(entry_type)
             self.entry_types[entry_type] = rb_type
         self.entry_types['radio'] = self.entry_types[TYPE_RADIO]
-        log.debug('rbhandler loaded')
+
+        log.debug('rb handler loaded')
 
     def get_playing_status(self):
         """Gets the playing status, returns True or False according to playing or not"""
+        log.debug('get playing status')
         return self.player.get_playing()[1]
 
     def get_mute(self):
-        """Gets True if the player is muted"""
+        log.debug('get mute')
         return self.player.get_mute()[1]
 
     def toggle_mute(self):
+        log.debug('toggle mute')
         self.player.toggle_mute()
 
     def get_volume(self):
-        """Gets the player volume, a float between 0 and 1"""
         log.debug('get volume')
         return self.player.get_volume()[1]
 
     def set_volume(self, volume):
-        """Sets the player volume, gets a float between 0 and 1"""
-        if not type(volume) is float:
-            raise Exception('Volume must be a float')
+        volume = float(volume)
         log.debug('set volume %d' % volume)
-        if volume > 1:
-            log.warning('Volume cannot be set over 1')
-
+        if volume > 1: log.warning('Volume cannot be set over 1')
         self.player.set_volume(volume)
 
     def get_playing_entry_id(self):
-        """Gets playing entry id, returns a string"""
+        log.debug('get playing entry id')
         entry = self.get_playing_entry()
-        if entry is None:
-            return None
-
         return self.get_entry_id(entry)
 
     def get_entry_id(self, entry):
+        log.debug('get entry id %s', entry)
+        if not entry:
+            return None
         return entry.get_ulong(RB.RhythmDBPropType.ENTRY_ID)
 
     def get_playing_entry(self):
-        """Returns the rhythmbox current playing entry object"""
+        log.debug('get playing entry')
         return self.player.get_playing_entry()
 
     def get_playing_time(self):
-        """Gets the playing time, in seconds"""
+        log.debug('get playing time')
         return self.player.get_playing_time()[1]
 
     def get_playing_time_string(self):
-        """Gets the playing time, as a string in "x:xx of x:xx left" format"""
+        log.debug('get playing time string')
         return self.player.get_playing_time_string()
 
     def play_next(self):
-        """If playing, skips the player to the next song"""
         log.debug('skip to next')
         if self.get_playing_status():
             self.player.do_next()
 
     def seek(self, seconds):
-        """Seeks n seconds in the current playing song, receives and int, positive or negative"""
+        seconds = int(seconds)
         log.debug('seek %d seconds' % seconds)
         self.player.seek(seconds)
 
     def previous(self):
-        """If playing, skips the player to the previous song"""
+        log.debug('skip to previous')
         if self.get_playing_status():
             self.player.do_previous()
 
     def play_pause(self):
-        """Starts playing or pauses"""
+        log.debug('play/pause')
         status = self.get_playing_status()
         return self.player.playpause(not status)
 
-    def play_entry(self, entry_id): # entry id
-        """Inmediatly starts playing the entry which id gets by parameter"""
-        entry = self.get_entry(entry_id)
-        if entry is None:
-            return
+    def pause(self):
+        log.debug('pause')
         if self.get_playing_status():
             self.play_pause()
+
+    def play_entry(self, entry_id):
+        log.debug('play entry {}'.format(entry_id))
+        entry = self.get_entry(entry_id)
+        if not entry: 
+            log.debug('no entry found')
+            return
+        self.pause()
         playing_source = self.player.props.queue_source
         if entry.get_entry_type() == self.entry_types['radio']:
             playing_source = self.shell.get_source_by_entry_type(self.entry_types['radio'])
-        self.player.set_playing_source(playing_source)
+        # self.player.set_playing_source(playing_source)
         self.player.play_entry(entry, playing_source)
 
-    def get_play_order(self):
-        """Returns the play order"""
-        return self.player.props.play_order
-
-    def set_play_order(self, play_order):
-        """Sets the play order"""
-        self.player.props.play_order = play_order
-
     def toggle_shuffle(self):
-        """Toggles shuffle playing"""
-        status = self.get_play_order()
-        new_status = self._play_toggle_shuffle[status]
+        log.debug('toggle shuffle')
+        play_order = self.get_play_order()
+        new_status = self._play_toggle_shuffle[play_order]
         self.set_play_order(new_status)
 
     def toggle_loop(self):
-        """Toggles loop playing"""
-        order = self.get_play_order()
+        log.debug('toggle loop')
+        old_order = self.get_play_order()
         new_order = ORDER_LINEAR
-        if order in self._play_toggle_loop:
-            new_order = self._play_toggle_loop[order]
+        if old_order in self._play_toggle_loop:
+            new_order = self._play_toggle_loop[old_order]
         self.set_play_order(new_order)
+        
+    def get_play_order(self):
+        log.debug('get play order')
+        return self.player.props.play_order
+
+    def set_play_order(self, play_order):
+        log.debug('set play order: {}'.format(play_order))
+        self.player.props.play_order = play_order
 
 #    def playing_song_changed(self, player, entry):
 #        log.debug('Playing song changed....')
@@ -202,7 +206,7 @@ class RBHandler(object):
 
     # QUEUE
     def get_play_queue(self, queue_limit=100):
-        """Returns the play queue, limited to 100 entries by default"""
+        log.debug('get play queue, limit: {}'.format(queue_limit))
         entries = []
         self.loop_query_model(func=entries.append,
                 query_model=self.get_play_queue_model(),
@@ -210,66 +214,45 @@ class RBHandler(object):
         return entries
 
     def get_play_queue_model(self):
-        """Returns the main play queue query model"""
-        return self.shell.props.queue_source.props.query_model
+        log.debug('get play queue model')
+        return self.queue_source.props.query_model
 
     def clear_play_queue(self):
-        """Cleans the playing queue"""
         log.debug("Cleaning playing queue")
-        self.loop_query_model(func=self.dequeue, query_model=self.get_play_queue_model())
+        self.loop_query_model(func=self.dequeue, 
+                query_model=self.get_play_queue_model())
         log.debug("Playing queue cleared")
 
     def shuffle_queue(self):
         entries = self.get_play_queue()
         if entries:
             random.shuffle(entries)
-            queue = self.shell.props.queue_source
+            queue = self.queue_source
             for i in range(0, len(entries)):
-                entry = self.shell.props.db.entry_lookup_by_id(entries[i].id)
+                entry = self.db.entry_lookup_by_id(entries[i].id)
                 queue.move_entry(entry, i)
 
     def enqueue(self, entry_ids):
-        """Appends the given entry id or ids to the playing queue"""
-        if type(entry_ids) is list:
-            for entry_id in entry_ids:
-                entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
-                if entry is None:
-                    continue
-                self.shell.props.queue_source.add_entry(entry, -1)
-
-        elif type(entry_ids) is int:
-            entry = self.shell.props.db.entry_lookup_by_id(int(entry_ids))
-            if not entry is None:
-                self.shell.props.queue_source.add_entry(entry, -1)
-        else:
-            entry = self.shell.props.db.entry_lookup_by_id(entry_ids.id)
-            self.shell.props.queue_source.add_entry(entry, -1)
-        self.shell.props.queue_source.queue_draw()
+        log.debug("Enqueuing {}".format(entry_ids))
+        for entry_id in to_list(entry_ids):
+            entry = self.db.entry_lookup_by_id(int(entry_id))
+            if entry is None:
+                continue
+            self.queue_source.add_entry(entry, -1)
+        self.queue_source.queue_draw()
 
     def dequeue(self, entry_ids):
-        """Removes the given entry id or ids from the playing queue"""
         log.debug("Dequeuing {}".format(entry_ids))
-        if type(entry_ids) is list:
-            for entry_id in entry_ids:
-                entry = self.shell.props.db.entry_lookup_by_id(int(entry_id))
-                if entry is None:
-                    continue
-                self.shell.props.queue_source.remove_entry(entry)
-        elif type(entry_ids) is int:
-            entry = self.shell.props.db.entry_lookup_by_id(int(entry_ids))
-            if not entry is None:
-                self.shell.props.queue_source.remove_entry(entry)
-        elif type(entry_ids) is RBEntry:
-            entry = self.shell.props.db.entry_lookup_by_id(entry_ids.id)
-            if not entry is None:
-                self.shell.props.queue_source.remove_entry(entry)
-        self.shell.props.queue_source.queue_draw()
+        for entry_id in to_list(entry_ids):
+            entry = self.db.entry_lookup_by_id(int(entry_id))
+            if entry is None:
+                continue
+            self.queue_source.remove_entry(entry)
+        self.queue_source.queue_draw()
 
     # ENTRY
     def get_entry(self, entry_id):
-        """Returns an entry by its id"""
-        if not str(entry_id).isdigit():
-            raise Exception('entry_id parameter must be an int')
+        log.debug('get entry {}'.format(entry_id))
         entry_id = int(entry_id)
         return self.db.entry_lookup_by_id(entry_id)
 
@@ -453,7 +436,7 @@ class RBHandler(object):
         """Enqueues in the play queue the given playlist"""
         if not source:
             return 0
-        # playlist.add_to_queue(self.shell.props.queue_source)
+        # playlist.add_to_queue(self.queue_source)
         # This way we will know how many songs are added
         return self.loop_query_model(
                    func=self.enqueue,
@@ -574,8 +557,12 @@ class RBEntry(object):
         self.bitrate = entry.get_ulong(RB.RhythmDBPropType.BITRATE)
         self.last_played = entry.get_ulong(RB.RhythmDBPropType.LAST_PLAYED)
 
+    def __int__(self):
+        return self.id
+
 
 class RBSource(object):
+
     def __init__(self, index, entry, source_type='playlist'):
         self.id = index
         self.index = index
@@ -590,3 +577,5 @@ class RBSource(object):
         self.is_group = False # entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]
         self.group_category = None #entry[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
 
+    def __int__(self):
+        return self.id

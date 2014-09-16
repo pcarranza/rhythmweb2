@@ -53,7 +53,7 @@ class RBTest(unittest.TestCase):
     def test_set_volume_with_invalid_value_fails(self):
         rbplayer = RBHandler(self.shell)
         with self.assertRaises(Exception):
-            rbplayer.set_volume('1')
+            rbplayer.set_volume('myvolume')
 
     def test_set_volume_calls_player(self):
         rbplayer = RBHandler(self.shell)

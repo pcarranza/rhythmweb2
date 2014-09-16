@@ -14,6 +14,9 @@ class Stub(object):
             return self.kwargs[name]
         return name
 
+    def __int__(self):
+        return self.kwargs.get('id')
+
     def __str__(self):
         return 'Stub: "{}"'.format(self.kwargs)
 
