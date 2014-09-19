@@ -13,7 +13,8 @@ def cast(value, message, func):
         return func(value)
     except:
         raise ValueError(message)
-    
+
+
 def to_list(value):
     if type(value) is list:
         return value

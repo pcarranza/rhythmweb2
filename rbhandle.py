@@ -3,7 +3,7 @@ import logging
 log = logging.getLogger(__name__)
 
 from gi.repository import RB, GLib
-from rhythmweb.utils import to_list
+from rhythmweb.utils import to_list, to_int
 
 ORDER_LINEAR = 'linear'
 ORDER_SHUFFLE = 'shuffle'
@@ -82,7 +82,6 @@ class RBHandler(object):
         log.debug('rb handler loaded')
 
     def get_playing_status(self):
-        """Gets the playing status, returns True or False according to playing or not"""
         log.debug('get playing status')
         return self.player.get_playing()[1]
 
@@ -104,20 +103,10 @@ class RBHandler(object):
         if volume > 1: log.warning('Volume cannot be set over 1')
         self.player.set_volume(volume)
 
-    def get_playing_entry_id(self):
-        log.debug('get playing entry id')
-        entry = self.get_playing_entry()
-        return self.get_entry_id(entry)
-
-    def get_entry_id(self, entry):
-        log.debug('get entry id %s', entry)
-        if not entry:
-            return None
-        return entry.get_ulong(RB.RhythmDBPropType.ENTRY_ID)
-
     def get_playing_entry(self):
         log.debug('get playing entry')
-        return self.player.get_playing_entry()
+        entry = self.player.get_playing_entry()
+        return RBEntry(entry) if entry else None
 
     def get_playing_time(self):
         log.debug('get playing time')
@@ -155,14 +144,13 @@ class RBHandler(object):
     def play_entry(self, entry_id):
         log.debug('play entry {}'.format(entry_id))
         entry = self.get_entry(entry_id)
-        if not entry: 
+        if not entry:
             log.debug('no entry found')
             return
         self.pause()
         playing_source = self.player.props.queue_source
         if entry.get_entry_type() == self.entry_types['radio']:
             playing_source = self.shell.get_source_by_entry_type(self.entry_types['radio'])
-        # self.player.set_playing_source(playing_source)
         self.player.play_entry(entry, playing_source)
 
     def toggle_shuffle(self):
@@ -178,7 +166,7 @@ class RBHandler(object):
         if old_order in self._play_toggle_loop:
             new_order = self._play_toggle_loop[old_order]
         self.set_play_order(new_order)
-        
+
     def get_play_order(self):
         log.debug('get play order')
         return self.player.props.play_order
@@ -207,8 +195,7 @@ class RBHandler(object):
     # QUEUE
     def get_play_queue(self, queue_limit=100):
         log.debug('get play queue, limit: {}'.format(queue_limit))
-        return [entry for entry in self.loop_query_model(
-            query_model=self.get_play_queue_model(), limit=queue_limit)]
+        return [entry for entry in Reader(self.get_play_queue_model(), limit=queue_limit)]
 
     def get_play_queue_model(self):
         log.debug('get play queue model')
@@ -216,7 +203,7 @@ class RBHandler(object):
 
     def clear_play_queue(self):
         log.debug("Cleaning playing queue")
-        for entry in self.loop_query_model(query_model=self.get_play_queue_model()):
+        for entry in Reader(self.get_play_queue_model()):
             self.dequeue(entry)
         log.debug("Playing queue cleared")
 
@@ -253,36 +240,12 @@ class RBHandler(object):
         entry_id = int(entry_id)
         return self.db.entry_lookup_by_id(entry_id)
 
-    def load_entry(self, entry):
-        """Returns a RBEntry with the entry information fully loaded for the given id"""
-        if entry is None:
-            return None
-        return RBEntry(entry)
-
     def set_rating(self, entry_id, rating):
         """Sets the provided rating to the given entry id, int 0 to 5"""
-        if not type(rating) is int:
-            raise Exception('Rating parameter must be an int')
+        rating = to_int(rating, 'Rating parameter must be an int')
         entry = self.get_entry(entry_id)
         if not entry is None:
             self.db.entry_set(entry, RB.RhythmDBPropType.RATING, rating)
-
-    def loop_query_model(self, query_model, first=0, limit=0):
-        if query_model is None:
-            raise ValueError('Query Model cannot be None')
-        if first:
-            limit = limit + first
-        index, count = 0, 0
-        for row in query_model:
-            if index < first:
-                index += 1
-                continue
-            yield self.load_entry(row[0])
-            count += 1
-            index += 1
-            if limit and index >= limit:
-                break
-        return count
 
     # Query
     def search_song(self, query):
@@ -371,7 +334,7 @@ class RBHandler(object):
 
         query_model = query.execute(self.db)
         log.debug('RBHandler.query executed, loading results...')
-        entries = [entry for entry in self.loop_query_model(query_model, first, limit)]
+        entries = [entry for entry in Reader(query_model, first, limit)]
         log.debug('RBHandler.query executed, returning results...')
         return entries
 
@@ -384,21 +347,18 @@ class RBHandler(object):
         return self.play_pause()
 
     def get_source(self, source_index):
-        if not type(source_index) is int:
-            raise Exception('source_index parameter must be an int')
-        index = 0
+        source_index = to_int(source_index, 'source_index parameter must be an int')
         sources = self.get_sources()
-        for source in sources:
+        for source in enumerate(sources):
             if source.index == source_index:
-                log.debug('Returning source with index %d' % index)
+                log.debug('Returning source %s' % source)
                 return source
-            index += 1
         return None
 
     def load_source_entries(self, source, limit=100):
         if source is None:
             return
-        source.entries = [entry for entry in self.loop_query_model(query_model=source.query_model, limit=limit)]
+        source.entries = [entry for entry in Reader(source.query_model, limit=limit)]
 
     def get_playlists(self):
         """Returns all registered playlists"""
@@ -418,8 +378,27 @@ class RBHandler(object):
             return 0
         # playlist.add_to_queue(self.queue_source)
         # This way we will know how many songs are added
-        for entry in self.loop_query_model(query_model=source.query_model):
+        for entry in Reader(source.query_model):
             self.enqueue(entry)
+
+class Reader(object):
+
+    def __init__(self, model, first=0, limit=0):
+        if model is None:
+            raise ValueError('Model is required')
+        self.model = model
+        self.first = first
+        self.limit = limit
+        self.total = 0
+
+    def __iter__(self):
+        for (index, row) in enumerate(self.model):
+            if index < self.first:
+                continue
+            yield RBEntry(row[0])
+            self.total += 1
+            if self.limit and self.total >= self.limit:
+                break
 
 
 class Query(object):
@@ -529,10 +508,10 @@ class RBEntry(object):
         self.track_number = entry.get_ulong(RB.RhythmDBPropType.TRACK_NUMBER)
         self.duration = entry.get_ulong(RB.RhythmDBPropType.DURATION)
         self.rating = entry.get_double(RB.RhythmDBPropType.RATING)
-        self.year = entry.get_ulong(RB.RhythmDBPropType.YEAR)
         self.genre = entry.get_string(RB.RhythmDBPropType.GENRE)
         self.play_count = entry.get_ulong(RB.RhythmDBPropType.PLAY_COUNT)
         self.location = entry.get_string(RB.RhythmDBPropType.LOCATION)
+        self.year = entry.get_ulong(RB.RhythmDBPropType.YEAR)
         self.bitrate = entry.get_ulong(RB.RhythmDBPropType.BITRATE)
         self.last_played = entry.get_ulong(RB.RhythmDBPropType.LAST_PLAYED)
 

@@ -95,7 +95,6 @@ class Player(object):
         status['playing'] = handler.get_playing_status()
         if status['playing']:
             playing_entry = handler.get_playing_entry()
-            playing_entry = handler.load_entry(playing_entry)
             if playing_entry:
                 status['playing_entry'] = get_song(playing_entry)
                 status['playing_time'] = handler.get_playing_time()

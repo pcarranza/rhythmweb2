@@ -24,6 +24,10 @@ class RBTest(unittest.TestCase):
         shell.props.db = db
         self.player, self.shell, self.db = player, shell, db
 
+    def test_invalid_shell_raises_error(self):
+        with self.assertRaises(ValueError):
+            RBHandler(None)
+
     def test_playing_status(self):
         rbplayer = RBHandler(self.shell)
         self.player.get_playing.return_value = (None, True)
@@ -63,11 +67,11 @@ class RBTest(unittest.TestCase):
     def test_playing_entry(self):
         rbplayer = RBHandler(self.shell)
         self.player.get_playing_entry.return_value = None
-        self.assertIsNone(rbplayer.get_playing_entry_id())
+        self.assertIsNone(rbplayer.get_playing_entry())
         entry = Mock()
         entry.get_ulong.return_value = 1
         self.player.get_playing_entry.return_value = entry
-        self.assertEquals(rbplayer.get_playing_entry_id(), 1)
+        self.assertEquals(int(rbplayer.get_playing_entry()), 1)
 
     def test_get_playing_time_calls_player(self):
         self.player.get_playing_time.return_value = (None, 10)

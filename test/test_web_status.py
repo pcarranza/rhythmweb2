@@ -33,7 +33,7 @@ class TestWebStatus(unittest.TestCase):
         self.rb.get_play_order.return_value = 'bla'
         self.rb.get_mute.return_value = False
         self.rb.get_volume.return_value = 1
-        self.rb.load_entry.return_value = self.entry
+        self.rb.get_playing_entry.return_value = self.entry
         self.rb.get_playing_time.return_value = 10
         result = handle_request(self.app, environ('/rest/status'), self.response)
         self.response.assert_called_with('200 OK', 
