@@ -195,7 +195,7 @@ class RBHandler(object):
     # QUEUE
     def get_play_queue(self, queue_limit=100):
         log.debug('get play queue, limit: {}'.format(queue_limit))
-        return [entry for entry in Reader(self.get_play_queue_model(), limit=queue_limit)]
+        return [entry for entry in read_model(self.get_play_queue_model(), limit=queue_limit)]
 
     def get_play_queue_model(self):
         log.debug('get play queue model')
@@ -203,7 +203,7 @@ class RBHandler(object):
 
     def clear_play_queue(self):
         log.debug("Cleaning playing queue")
-        for entry in Reader(self.get_play_queue_model()):
+        for entry in read_model(self.get_play_queue_model()):
             self.dequeue(entry)
         log.debug("Playing queue cleared")
 
@@ -246,29 +246,6 @@ class RBHandler(object):
         entry = self.get_entry(entry_id)
         if not entry is None:
             self.db.entry_set(entry, RB.RhythmDBPropType.RATING, rating)
-
-    # Query
-    def search_song(self, query):
-        """Performs a query for entry type "song" with the provided query"""
-        log.info('Searching for a song with query %s' % query)
-        return self.search(query, TYPE_SONG)
-
-    def search_radio(self, query):
-        """Performs a query for entry type "radio" with the provided query"""
-        log.info('Searching for a radio with filter %s' % query)
-        return self.search(query, TYPE_RADIO)
-
-    def search_podcast(self, query):
-        """Performs a query for entry type "podcast" with the provided filters"""
-        log.info('Searching for a podcast with filter %s' % query)
-        return self.search(query, TYPE_PODCAST)
-
-    def search(self, query, media_type):
-        """Performs a query for provided entry type with the provided query and media type"""
-        filters = {}
-        filters['type'] = media_type
-        filters['all'] = query
-        return self.query(filters)
 
     def query(self, filters):
         """Performs a query with the provided filters"""
@@ -334,7 +311,7 @@ class RBHandler(object):
 
         query_model = query.execute(self.db)
         log.debug('RBHandler.query executed, loading results...')
-        entries = [entry for entry in Reader(query_model, first, limit)]
+        entries = [entry for entry in read_model(query_model, first, limit)]
         log.debug('RBHandler.query executed, returning results...')
         return entries
 
@@ -358,7 +335,7 @@ class RBHandler(object):
     def load_source_entries(self, source, limit=100):
         if source is None:
             return
-        source.entries = [entry for entry in Reader(source.query_model, limit=limit)]
+        source.entries = [entry for entry in read_model(source.query_model, limit=limit)]
 
     def get_playlists(self):
         """Returns all registered playlists"""
@@ -378,27 +355,21 @@ class RBHandler(object):
             return 0
         # playlist.add_to_queue(self.queue_source)
         # This way we will know how many songs are added
-        for entry in Reader(source.query_model):
+        for entry in read_model(source.query_model):
             self.enqueue(entry)
 
-class Reader(object):
 
-    def __init__(self, model, first=0, limit=0):
-        if model is None:
-            raise ValueError('Model is required')
-        self.model = model
-        self.first = first
-        self.limit = limit
-        self.total = 0
-
-    def __iter__(self):
-        for (index, row) in enumerate(self.model):
-            if index < self.first:
-                continue
-            yield RBEntry(row[0])
-            self.total += 1
-            if self.limit and self.total >= self.limit:
-                break
+def read_model(model, first=0, limit=0):
+    if model is None:
+        raise ValueError('A model to read is required')
+    total = 0
+    for (index, row) in enumerate(model):
+        if index < first:
+            continue
+        yield RBEntry(row[0])
+        total += 1
+        if limit and total >= limit:
+            break
 
 
 class Query(object):
