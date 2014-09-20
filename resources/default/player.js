@@ -295,7 +295,7 @@ function update_status() {
 					str_time = atime + ' <i> of </i> ' + total_time;
 					$('#time').html(str_time);
 					
-					if (actual_time < duration)
+					if (duration == 0 || actual_time < duration)
 						timers.push(setTimeout(timer_function, 1000));
 					else {
 						update_status();
