@@ -578,7 +578,7 @@ function load_tag_cloud() {
 		
         $.each(json.values, function(name, value) {
             clazz = get_tag_cloud_class(value, biggest_value);
-			id = 'gr_' + name; index++;
+			id = 'gr_' + index; index++;
 			$('#genres_cloud').append('<div id="' + id + 
 					'" class="tag_gr ' + clazz + 
 					'" title="genre: ' + name + ' [' + value + ']">' + name + 
