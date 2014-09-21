@@ -31,8 +31,8 @@ class TestRBHandleSearch(unittest.TestCase):
         self.db.do_full_query_parsed.assert_called_with(model, array)
         self.db.query_append_params.assert_has_calls([
             call(array, 'EQUALS', 'TYPE', 'song'),
-            call(array, 'GREATER_THAN', 7, 5.0),
-            call(array, 'GREATER_THAN', 10, 2)])
+            call(array, 'GREATER_THAN', 'rating', 5.0),
+            call(array, 'GREATER_THAN', 'play_count', 2)])
 
     def test_query_with_invalid_rating_fails(self, ptr_array, query_model):
         rb = RBHandler(self.shell)

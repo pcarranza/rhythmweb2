@@ -104,6 +104,11 @@ class Player(object):
         return status
 
 
+def query_library(what):
+    log.debug('Looking for library %s', what)
+    return getattr(get_handler().library, what, {})
+
+
 class Query(object):
 
     def __init__(self):

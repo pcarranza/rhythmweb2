@@ -4,6 +4,7 @@ log = logging.getLogger(__name__)
 
 from gi.repository import RB, GLib
 from rhythmweb.utils import to_list, to_int
+from collections import defaultdict
 
 ORDER_LINEAR = 'linear'
 ORDER_SHUFFLE = 'shuffle'
@@ -79,6 +80,8 @@ class RBHandler(object):
             self.entry_types[entry_type] = rb_type
         self.entry_types['radio'] = self.entry_types[TYPE_RADIO]
 
+        self.library = Library()
+        self.db.connect('entry_added', self.library.entry_added)
         log.debug('rb handler loaded')
 
     def get_playing_status(self):
@@ -174,23 +177,6 @@ class RBHandler(object):
     def set_play_order(self, play_order):
         log.debug('set play order: {}'.format(play_order))
         self.player.props.play_order = play_order
-
-#    def playing_song_changed(self, player, entry):
-#        log.debug('Playing song changed....')
-#        if not self.__playing_song is None:
-#            old_playcount = self.__playing_song.play_count
-#            old_entry = self.get_entry(self.__playing_song.id)
-#            new_play_count = self.get_value(old_entry, RB.RhythmDBPropType.PLAY_COUNT)
-#            if old_playcount < new_play_count:
-#                diff = new_play_count - old_playcount
-#                self.__append_artist(self.__playing_song.artist, diff)
-#                self.__append_album(self.__playing_song.album, diff)
-#                self.__append_genre(self.__playing_song.genre, diff)
-#
-#        if entry is None:
-#            self.__playing_song = None
-#        else:
-#            self.__playing_song = self.load_rb_entry(entry)
 
     # QUEUE
     def get_play_queue(self, queue_limit=100):
@@ -370,6 +356,28 @@ def read_model(model, first=0, limit=0):
         total += 1
         if limit and total >= limit:
             break
+
+
+class Library(object):
+
+    def __init__(self):
+        self.artists = {'values': defaultdict(lambda: 0), 'max': 0}
+        self.albums = {'values': defaultdict(lambda: 0), 'max': 0}
+        self.genres = {'values': defaultdict(lambda: 0), 'max': 0}
+        self.songs = {'values': defaultdict(lambda: 0), 'max': 0}
+
+    def entry_added(self, db, rb_entry):
+        entry = RBEntry(rb_entry)
+        self.append(self.artists, entry.artist, entry.play_count)
+        self.append(self.albums, entry.album, entry.play_count)
+        self.append(self.genres, entry.genre, entry.play_count)
+        self.append(self.songs, entry.title, entry.play_count)
+
+    def append(self, values, name, play_count):
+        if not name: name = '[empty]'
+        values['values'][name] += play_count
+        if values['max'] < values['values'][name]:
+            values['max'] = values['values'][name]
 
 
 class Query(object):

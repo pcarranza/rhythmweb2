@@ -1,6 +1,6 @@
 
 from rhythmweb.app import route
-from rhythmweb.controller import Player, Song, Queue, Query, Source
+from rhythmweb.controller import Player, Song, Queue, Query, Source, query_library
 from rhythmweb.utils import to_int, to_float
 
 import logging
@@ -13,9 +13,7 @@ MEDIA_TYPES = {'song' : 'song',
                 'podcast' : 'podcast-post',
                 'podcast-post' : 'podcast-post'}
 
-SEARCH_TYPES = {'artists' : 'artist', 
-                'genres' : 'genre', 
-                'albums' : 'album'}
+SEARCH_TYPES = {'artists', 'genres', 'albums'}
 
 @route('/rest/status')
 def status():
@@ -131,25 +129,12 @@ def parse_player_args(player_arguments):
     return kwargs
 
 
-@route('/rest/library/<constraint?>/<value?>')
-def library(*args):
-    search_by, value = args
-    if not search_by or not value:
-        raise ValueError('no parameters')
-    if search_by not in SEARCH_TYPES:
-        raise ValueError('Invalid library filter "{}"'.format(search_by))
-    value = str(value).replace('+', ' ')
-    search_type = SEARCH_TYPES[search_by]
-    query = {
-            'type': 'song',
-            search_type: value,
-            'exact-match': True,
-            'limit': 0
-            }
-    log.info('Running query {}'.format(query))
-    library = Query().query(query)
-    library[search_type] = value
-    return library
+@route('/rest/library/<search_for>')
+def library(search_for):
+    if search_for not in SEARCH_TYPES:
+        raise ValueError('Invalid library filter "{}"'.format(search_for))
+    return query_library(search_for)
+
     
 @route('/rest/playlists/<id?:int>')
 def playlists(playlist_id, **kwargs):

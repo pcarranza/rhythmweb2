@@ -1,7 +1,7 @@
 import unittest
 
-from mock import Mock, MagicMock, patch, call
-from rbhandle import RBHandler, InvalidQueryException
+from mock import Mock
+from rbhandle import RBHandler
 from utils import ModelStub, EntryStub
 
 class TestRBSource(unittest.TestCase):
@@ -39,4 +39,3 @@ class TestRBSource(unittest.TestCase):
         rb = RBHandler(self.shell)
         playlists = rb.get_playlists()
         self.assertEquals(len(playlists), 1)
-

@@ -33,9 +33,9 @@ Basically this is what is in my head regarding this project:
 * ~~Recover ability to play radio~~ search by type radio and play :smile:
 * ~~Recover source selection and handling (I miss using radio)~~
 * ~~Refactor all the backend code for simplification (focusing on decoupling and single responsibility) -> Controllers~~
+* ~~Recover the artits/genre cloud~~
 * Refactor all the backend code for simplification -> rbhandler
 * Fix some usability issues in the mobile skin
-* Recover the artits/genre cloud
 
 ### Some notes on the instalation process:
 

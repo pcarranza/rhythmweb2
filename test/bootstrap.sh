@@ -42,19 +42,19 @@ class GObject(object):
 
 class RB(object):
     class RhythmDBPropType(object):
-        ENTRY_ID = 1
-        TITLE = 2
-        ARTIST = 3
-        ALBUM = 4
-        TRACK_NUMBER = 5
-        DURATION = 6
-        RATING = 7
-        YEAR = 8
-        GENRE = 9
-        PLAY_COUNT = 10
-        LOCATION = 11
-        BITRATE = 12
-        LAST_PLAYED = 13
+        ENTRY_ID = 'entry_id'
+        TITLE = 'title'
+        ARTIST = 'artist'
+        ALBUM = 'album'
+        TRACK_NUMBER = 'track_number'
+        DURATION = 'duration'
+        RATING = 'rating'
+        YEAR = 'year'
+        GENRE = 'genre'
+        PLAY_COUNT = 'play_count'
+        LOCATION = 'location'
+        BITRATE = 'bitrate'
+        LAST_PLAYED = 'last_player'
 
         ARTIST_FOLDED = 'ARTIST_FOLDED'
         TITLE_FOLDED = 'TITLE_FOLDED'

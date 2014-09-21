@@ -55,16 +55,16 @@ $(document).ready(function() {
 	});
 	
 	
-//	$('#tab_tags').click(function () {
-//		clear_tabs();
-//		hide_all();
-//		$(this).addClass('selected');
-//
-//		load_tag_cloud();
-//		
-//		$('#tags').removeClass('hide');
-//	});
-//	
+	$('#tab_tags').click(function () {
+		clear_tabs();
+		hide_all();
+		$(this).addClass('selected');
+
+		load_tag_cloud();
+		
+		$('#tags').removeClass('hide');
+	});
+	
 	$('#tab_sources').click(function() {
 		clear_tabs();
 		hide_all()
@@ -523,7 +523,7 @@ function set_rating(event) {
 function clear_tabs() {
 	$('#tab_queue').removeClass('selected');
 	$('#tab_search').removeClass('selected');
-//	$('#tab_tags').removeClass('selected');
+	$('#tab_tags').removeClass('selected');
 	$('#tab_sources').removeClass('selected');
 }
 
@@ -531,43 +531,38 @@ function clear_tabs() {
 function hide_all() {
 	$('#queue').addClass('hide');
 	$('#search').addClass('hide');
-//	$('#tags').addClass('hide');
+	$('#tags').addClass('hide');
 	$('#sources').addClass('hide');
 }
+
 
 function load_tag_cloud() {
 	$('#artists_cloud').html('');
 	$('#albums_cloud').html('');
 	$('#genres_cloud').html('');
 	
+    var index = 0;
 	$.getJSON('rest/library/artists', function(json) {
-		bigger = json.biggest_artist;
-		bigger_value = bigger.value;
-		
-		$.each(json.artists, function(index, artist) {
-			value = artist.value;
-			name = artist.name;
-			clazz = get_tag_cloud_class(value, bigger_value);
-			id = 'ar_' + index;
-			$('#artists_cloud').append('<div id="' + 
-					id + '" class="tag_ar ' + 
-					clazz + '" title="artist: ' + name + ' [' + value + ']">' + 
-					name + '</div>');
-			$('#' + id).bind('click', { type : 'artist', 'name' : name }, cloud_search);
-		});
+		biggest_value = json.max;
+        $.each(json.values, function(name, value) {
+            clazz = get_tag_cloud_class(value, biggest_value);
+            id = 'ar_' + index; index++;
+            $('#artists_cloud').append('<div id="' + 
+                    id + '" class="tag_ar ' + 
+                    clazz + '" title="artist: ' + name + ' [' + value + ']">' + 
+                    name + '</div>');
+            $('#' + id).bind('click', { type : 'artist', 'name' : name }, cloud_search);
+        });
 		
 	}).fail(handle_jquery_failure);
 	
-
+    index = 0;
 	$.getJSON('rest/library/albums', function(json) {
-		bigger = json.biggest_album;
-		bigger_value = bigger.value;
+		biggest_value = json.max;
 		
-		$.each(json.albums, function(index, album) {
-			value = album.value;
-			name = album.name;
-			clazz = get_tag_cloud_class(value, bigger_value);
-			id = 'al_' + index;
+        $.each(json.values, function(name, value) {
+            clazz = get_tag_cloud_class(value, biggest_value);
+			id = 'al_' + index; index++;
 			$('#albums_cloud').append('<div id="' + id + 
 					'" class="tag_al ' + clazz + 
 					'" title="album: ' + name + ' [' + value + ']">' + name + 
@@ -577,15 +572,13 @@ function load_tag_cloud() {
 		
 	}).fail(handle_jquery_failure);
 
+    index = 0;
 	$.getJSON('rest/library/genres', function(json) {
-		bigger = json.biggest_genre;
-		bigger_value = bigger.value;
+		biggest_value = json.max;
 		
-		$.each(json.genres, function(index, genre) {
-			value = genre.value;
-			name = genre.name;
-			clazz = get_tag_cloud_class(value, bigger_value);
-			id = 'gr_' + index;
+        $.each(json.values, function(name, value) {
+            clazz = get_tag_cloud_class(value, biggest_value);
+			id = 'gr_' + name; index++;
 			$('#genres_cloud').append('<div id="' + id + 
 					'" class="tag_gr ' + clazz + 
 					'" title="genre: ' + name + ' [' + value + ']">' + name + 

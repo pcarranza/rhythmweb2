@@ -23,17 +23,18 @@ class Stub(object):
 
 class EntryStub(object):
 
-    def __init__(self, key):
+    def __init__(self, key, **kwargs):
         self.key = key
+        self.args = kwargs
 
     def get_ulong(self, name):
-        return self.key
+        return self.args.get(name, self.key)
 
     def get_string(self, name):
-        return name
+        return self.args.get(name, name)
 
     def get_double(self, name):
-        return 1.0
+        return self.args.get(name, 1.0)
 
     def __str__(self):
         return 'EntryStub key: "{}"'.format(self.key)

@@ -18,7 +18,7 @@ class TestRBEntry(unittest.TestCase):
     def test_set_rating_works(self):
         rbplayer = RBHandler(self.shell)
         rbplayer.set_rating(1, 5)
-        self.db.entry_set.assert_called_with(1, 7, 5)
+        self.db.entry_set.assert_called_with(1, 'rating', 5)
 
     def test_set_rating_with_invalid_value_fails(self):
         rbplayer = RBHandler(self.shell)
