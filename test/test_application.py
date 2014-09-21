@@ -62,7 +62,7 @@ class TestServer(unittest.TestCase):
             server.stop()
 
     def test_full_server_stack_post_handling(self):
-        self.rb.load_entry.return_value = Stub(id=2)
+        self.rb.get_entry.return_value = Stub(id=2)
         server = Server()
         try:
             server.start()

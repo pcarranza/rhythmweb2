@@ -146,7 +146,7 @@ class RBHandler(object):
 
     def play_entry(self, entry_id):
         log.debug('play entry {}'.format(entry_id))
-        entry = self.get_entry(entry_id)
+        entry = self.db.entry_lookup_by_id(entry_id)
         if not entry:
             log.debug('no entry found')
             return
@@ -224,12 +224,13 @@ class RBHandler(object):
     def get_entry(self, entry_id):
         log.debug('get entry {}'.format(entry_id))
         entry_id = int(entry_id)
-        return self.db.entry_lookup_by_id(entry_id)
+        entry = self.db.entry_lookup_by_id(entry_id)
+        return RBEntry(entry) if entry else None
 
     def set_rating(self, entry_id, rating):
         """Sets the provided rating to the given entry id, int 0 to 5"""
         rating = to_int(rating, 'Rating parameter must be an int')
-        entry = self.get_entry(entry_id)
+        entry = self.db.entry_lookup_by_id(entry_id)
         if not entry is None:
             self.db.entry_set(entry, RB.RhythmDBPropType.RATING, rating)
 

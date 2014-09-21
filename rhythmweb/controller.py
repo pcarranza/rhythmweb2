@@ -2,7 +2,7 @@
 from collections import defaultdict
 
 from rhythmweb.model import get_song, get_playlist
-from rbhandle import RBHandler
+from rbhandle import RBHandler, RBEntry
 
 import logging
 log = logging.getLogger(__name__)
@@ -24,7 +24,6 @@ class Song(object):
         entry = self.rb.get_entry(song_id)
         if not entry:
             return None
-        entry = self.rb.load_entry(entry)
         log.debug('Found song %d', song_id)
         return get_song(entry)
 
