@@ -50,7 +50,7 @@ class TestRBHandleQueue(unittest.TestCase):
         rb.dequeue(1)
         self.shell.props.queue_source.remove_entry.assert_has_calls([
             call(1)])
-            
+
     def test_dequeue_many_works_ok(self):
         self.shell.props.queue_source.props.query_model = ModelStub(
             EntryStub(1), EntryStub(2), EntryStub(3))
@@ -58,7 +58,15 @@ class TestRBHandleQueue(unittest.TestCase):
         rb.dequeue([1, 2])
         self.shell.props.queue_source.remove_entry.assert_has_calls([
             call(1), call(2)])
-            
+
+    def test_clear_play_queue_works_ok(self):
+        self.shell.props.queue_source.props.query_model = ModelStub(
+            EntryStub(1), EntryStub(2), EntryStub(3))
+        rb = RBHandler(self.shell)
+        rb.clear_play_queue()
+        self.shell.props.queue_source.remove_entry.assert_has_calls([
+            call(1), call(2), call(3)])
+
     def test_get_play_queue_works(self):
         self.shell.props.queue_source.props.query_model = ModelStub(
             EntryStub(1), EntryStub(2), EntryStub(5))
