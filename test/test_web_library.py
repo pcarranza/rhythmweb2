@@ -22,12 +22,12 @@ class TestWebLibrary(unittest.TestCase):
                 [('Content-type', 'text/html; charset=UTF-8')])
 
     def test_basic_do_get(self):
-        self.rb.library.artists = {'list' : {'a guy' : 55}, 'max': 55}
+        self.rb.library.artists = {'values' : {'a guy' : 55}, 'max': 55}
         result = handle_request(self.app, environ('/rest/library/artists'), self.response)
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
-        expected = json.loads('{"list": {"a guy": 55}, "max": 55}')
+        expected = json.loads('{"values": {"a guy": 55}, "max": 55}')
         returned = json.loads(result)
         self.assertEquals(expected, returned)
 

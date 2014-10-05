@@ -389,6 +389,7 @@ class Query(object):
         self.query_for_all = False
         self.matcher = RB.RhythmDBQueryType.FUZZY_MATCH
         self.sort_func = RB.RhythmDBQueryModel.album_sort_func
+        # self.sort_func = RB.RhythmDBQueryModel.track_sort_func
 
     def add_artist(self, artist):
         if not artist:
@@ -449,7 +450,6 @@ class Query(object):
     def execute(self, db):
         """Runs the query on the database"""
         query_model = RB.RhythmDBQueryModel.new_empty(db)
-        query_model.set_sort_order(self.sort_func, None, False)
 
         if self.query_for_all: # equivalent to use an OR (one query for each parameter)
             log.info('Query for all parameters separatedly')
@@ -467,6 +467,8 @@ class Query(object):
             for parameter in self.filters:
                 db.query_append_params(query, parameter[0], parameter[1], parameter[2])
             db.do_full_query_parsed(query_model, query)
+
+        query_model.set_sort_order(self.sort_func, None, False)
         return query_model
 
 

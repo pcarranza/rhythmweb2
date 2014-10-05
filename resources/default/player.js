@@ -159,8 +159,8 @@ function do_search(parameters) {
 		$('#img_searching').hide();
 		$('#search_parameters').append(
 				'<span class="cell">' +
-				'<span class="prop">count</span>:' + 
-				'<span class="val">' + json.entries.length + '</span>' + 
+				'<span class="prop">count</span>:' +
+				'<span class="val">' + json.entries.length + '</span>' +
 				'</span>');
 		$('#search_result').append(create_header('search_header_actions'));
 		$('#search_header_actions').append(create_add_all('search_add_all'))
@@ -173,13 +173,13 @@ function do_search(parameters) {
 			ids = ids.slice(0, ids.length - 1);
 		$('#search_add_all').click(function() {
 			$.post("rest/player", { action: "enqueue", "entry_id" : ids }, function(data) {
-				var numbers = /\d+/g; 
+				var numbers = /\d+/g;
 				while(id = numbers.exec(ids)) {
 					$('#search_result_line_' + id).fadeOut('fast');
 				}
 				info('<i>search result added to queue</i>');
 			});
-		}); 
+		});
 	});
 }
 
@@ -203,8 +203,8 @@ function search_parameters_to_html(parameters) {
 	for(var property in parameters) {
 		var value = parameters[property];
 		component += '<span class="cell">' +
-					'<span class="prop">' + property + '</span>:' + 
-					'<span class="val">' + value + '</span>' + 
+					'<span class="prop">' + property + '</span>:' +
+					'<span class="val">' + value + '</span>' +
 					'</span>';
 	}
 	component += '</div>';
@@ -226,7 +226,6 @@ function update_status() {
 			$('#play').show();
 			$('#pause').hide();
 		}
-		
 		
 		if (json && json.volume) {
 			volume = json.volume;
@@ -413,11 +412,11 @@ function create_entry_line(append_to, line_id, container_id, rating_id, entry) {
 	line += '<span class="track_actions"><span id="' + container_id + '"></span></span>';
 	line += '<span class="track_number">' + entry.track_number + '</span>';
 	line += '<span class="track_title">' + entry.title + '</span>';
-	line += '<span class="track_genre link" id="' + line_id +'_genre" title="browse genre">' + 
+	line += '<span class="track_genre link" id="' + line_id +'_genre" title="browse genre">' +
 			entry.genre + '</span>';
-	line += '<span class="track_artist link" id="' + line_id +'_artist"  title="browse artist">' + 
+	line += '<span class="track_artist link" id="' + line_id +'_artist"  title="browse artist">' +
 			entry.artist + '</span>';
-	line += '<span class="track_album link" id="' + line_id +'_album"  title="browse album">' + 
+	line += '<span class="track_album link" id="' + line_id +'_album"  title="browse album">' +
 			entry.album + '</span>';
 	line += '<span class="track_duration">' + human_time(entry.duration) + '</span>';
 	line += '<span class="track_rating"><span id="' + rating_id + '"></span></span>';
@@ -435,7 +434,7 @@ function create_entry_line(append_to, line_id, container_id, rating_id, entry) {
 
 function add_dequeue_action(line_id, container_id, entry) {
 	var action_id = container_id + '_dequeue';
-	var dequeue = '<img id="' + action_id + '" class="link dequeue" src="img/remove.png" ' + 
+	var dequeue = '<img id="' + action_id + '" class="link dequeue" src="img/remove.png" ' +
 			'width="24" height="24" alt="Remove" title="Remove from queue" />';
 	var entry_id = entry.id;
 	$('#' + container_id).append(dequeue);
@@ -450,7 +449,7 @@ function add_dequeue_action(line_id, container_id, entry) {
 
 function add_enqueue_action(line_id, container_id, entry, fadeout) {
 	var action_id = container_id + '_enqueue';
-	var enqueue = '<img id="' + action_id + '" class="link enqueue" src="img/add.png" ' + 
+	var enqueue = '<img id="' + action_id + '" class="link enqueue" src="img/add.png" ' +
 			'width="24" height="24" alt="Add" title="Add to queue"/>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(enqueue);
@@ -465,7 +464,7 @@ function add_enqueue_action(line_id, container_id, entry, fadeout) {
 
 function add_play_entry_action(line_id, container_id, entry) {
 	var action_id = container_id + '_play';
-	var play_entry = '<div id="' + action_id + '" class="link play" alt="Play entry" ' + 
+	var play_entry = '<div id="' + action_id + '" class="link play" alt="Play entry" ' +
 			'title="Play directly">&nbsp;</div>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(play_entry);
@@ -486,16 +485,16 @@ function add_rate_action(line_id, container_id, entry) {
 		var action_id = action_scheme + index;
 		if (index > rating) {
 			$('#' + container_id).append(
-				'<img id="' + action_id + '" class="link" src="img/star-grey.png" ' + 
+				'<img id="' + action_id + '" class="link" src="img/star-grey.png" ' +
 				'width="24" height="24" alt="Rate" title="Rate" />');
 		} else {
 			$('#' + container_id).append(
-				'<img id="' + action_id + '" class="link" src="img/star.png" ' + 
+				'<img id="' + action_id + '" class="link" src="img/star.png" ' +
 				'width="24" height="24" alt="Rate" title="Rate" />');
 		}
 		$('#' + action_id).bind(
-			'click', 
-			{ id : entry_id, rating : index, scheme : action_scheme }, 
+			'click',
+			{ id : entry_id, rating : index, scheme : action_scheme },
 			set_rating);
 	}
 }
@@ -540,50 +539,43 @@ function load_tag_cloud() {
 	$('#artists_cloud').html('');
 	$('#albums_cloud').html('');
 	$('#genres_cloud').html('');
+
+    var write_html = function(name, value, type, index) {
+        var clazz = get_tag_cloud_class(value, biggest_value);
+        var tag = type.substring(0, 2);
+        var id = tag + '_' + index;
+        var cloud_name = type + 's_cloud';
+        $('#' + cloud_name).append('<div id="' +
+                id + '" class="tag_' + tag + " " +
+                clazz + '" title="' + type + ': ' + name + ' [' + value + ']">' +
+                name + '</div>');
+        $('#' + id).bind('click', { 'type' : type, 'name' : name }, cloud_search);
+
+    };
 	
-    var index = 0;
 	$.getJSON('rest/library/artists', function(json) {
 		biggest_value = json.max;
+        var index = 0;
         $.each(json.values, function(name, value) {
-            clazz = get_tag_cloud_class(value, biggest_value);
-            id = 'ar_' + index; index++;
-            $('#artists_cloud').append('<div id="' + 
-                    id + '" class="tag_ar ' + 
-                    clazz + '" title="artist: ' + name + ' [' + value + ']">' + 
-                    name + '</div>');
-            $('#' + id).bind('click', { type : 'artist', 'name' : name }, cloud_search);
+            write_html(name, value, 'artist', index++);
         });
 		
 	}).fail(handle_jquery_failure);
 	
-    index = 0;
 	$.getJSON('rest/library/albums', function(json) {
 		biggest_value = json.max;
-		
+        var index = 0;
         $.each(json.values, function(name, value) {
-            clazz = get_tag_cloud_class(value, biggest_value);
-			id = 'al_' + index; index++;
-			$('#albums_cloud').append('<div id="' + id + 
-					'" class="tag_al ' + clazz + 
-					'" title="album: ' + name + ' [' + value + ']">' + name + 
-					'</div>');
-			$('#' + id).bind('click', { type : 'album', 'name' : name }, cloud_search);			
+            write_html(name, value, 'album', index++);
 		});
 		
 	}).fail(handle_jquery_failure);
 
-    index = 0;
 	$.getJSON('rest/library/genres', function(json) {
 		biggest_value = json.max;
-		
+        var index = 0;
         $.each(json.values, function(name, value) {
-            clazz = get_tag_cloud_class(value, biggest_value);
-			id = 'gr_' + index; index++;
-			$('#genres_cloud').append('<div id="' + id + 
-					'" class="tag_gr ' + clazz + 
-					'" title="genre: ' + name + ' [' + value + ']">' + name + 
-					'</div>');
-			$('#' + id).bind('click', { type : 'genre', 'name' : name }, cloud_search);			
+            write_html(name, value, 'genre', index++);
 		});
 		
 	}).fail(handle_jquery_failure);
@@ -601,17 +593,16 @@ function load_sources() {
 }
 
 
-
 function add_play_entry_action(line_id, container_id, entry) {
 	var action_id = container_id + '_play';
-	var play_entry = '<div id="' + action_id + 
-			'" class="link play" alt="Play entry" ' + 
+	var play_entry = '<div id="' + action_id +
+			'" class="link play" alt="Play entry" ' +
 			'title="Play directly">&nbsp;</div>';
 	var entry_id = entry.id;
 	$('#' + container_id).append(play_entry);
 	$('#' + action_id).click(function() {
-		$.post("rest/player", 
-				{ action: "play_entry", "entry_id" : entry_id }, 
+		$.post("rest/player",
+				{ action: "play_entry", "entry_id" : entry_id },
 				function(data) {
 			info('\"' + entry.title + '\" <i>started playing</i>');
 			timers.push(setTimeout('update_status()', 500));
@@ -622,60 +613,60 @@ function add_play_entry_action(line_id, container_id, entry) {
 
 function add_source(container, source) {
 	var play_source_action = 'play_source_' + source.id;
-	var play_source = '<div id="' + play_source_action + 
-			'" class="link play" alt="Play source" ' + 
+	var play_source = '<div id="' + play_source_action +
+			'" class="link play" alt="Play source" ' +
 			'title="Play source">&nbsp;</div>';
 	
 	var pl_entries_id = 'pl_entries_' + source.id;
 	var pl_load_source_id = 'pl_load_' + source.id;
-	var pl_entries = '<div id="' + pl_entries_id + '" class="pl_entries">' + 
-			'<img id="' + pl_load_source_id + '" src="img/add.png" ' + 
-					'class="link pl_load" width="24" height="24" ' + 
-					'alt="Show" title="Show entries" />' + 
+	var pl_entries = '<div id="' + pl_entries_id + '" class="pl_entries">' +
+			'<img id="' + pl_load_source_id + '" src="img/add.png" ' +
+					'class="link pl_load" width="24" height="24" ' +
+					'alt="Show" title="Show entries" />' +
 		'</div>';
 
 	row = '<div class="pl_row">' +
-			'<div id="playlist_' + source.id + 
-						'" class="pl_name" title="Enqueue source">' + 
-				'<img id="do_source_' + source.id + 
-						'" src="img/apply.png" width="24" height="24" ' + 
+			'<div id="playlist_' + source.id +
+						'" class="pl_name" title="Enqueue source">' +
+				'<img id="do_source_' + source.id +
+						'" src="img/apply.png" width="24" height="24" ' +
 						'alt="Enqueue source" title="Enqueue source" class="enqueue"/>' +
-				play_source + 
+				play_source +
 			'</div>' +
-			'<div id="pl_source_name_' + source.id + 
-						'" class="link pl_name" ' + 
-						'title="Show entries">' + 
+			'<div id="pl_source_name_' + source.id +
+						'" class="link pl_name" ' +
+						'title="Show entries">' +
 						(source.is_playing ? '<i>[' + source.name + ']</i>' : source.name ) + '</div>' +
 				pl_entries +
 			'</div>';
 	$('#' + container).append(row);
 	$('#do_source_' + source.id).click(function () {
-		$.post("rest/playlists", 
-				{ action: "enqueue", "source" : source.id }, 
+		$.post("rest/playlists",
+				{ action: "enqueue", "source" : source.id },
 				function (data) {
 			info('<i>Source <b>' + source.name + '</b> added to play queue</i>');
 			$('#' + pl_entries_id).fadeOut('fast');
 			$('#' + pl_entries_id).html(pl_entries);
 			$('#' + pl_entries_id).fadeIn('fast');
 			$('#' + pl_load_source_id).bind(
-					'click', 
-					{ id : source.id  }, 
+					'click',
+					{ id : source.id  },
 					load_source);
 		});
 	});
 	$('#' + pl_load_source_id).bind(
-			'click', 
-			{ id : source.id  }, 
+			'click',
+			{ id : source.id  },
 			load_source);
 
 	$('#pl_source_name_' + source.id).bind(
-			'click', 
-			{ id : source.id  }, 
+			'click',
+			{ id : source.id  },
 			load_source);
 	
 	$('#' + play_source_action).click(function() {
-		$.post("rest/playlists", 
-				{ action: "play_source", "source" : source.id }, 
+		$.post("rest/playlists",
+				{ action: "play_source", "source" : source.id },
 				function(data) {
 			info('Source <b>' + source.name + '</b> <i>started playing</i>');
 			timers.push(setTimeout('update_status()', 500));
@@ -689,7 +680,7 @@ function load_source(event) {
 	var url = 'rest/playlists/' + source.id;
 	var entries_id = 'pl_entries_' + source.id;
 	$('#' + entries_id).html(
-			'<img id="img_searching" src="img/loading.gif" width="16" height="16" ' + 
+			'<img id="img_searching" src="img/loading.gif" width="16" height="16" ' +
 					'alt="Fetching source..." title="Fetching source..." />');
 	$.getJSON(url, function(json) {
 		var header_actions = 'source_' + source.id + '_header_actions';
@@ -814,9 +805,9 @@ function parse_search_parameters() {
 			}
 		});
 		
-	} 
+	}
 
-	if (!query_parameters.hasOwnProperty('artist') && 
+	if (!query_parameters.hasOwnProperty('artist') &&
 			!query_parameters.hasOwnProperty('album') &&
 			!query_parameters.hasOwnProperty('title') &&
 			!query_parameters.hasOwnProperty('genre') &&
@@ -841,8 +832,8 @@ function parse_search_parameters() {
 		query_parameters.type = 'song';
 
 	return query_parameters;
-	
 }
+
 
 function handle_jquery_failure(jqxhr, textStatus, error) {
     console.log('Error');
