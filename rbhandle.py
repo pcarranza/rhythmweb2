@@ -93,8 +93,9 @@ class RBHandler(object):
         return self.player.get_mute()[1]
 
     def toggle_mute(self):
-        log.debug('toggle mute')
-        self.player.toggle_mute()
+        mute = not self.get_mute()
+        log.debug('toggle mute {}'.format(mute))
+        self.player.set_mute(mute)
 
     def get_volume(self):
         log.debug('get volume')

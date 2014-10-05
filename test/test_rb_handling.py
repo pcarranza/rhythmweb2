@@ -43,9 +43,10 @@ class RBTest(unittest.TestCase):
         self.assertFalse(rbplayer.get_mute())
 
     def test_toggle_mute(self):
+        self.player.get_mute.return_value = (None, False)
         rbplayer = RBHandler(self.shell)
         rbplayer.toggle_mute()
-        self.player.toggle_mute.assert_called_with()
+        self.player.set_mute.assert_called_with(True)
 
     def test_get_volume(self):
         rbplayer = RBHandler(self.shell)
