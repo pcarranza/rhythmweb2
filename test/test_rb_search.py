@@ -107,6 +107,26 @@ class TestRBHandleSearch(unittest.TestCase):
         self.db.query_append_params.assert_has_calls([
             call(array, 'FUZZY', 'GENRE_FOLDED', 'a nice genre')])
 
+    def test_query_for_all_works(self, ptr_array, query_model):
+        item = Mock()
+        array, model = Mock(), ModelStub(item)
+        query_model.return_value = model
+        ptr_array.return_value = array
+
+        rb = RBHandler(self.shell)
+        rb.query({'all': 'calabazas'})
+        self.db.do_full_query_parsed.assert_called_with(model, array)
+        self.db.query_append_params.assert_has_calls([
+            call(array, 'EQUALS', 'TYPE', 'song'),
+            call(array, 'FUZZY', 'ARTIST_FOLDED', 'calabazas'),
+            call(array, 'EQUALS', 'TYPE', 'song'),
+            call(array, 'FUZZY', 'TITLE_FOLDED', 'calabazas'),
+            call(array, 'EQUALS', 'TYPE', 'song'),
+            call(array, 'FUZZY', 'ALBUM_FOLDED', 'calabazas'),
+            call(array, 'EQUALS', 'TYPE', 'song'),
+            call(array, 'FUZZY', 'GENRE_FOLDED', 'calabazas'),
+            ])
+
     def test_search_with_no_filters_returns_empty_list(self, ptr_array, query_model):
         rb = RBHandler(self.shell)
         result = rb.query({})
