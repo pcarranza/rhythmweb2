@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/pcarranza/rhythmweb2.svg?branch=master)](https://travis-ci.org/pcarranza/rhythmweb)
-[![Coverage Status](https://coveralls.io/repos/pcarranza/rhythmweb2/badge.png?branch=master)](https://coveralls.io/r/pcarranza/rhythmweb?branch=master)
+[![Build Status](https://travis-ci.org/pcarranza/rhythmweb2.svg?branch=master)](https://travis-ci.org/pcarranza/rhythmweb2)
+[![Coverage Status](https://coveralls.io/repos/pcarranza/rhythmweb2/badge.png?branch=master)](https://coveralls.io/r/pcarranza/rhythmweb2?branch=master)
 
 # Rhythmweb
 
@@ -41,17 +41,6 @@ Basically this is what is in my head regarding this project:
 
 From GTK3 the actual folder to install the project is ~/.local/share/rhythmbox/plugins/rhythmweb
 The rest is pretty much the same.
-
-Also the default configuration looks a bit wrong, it should be something like this:
-
-    ...
-    hostname=127.0.0.1
-    port=7001
-
-    proxy=True
-    proxy.port=7000
-    proxy.hostname=0.0.0.0
-    ...
 
 ### What is there to come
 
