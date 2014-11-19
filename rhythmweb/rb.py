@@ -507,7 +507,7 @@ class RBSource(object):
     def __init__(self, index, entry, source_type='playlist'):
         self.id = index
         self.source_type = source_type
-        self.name = entry.props.name # entry[RB_SOURCELIST_MODEL_COLUMN_NAME]
+        self.name = entry.props.name
         self.source = entry
         self.query_model = entry.props.query_model
         self.entries = None

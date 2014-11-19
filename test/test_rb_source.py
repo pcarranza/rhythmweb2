@@ -30,7 +30,7 @@ class TestRBSource(unittest.TestCase):
     def test_play_source(self):
         self.player.get_playing.return_value = (None, True)
         rb = RBHandler(self.shell)
-        source = SourceStub()
+        source = Mock(source=SourceStub())
         self.assertTrue(rb.play_source(source))
         self.shell.props.shell_player.set_playing_source.assert_called_with(source.source)
 

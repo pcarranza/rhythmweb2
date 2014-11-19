@@ -10,6 +10,7 @@ class Stub(object):
         self.kwargs = kwargs
 
     def __getattr__(self, name):
+        self.assert_supported(name)
         if name in self.kwargs:
             return self.kwargs[name]
         return name
@@ -19,6 +20,9 @@ class Stub(object):
 
     def __str__(self):
         return 'Stub: "{}"'.format(self.kwargs)
+
+    def assert_supported(self, name):
+        pass
 
 
 class EntryStub(object):
@@ -56,12 +60,9 @@ class SourceStub(Stub):
 
     supported_keys = {'id', 'name', 'visibility', 'is_group', 'is_playing', 'type', 'entries'}
 
-    def __init__(self, **kwargs):
-        unsupported_keys = kwargs.keys() - self.supported_keys
-        if unsupported_keys:
-            raise ValueError('Keys %s are not supported', unsupported_keys)
-        super(SourceStub, self).__init__(**kwargs)
-
+    def assert_supported(self, name):
+        if not name in self.supported_keys:
+            raise AttributeError('{} object as no attribute {}'.format(self, name))
 
 class ModelStub(object):
 
