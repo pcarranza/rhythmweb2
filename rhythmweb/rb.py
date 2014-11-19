@@ -506,17 +506,11 @@ class RBSource(object):
 
     def __init__(self, index, entry, source_type='playlist'):
         self.id = index
-        self.index = index
         self.source_type = source_type
-        self.is_playing = False # entry[RB_SOURCELIST_MODEL_COLUMN_PLAYING] (Check agains shell.get_playing_source)
         self.name = entry.props.name # entry[RB_SOURCELIST_MODEL_COLUMN_NAME]
         self.source = entry
         self.query_model = entry.props.query_model
         self.entries = None
-        self.attributes = None # entry[RB_SOURCELIST_MODEL_COLUMN_ATTRIBUTES]
-        self.visibility = None # entry[RB_SOURCELIST_MODEL_COLUMN_VISIBILITY]
-        self.is_group = False # entry[RB_SOURCELIST_MODEL_COLUMN_IS_GROUP]
-        self.group_category = None #entry[RB_SOURCELIST_MODEL_COLUMN_GROUP_CATEGORY]
 
     def __int__(self):
         return self.id

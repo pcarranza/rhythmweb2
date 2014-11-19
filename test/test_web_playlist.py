@@ -4,14 +4,14 @@ import json
 from mock import Mock
 from rhythmweb import view, controller
 from rhythmweb.server import Server
-from utils import Stub, environ, handle_request
+from utils import Stub, environ, handle_request, SourceStub
 
 class TestWebPlaylist(unittest.TestCase):
 
     def setUp(self):
         self.rb = Mock()
         controller.rb_handler['rb'] = self.rb
-        self.playlist = Stub()
+        self.playlist = SourceStub()
         self.response = Mock()
         self.app = Server()
 
@@ -22,7 +22,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
-        expected = json.loads('{"playlists": [{"entries": [{"title": "title", "album": "album", "last_played": "last_played", "duration": "duration", "artist": "artist", "play_count": "play_count", "rating": "rating", "location": "location", "bitrate": "bitrate", "track_number": "track_number", "id": "id", "genre": "genre", "year": "year"}], "is_playing": "is_playing", "is_group": "is_group", "type": "source_type", "id": "id", "name": "name", "visibility": "visibility"}]}')
+        expected = json.loads('{"playlists": [{"entries": [{"title": "title", "album": "album", "last_played": "last_played", "duration": "duration", "artist": "artist", "play_count": "play_count", "rating": "rating", "location": "location", "bitrate": "bitrate", "track_number": "track_number", "id": "id", "genre": "genre", "year": "year"}], "type": "source_type", "id": "id", "name": "name" }]}')
         returned = json.loads(result)
         self.assertEquals(expected, returned)
         self.rb.get_playlists.assert_called_with()
@@ -34,7 +34,7 @@ class TestWebPlaylist(unittest.TestCase):
         self.response.assert_called_with('200 OK',
                 [('Content-type', 'application/json; charset=UTF-8'),
                     ('Cache-Control: ', 'no-cache; must-revalidate')])
-        expected = json.loads('{ "id" : "id" , "name" : "name" , "type" : "source_type" , "is_group" : "is_group" , "is_playing" : "is_playing" , "visibility" : "visibility" , "entries" : [{"last_played": "last_played", "title": "title", "genre": "genre", "album": "album", "bitrate": "bitrate", "track_number": "track_number", "id": "id", "duration": "duration", "year": "year", "play_count": "play_count", "location": "location", "artist": "artist", "rating": "rating"}]}')
+        expected = json.loads('{ "id" : "id" , "name" : "name" , "type" : "source_type", "entries" : [{"last_played": "last_played", "title": "title", "genre": "genre", "album": "album", "bitrate": "bitrate", "track_number": "track_number", "id": "id", "duration": "duration", "year": "year", "play_count": "play_count", "location": "location", "artist": "artist", "rating": "rating"}]}')
         returned = json.loads(result)
         self.assertEquals(expected, returned)
         self.rb.get_playlists.assert_called_with()

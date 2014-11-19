@@ -40,6 +40,17 @@ class EntryStub(object):
         return 'EntryStub key: "{}"'.format(self.key)
 
 
+class SourceStub(Stub):
+
+    supported_keys = {'id', 'name', 'visibility', 'is_group', 'is_playing', 'type', 'entries'}
+
+    def __init__(self, **kwargs):
+        unsupported_keys = kwargs.keys() - self.supported_keys
+        if unsupported_keys:
+            raise ValueError('Keys %s are not supported', unsupported_keys)
+        super(SourceStub, self).__init__(**kwargs)
+
+
 class ModelStub(object):
 
     def __init__(self, *rows):

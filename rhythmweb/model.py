@@ -23,9 +23,6 @@ def get_playlist(playlist):
     plst = {}
     plst['id'] = playlist.id
     plst['name'] = playlist.name
-    plst['visibility'] = playlist.visibility
-    plst['is_group'] = playlist.is_group
-    plst['is_playing'] = playlist.is_playing
     plst['type'] = playlist.source_type
     if playlist.entries:
         plst['entries'] = [get_song(entry) for entry in playlist.entries]

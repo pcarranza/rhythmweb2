@@ -2,7 +2,7 @@ import unittest
 
 from mock import Mock
 from rhythmweb.rb import RBHandler
-from utils import ModelStub, EntryStub
+from utils import ModelStub, EntryStub, SourceStub
 
 class TestRBSource(unittest.TestCase):
 
@@ -20,7 +20,7 @@ class TestRBSource(unittest.TestCase):
 
     def test_get_source_entries(self):
         rb = RBHandler(self.shell)
-        source = Mock()
+        source = SourceStub()
         source.query_model =  ModelStub(EntryStub(1), EntryStub(2), EntryStub(3))
         rb.load_source_entries(source)
         entries = source.entries
@@ -30,7 +30,7 @@ class TestRBSource(unittest.TestCase):
     def test_play_source(self):
         self.player.get_playing.return_value = (None, True)
         rb = RBHandler(self.shell)
-        source = Mock()
+        source = SourceStub()
         self.assertTrue(rb.play_source(source))
         self.shell.props.shell_player.set_playing_source.assert_called_with(source.source)
 
