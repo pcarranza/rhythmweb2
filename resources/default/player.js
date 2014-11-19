@@ -262,7 +262,6 @@ function update_status() {
 			var album = '';
 			var title = '';
 			var time = 0;
-			var total_time = 0;
 			
 			if (json && json.playing_entry) {
 				entry = json.playing_entry;
@@ -284,14 +283,15 @@ function update_status() {
 			var countdown = function() {
 				
 				var duration = entry.duration;
-				var total_time = human_time(duration)
 				var actual_time = json.playing_time;
 				
 				var timer_function = function () {
 					actual_time++;
 					
-					atime = human_time(actual_time);
-					str_time = atime + ' <i> of </i> ' + total_time;
+					str_time = human_time(actual_time);
+                    if (duration) {
+                        str_time += ' <i> of </i> ' + human_time(duration);
+                    }
 					$('#time').html(str_time);
 					
 					if (duration == 0 || actual_time < duration)
