@@ -2,7 +2,8 @@ import unittest
 
 from mock import Mock
 from rhythmweb.rb import RBHandler
-from utils import ModelStub, EntryStub, SourceStub
+from rhythmweb.model import get_playlist
+from utils import ModelStub, EntryStub, SourceStub, PlaylistStub
 
 class TestRBSource(unittest.TestCase):
 
@@ -35,7 +36,14 @@ class TestRBSource(unittest.TestCase):
         self.shell.props.shell_player.set_playing_source.assert_called_with(source.source)
 
     def test_get_playlists(self):
-        self.shell.props.playlist_manager.get_playlists.return_value = [Mock()]
+        self.shell.props.playlist_manager.get_playlists.return_value = [PlaylistStub('my_source', entries=[EntryStub(1)])]
         rb = RBHandler(self.shell)
         playlists = rb.get_playlists()
         self.assertEquals(len(playlists), 1)
+
+    def test_get_playlists_without_entries_works(self):
+        self.shell.props.playlist_manager.get_playlists.return_value = [PlaylistStub('my_source')]
+        rb = RBHandler(self.shell)
+        playlists = rb.get_playlists()
+        playlist = get_playlist(playlists[0])
+        self.assertEquals(playlist['entries'], [])

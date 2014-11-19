@@ -64,6 +64,13 @@ class SourceStub(Stub):
         if not name in self.supported_keys:
             raise AttributeError('{} object as no attribute {}'.format(self, name))
 
+
+class PlaylistStub(object):
+
+    def __init__(self, name, entries=[]):
+        self.props = Stub(name=name, query_model=entries)
+
+
 class ModelStub(object):
 
     def __init__(self, *rows):
