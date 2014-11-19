@@ -23,17 +23,29 @@ class Stub(object):
 
 class EntryStub(object):
 
+    supported_keys = {'id', 'artist', 'album', 'rating',
+                      'track_number', 'title', 'duration',
+                      'year', 'genre', 'play_count', 'bitrate',
+                      'last_played', 'location'}
+
     def __init__(self, key, **kwargs):
         self.key = key
         self.args = kwargs
 
+    def assert_supported(self, name):
+        if not name in self.supported_keys:
+            raise AttributeError('{} object as no attribute {}'.format(self, name))
+
     def get_ulong(self, name):
+        self.assert_supported(name)
         return self.args.get(name, self.key)
 
     def get_string(self, name):
+        self.assert_supported(name)
         return self.args.get(name, name)
 
     def get_double(self, name):
+        self.assert_supported(name)
         return self.args.get(name, 1.0)
 
     def __str__(self):
