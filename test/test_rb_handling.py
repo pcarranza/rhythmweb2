@@ -2,7 +2,7 @@ import unittest
 
 from contextlib import contextmanager
 from mock import Mock
-from rbhandle import RBHandler, ORDER_SHUFFLE, ORDER_LINEAR
+from rhythmweb.rb import RBHandler, ORDER_SHUFFLE, ORDER_LINEAR
 
 
 class RBBasicHandlerTest(unittest.TestCase):

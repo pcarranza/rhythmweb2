@@ -2,7 +2,7 @@
 from collections import defaultdict
 
 from rhythmweb.model import get_song, get_playlist
-from rbhandle import RBHandler, RBEntry
+from rhythmweb.rb import RBHandler, RBEntry
 
 import logging
 log = logging.getLogger(__name__)

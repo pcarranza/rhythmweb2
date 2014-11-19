@@ -1,7 +1,7 @@
 import unittest
 
 from mock import Mock, MagicMock, patch, call
-from rbhandle import RBHandler, InvalidQueryException
+from rhythmweb.rb import RBHandler, InvalidQueryException
 
 from utils import EntryStub, ModelStub, Stub
 

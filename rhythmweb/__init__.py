@@ -1,6 +1,6 @@
 from gi.repository import GObject, Peas
-from rbhandle import RBHandler
 
+from rhythmweb.rb import RBHandler
 from rhythmweb import view, controller
 from rhythmweb.server import Server
 

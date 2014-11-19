@@ -4,7 +4,7 @@ import json
 from mock import Mock
 from rhythmweb import view, controller
 from rhythmweb.server import Server
-from rbhandle import InvalidQueryException
+from rhythmweb.rb import InvalidQueryException
 from utils import Stub, environ, handle_request
 
 from utils import Stub

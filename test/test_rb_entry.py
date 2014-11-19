@@ -1,7 +1,7 @@
 import unittest
 
 from mock import Mock, patch
-from rbhandle import RBHandler
+from rhythmweb.rb import RBHandler
 
 from utils import EntryStub, ModelStub, Stub
 

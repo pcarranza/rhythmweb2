@@ -1,7 +1,7 @@
 import unittest
 
 from mock import Mock
-from rbhandle import RBHandler
+from rhythmweb.rb import RBHandler
 from utils import ModelStub, EntryStub
 
 class TestRBSource(unittest.TestCase):
