@@ -91,16 +91,14 @@ class Server(object):
                 if content:
                     return response.reply_with_file(path, content)
                 content = app.route(path)
-                if content is None:
-                    return response.reply_with_not_found()
-                return response.reply_with_json(content)
 
             if method == 'POST':
                 post = self.parse_post_parameters(environ)
                 content = app.route(path, **post)
-                if content is None:
-                    return response.reply_with_not_found()
-                return response.reply_with_json(content)
+
+            if content is None:
+                return response.reply_with_not_found()
+            return response.reply_with_json(content)
 
         except ValueError as e:
             return response.reply_with_client_error(e)
