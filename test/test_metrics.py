@@ -21,4 +21,10 @@ class MetricsBasicTest(unittest.TestCase):
 
 
 class MetricsSetupTest(unittest.TestCase):
-    pass
+
+    def test_record_writes_to_endpoint(self):
+        my_metrics = metrics.Metrics()
+        my_metrics.sock = Mock()
+        my_metrics.enabled = True
+        my_metrics.record('mymetric', 1)
+        self.assertTrue(my_metrics.sock.sendall.called)
