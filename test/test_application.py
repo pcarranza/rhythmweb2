@@ -19,7 +19,7 @@ class TestServer(unittest.TestCase):
         self.response = Mock()
         conf = Configuration()
         conf.parser.set('server', 'port', '7003')
-        self.conf_patch = patch('rhythmweb.server.Configuration')
+        self.conf_patch = patch('rhythmweb.server.Configuration.get_instance')
         conf_mock = self.conf_patch.start()
         conf_mock.return_value = conf
 

@@ -6,6 +6,12 @@ import logging.handlers
 
 class Configuration(object):
 
+    @classmethod
+    def get_instance(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = Configuration()
+        return cls.instance
+
     def __init__(self):
         self.parser = SafeConfigParser(defaults={
             'theme' : 'default',
@@ -16,10 +22,12 @@ class Configuration(object):
             'log.level' : 'INFO',
             'log.format' : '%(levelname)s	%(asctime)s	%(name)s: %(message)s',
             'debug' : 'False',
+            'metrics.enabled' : 'False',
+            'metrics.server' : '127.0.0.1',
+            'metrics.port' : '2003'
             })
         self.parser.add_section('server')
         self.parser.read(path.expanduser('~/.rhythmweb'))
-        self.configure_logger()
 
     def get_string(self, key):
         return self.parser.get('server', key, raw=True)
@@ -29,6 +37,7 @@ class Configuration(object):
 
     def get_boolean(self, key):
         return self.parser.getboolean('server', key)
+
 
     def configure_logger(self):
         root = logging.getLogger()

@@ -38,12 +38,13 @@ CONTENT_TYPES = {
 class Server(object):
 
     def __init__(self):
-        self.config = Configuration()
         self.cgi_server = None
         self.is_running = False
         self._watch_id = None
 
     def start(self):
+        self.config = Configuration.get_instance()
+        self.config.configure_logger()
         log.info('   STARTING SERVER')
         hostname = self.config.get_string('hostname')
         port = self.config.get_int('port')
