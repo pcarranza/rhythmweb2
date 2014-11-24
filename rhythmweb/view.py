@@ -2,6 +2,7 @@
 from rhythmweb.app import route
 from rhythmweb.controller import Player, Song, Queue, Query, Source, query_library
 from rhythmweb.utils import to_int, to_float
+from rhythmweb import metrics
 
 import logging
 log = logging.getLogger(__name__)
@@ -15,12 +16,14 @@ MEDIA_TYPES = {'song' : 'song',
 
 SEARCH_TYPES = {'artists', 'genres', 'albums'}
 
+@metrics.time('view.status')
 @route('/rest/status')
 def status():
     log.debug('Returning status')
     return Player().status()
 
 
+@metrics.time('view.song')
 @route('/rest/song/<song:int>')
 def song(song_id, **kwargs):
     handler = Song()
@@ -34,6 +37,7 @@ def song(song_id, **kwargs):
     return song
 
 
+@metrics.time('view.queue')
 @route('/rest/queue')
 def queue():
     handler = Queue()
@@ -84,6 +88,7 @@ def validate_query(query):
         query['type'] = MEDIA_TYPES[query['type']] if query['type'] in MEDIA_TYPES else None
 
 
+@metrics.time('view.player')
 @route('/rest/player')
 def play(**kwargs):
     if not kwargs:
@@ -129,6 +134,7 @@ def parse_player_args(player_arguments):
     return kwargs
 
 
+@metrics.time('view.library')
 @route('/rest/library/<search_for>')
 def library(search_for):
     if search_for not in SEARCH_TYPES:
@@ -136,6 +142,7 @@ def library(search_for):
     return query_library(search_for)
 
     
+@metrics.time('view.playlists')
 @route('/rest/playlists/<id?:int>')
 def playlists(playlist_id, **kwargs):
     source = Source()
