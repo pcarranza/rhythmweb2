@@ -9,6 +9,7 @@ from wsgiref.simple_server import make_server
 
 from rhythmweb.app import app
 from rhythmweb.conf import Configuration
+from rhythmweb import metrics
 
 import logging
 log = logging.getLogger(__name__)
@@ -77,6 +78,7 @@ class Server(object):
         self.cgi_server.handle_request()
         return True
 
+    @metrics.time('server.handle_request')
     def handle_request(self, environ, response):
         method = environ.get('REQUEST_METHOD', 'GET')
         path = environ.get('PATH_INFO', '/')
