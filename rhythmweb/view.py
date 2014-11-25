@@ -16,15 +16,15 @@ MEDIA_TYPES = {'song' : 'song',
 
 SEARCH_TYPES = {'artists', 'genres', 'albums'}
 
-@metrics.time('view.status')
 @route('/rest/status')
+@metrics.time('view.status')
 def status():
     log.debug('Returning status')
     return Player().status()
 
 
-@metrics.time('view.song')
 @route('/rest/song/<song:int>')
+@metrics.time('view.song')
 def song(song_id, **kwargs):
     handler = Song()
     song = handler.find_by_id(song_id)
@@ -37,8 +37,8 @@ def song(song_id, **kwargs):
     return song
 
 
-@metrics.time('view.queue')
 @route('/rest/queue')
+@metrics.time('view.queue')
 def queue():
     handler = Queue()
     log.debug('Returning queue')
@@ -46,6 +46,7 @@ def queue():
 
 
 @route('/rest/search/<media_type?>/<first_constraint?>/<first_value?>/<second_constraint?>/<second_value?>')
+@metrics.time('view.search')
 def search(*args, **kwargs):
     try:
         query = parse_search_args(args)
@@ -88,8 +89,8 @@ def validate_query(query):
         query['type'] = MEDIA_TYPES[query['type']] if query['type'] in MEDIA_TYPES else None
 
 
-@metrics.time('view.player')
 @route('/rest/player')
+@metrics.time('view.player')
 def play(**kwargs):
     if not kwargs:
         raise TypeError
@@ -134,16 +135,16 @@ def parse_player_args(player_arguments):
     return kwargs
 
 
-@metrics.time('view.library')
 @route('/rest/library/<search_for>')
+@metrics.time('view.library')
 def library(search_for):
     if search_for not in SEARCH_TYPES:
         raise ValueError('Invalid library filter "{}"'.format(search_for))
     return query_library(search_for)
 
     
-@metrics.time('view.playlists')
 @route('/rest/playlists/<id?:int>')
+@metrics.time('view.playlists')
 def playlists(playlist_id, **kwargs):
     source = Source()
     if kwargs: # POST

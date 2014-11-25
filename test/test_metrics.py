@@ -39,8 +39,8 @@ class MetricsSetupTest(unittest.TestCase):
             my_metrics.record('mymetric', 1)
             sock.socket.assert_called_with()
             my_sock.connect.assert_called_with(('127.0.0.1', 2003))
-            call_args = my_sock.sendall.call_args_list[0][0][0]
-            self.assertEquals('rhythmweb.mymetric', call_args[0].split()[0])
+            call_args = my_sock.sendall.call_args_list[0][0]
+            self.assertEquals('rhythmweb.mymetric', call_args[0].decode('utf8').split()[0])
 
     def test_when_enabled_and_socket_fails_exception_is_logger(self):
         with patch('rhythmweb.metrics.socket') as sock, patch('rhythmweb.metrics.log') as log:

@@ -5,10 +5,9 @@ from socket import error as SocketError
 
 from time import time as timestamp
 from rhythmweb.conf import Configuration
-from contextlib import contextmanager
+from functools import wraps
 
 log = logging.getLogger(__name__)
-
 
 class Metrics(object):
 
@@ -21,11 +20,14 @@ class Metrics(object):
 
     def record(self, name, value):
         if not self.enabled:
+            log.debug('Ignoring metric %s, metrics are disabled', name)
             return
         if self.connect():
             try:
-                self.sock.sendall(['rhythmweb.{} {} {}'.format(
-                    name, value, int(timestamp()))])
+                message = 'rhythmweb.{} {} {}\n'.format(
+                    name, value, int(timestamp()))
+                log.debug('logging metric %s', message)
+                self.sock.sendall(message.encode('utf8'))
             except SocketError as e:
                 log.exception('Could not send metrics %s: %s', name, e)
 
