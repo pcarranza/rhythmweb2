@@ -42,7 +42,7 @@ class MetricsSetupTest(unittest.TestCase):
             call_args = my_sock.sendall.call_args_list[0][0]
             self.assertEquals('rhythmweb.mymetric', call_args[0].decode('utf8').split()[0])
 
-    def test_when_enabled_and_socket_fails_exception_is_logger(self):
+    def test_when_enabled_and_socket_fails_connection_exception_is_logged(self):
         with patch('rhythmweb.metrics.socket') as sock, patch('rhythmweb.metrics.log') as log:
             e = socket.error('Just because')
             sock.socket.side_effect = e
@@ -50,3 +50,13 @@ class MetricsSetupTest(unittest.TestCase):
             my_metrics.enabled = True
             my_metrics.record('mymetric', 1)
             log.exception.assert_called_with('Could not open metrics socket %s', e)
+
+    def test_when_enabled_and_socket_fails_sending_exception_is_logged(self):
+        with patch('rhythmweb.metrics.log') as log:
+            e = socket.error('Just because')
+            my_metrics = metrics.Metrics()
+            my_metrics.sock = Mock()
+            my_metrics.sock.sendall.side_effect = e
+            my_metrics.enabled = True
+            my_metrics.record('mymetric', 1)
+            log.exception.assert_called_with('Could not send metrics %s: %s', 'mymetric', e)
