@@ -25,7 +25,7 @@ class Metrics(object):
         if self.connect():
             try:
                 message = 'rhythmweb.{} {} {}\n'.format(
-                    name, value, int(timestamp()))
+                    name, value, timestamp())
                 log.debug('logging metric %s', message)
                 self.sock.sendall(message.encode('utf8'))
             except SocketError as e:
@@ -50,7 +50,7 @@ def time(metric):
             start = timestamp()
             value = function(*args, **kwargs)
             end = timestamp()
-            metrics.record(metric, int((end - start) * 1000))
+            metrics.record(metric, end - start))
             return value
         return wrap
     return decorator
