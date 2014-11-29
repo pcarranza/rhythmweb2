@@ -50,7 +50,7 @@ def time(metric):
             start = timestamp()
             value = function(*args, **kwargs)
             end = timestamp()
-            metrics.record(metric, end - start))
+            metrics.record(metric, end - start)
             return value
         return wrap
     return decorator

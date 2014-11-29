@@ -18,7 +18,7 @@ class MetricsBasicTest(unittest.TestCase):
             self.assertEquals('returning fake', return_value)
             metric, timed = metrics_mock.record.call_args[0]
             self.assertEquals(metric, 'my_metric')
-            self.assertTrue(1 < timed)
+            self.assertTrue(0.1 < timed)
 
 
 class MetricsSetupTest(unittest.TestCase):
