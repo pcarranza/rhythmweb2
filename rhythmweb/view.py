@@ -81,7 +81,7 @@ def validate_query(query):
         rating = query['rating']
         query['rating'] = rating if rating.isdigit() else len(rating)
     if 'type' in query:
-        query['type'] = query['type'] if query['type'] in MEDIA_TYPES else None
+        query['type'] = MEDIA_TYPES[query['type']] if query['type'] in MEDIA_TYPES else None
 
 
 @route('/rest/player')
