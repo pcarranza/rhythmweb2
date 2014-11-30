@@ -1,16 +1,15 @@
 import unittest
 
 from mock import Mock
-from rhythmweb import view, controller
+from rhythmweb import view, controller, rb
 from rhythmweb.server import Server
 from utils import Stub, environ, handle_request
 
 class TestWebPlayer(unittest.TestCase):
 
     def setUp(self):
-        self.rb = Mock()
+        self.rb = Mock(rb.RBHandler)
         controller.rb_handler['rb'] = self.rb
-        self.rb.load_entry.return_value = Stub()
         self.response = Mock()
         self.app = Server()
 

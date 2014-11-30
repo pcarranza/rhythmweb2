@@ -2,14 +2,14 @@ import unittest
 import json
 
 from mock import Mock
-from rhythmweb import view, controller
+from rhythmweb import view, controller, rb
 from rhythmweb.server import Server
 from utils import Stub, environ, handle_request
 
 class TestWebSong(unittest.TestCase):
 
     def setUp(self):
-        self.rb = Mock()
+        self.rb = Mock(spec=rb.RBHandler)
         controller.rb_handler['rb'] = self.rb
         self.response = Mock()
         self.app = Server()

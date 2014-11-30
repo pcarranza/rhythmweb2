@@ -80,7 +80,7 @@ class RBHandler(object):
             self.entry_types[entry_type] = rb_type
         self.entry_types['radio'] = self.entry_types[TYPE_RADIO]
 
-        self.library = Library()
+        self._library = Library()
         self.db.connect('entry_added', self.library.entry_added)
         log.debug('rb handler loaded')
 
@@ -346,6 +346,9 @@ class RBHandler(object):
         for entry in read_model(source.query_model):
             self.enqueue(entry)
 
+    @property
+    def library(self):
+        return self._library
 
 def read_model(model, first=0, limit=0):
     if model is None:
