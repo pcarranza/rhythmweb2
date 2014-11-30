@@ -114,11 +114,19 @@ class RBHandler(object):
 
     def get_playing_time(self):
         log.debug('get playing time')
-        return self.player.get_playing_time()[1]
+        try:
+            return self.player.get_playing_time()[1]
+        except:
+            log.exception("Playing time was not available")
+            return 0
 
     def get_playing_time_string(self):
         log.debug('get playing time string')
-        return self.player.get_playing_time_string()
+        try:
+            return self.player.get_playing_time_string()
+        except:
+            log.exception("Playing time string was not available")
+            return 0
 
     def play_next(self):
         log.debug('skip to next')
