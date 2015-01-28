@@ -53,7 +53,6 @@ class RBHandler(object):
         self.shell = shell
         self.player = shell.props.shell_player
         self.db = shell.props.db
-        self.queue_source = self.shell.props.queue_source
 
         LINEAR_LOOP = "%s%s" % (ORDER_LINEAR, PLAY_LOOP)
         SHUFFLE_LOOP = "%s%s" % (ORDER_SHUFFLE, PLAY_LOOP)
@@ -187,47 +186,6 @@ class RBHandler(object):
         log.debug('set play order: {}'.format(play_order))
         self.player.props.play_order = play_order
 
-    # QUEUE
-    def get_play_queue(self, queue_limit=100):
-        log.debug('get play queue, limit: {}'.format(queue_limit))
-        return [entry for entry in read_model(self.get_play_queue_model(), limit=queue_limit)]
-
-    def get_play_queue_model(self):
-        log.debug('get play queue model')
-        return self.queue_source.props.query_model
-
-    def clear_play_queue(self):
-        log.debug("Cleaning playing queue")
-        for entry in read_model(self.get_play_queue_model()):
-            self.dequeue(entry)
-        log.debug("Playing queue cleared")
-
-    def shuffle_queue(self):
-        entries = self.get_play_queue()
-        if entries:
-            random.shuffle(entries)
-            queue = self.queue_source
-            for i in range(0, len(entries)):
-                entry = self.db.entry_lookup_by_id(entries[i].id)
-                queue.move_entry(entry, i)
-
-    def enqueue(self, entry_ids):
-        log.debug("Enqueuing {}".format(entry_ids))
-        for entry_id in to_list(entry_ids):
-            entry = self.db.entry_lookup_by_id(int(entry_id))
-            if entry is None:
-                continue
-            self.queue_source.add_entry(entry, -1)
-        self.queue_source.queue_draw()
-
-    def dequeue(self, entry_ids):
-        log.debug("Dequeuing {}".format(entry_ids))
-        for entry_id in to_list(entry_ids):
-            entry = self.db.entry_lookup_by_id(int(entry_id))
-            if entry is None:
-                continue
-            self.queue_source.remove_entry(entry)
-        self.queue_source.queue_draw()
 
     # ENTRY
     def get_entry(self, entry_id):
@@ -358,17 +316,54 @@ class RBHandler(object):
     def library(self):
         return self._library
 
-def read_model(model, first=0, limit=0):
-    if model is None:
-        raise ValueError('A model to read is required')
-    total = 0
-    for (index, row) in enumerate(model):
-        if index < first:
-            continue
-        yield RBEntry(row[0])
-        total += 1
-        if limit and total >= limit:
-            break
+
+class Queue(object):
+
+    def __init__(self, shell):
+        self.queue_source = shell.props.queue_source
+        self.db = shell.props.db
+
+    # QUEUE
+    def get_play_queue(self, queue_limit=100):
+        log.debug('get play queue, limit: {}'.format(queue_limit))
+        return [entry for entry in read_model(self.get_play_queue_model(), limit=queue_limit)]
+
+    def get_play_queue_model(self):
+        log.debug('get play queue model')
+        return self.queue_source.props.query_model
+
+    def clear_play_queue(self):
+        log.debug("Cleaning playing queue")
+        for entry in read_model(self.get_play_queue_model()):
+            self.dequeue(entry)
+        log.debug("Playing queue cleared")
+
+    def shuffle_queue(self):
+        entries = self.get_play_queue()
+        if entries:
+            random.shuffle(entries)
+            queue = self.queue_source
+            for i in range(0, len(entries)):
+                entry = self.db.entry_lookup_by_id(entries[i].id)
+                queue.move_entry(entry, i)
+
+    def enqueue(self, entry_ids):
+        log.debug("Enqueuing {}".format(entry_ids))
+        for entry_id in to_list(entry_ids):
+            entry = self.db.entry_lookup_by_id(int(entry_id))
+            if entry is None:
+                continue
+            self.queue_source.add_entry(entry, -1)
+        self.queue_source.queue_draw()
+
+    def dequeue(self, entry_ids):
+        log.debug("Dequeuing {}".format(entry_ids))
+        for entry_id in to_list(entry_ids):
+            entry = self.db.entry_lookup_by_id(int(entry_id))
+            if entry is None:
+                continue
+            self.queue_source.remove_entry(entry)
+        self.queue_source.queue_draw()
 
 
 class Library(object):
@@ -525,3 +520,17 @@ class RBSource(object):
 
     def __int__(self):
         return self.id
+
+
+def read_model(model, first=0, limit=0):
+    if model is None:
+        raise ValueError('A model to read is required')
+    total = 0
+    for (index, row) in enumerate(model):
+        if index < first:
+            continue
+        yield RBEntry(row[0])
+        total += 1
+        if limit and total >= limit:
+            break
+

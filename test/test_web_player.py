@@ -1,6 +1,6 @@
 import unittest
 
-from mock import Mock
+from mock import Mock, patch
 from rhythmweb import view, controller, rb
 from rhythmweb.server import Server
 from utils import Stub, environ, handle_request
@@ -12,6 +12,14 @@ class TestWebPlayer(unittest.TestCase):
         controller.rb_handler['rb'] = self.rb
         self.response = Mock()
         self.app = Server()
+
+        self.queue_patch = patch('rhythmweb.controller.rb.Queue', spec=rb.Queue)
+        self.queue_class = self.queue_patch.start()
+        self.queue = Mock(spec=rb.Queue)
+        self.queue_class.return_value = self.queue
+
+    def tearDown(self):
+        self.queue_patch.stop()
 
     def test_do_get_errs(self):
         result = handle_request(self.app, environ('/rest/player'), self.response)
@@ -64,42 +72,42 @@ class TestWebPlayer(unittest.TestCase):
         result = handle_request(self.app, 
                 environ('/rest/player', post_data='action=enqueue&entry_id=1'),
                 self.response)
-        self.rb.enqueue.assert_called_with([1])
+        self.queue.enqueue.assert_called_with([1])
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_enqueue_with_many_values_works(self):
         result = handle_request(self.app, 
                 environ('/rest/player', post_data='action=enqueue&entry_id=1,2'),
                 self.response)
-        self.rb.enqueue.assert_called_with([1, 2])
+        self.queue.enqueue.assert_called_with([1, 2])
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_dequeue_with_one_value_works(self):
         result = handle_request(self.app, 
                 environ('/rest/player', post_data='action=dequeue&entry_id=1'),
                 self.response)
-        self.rb.dequeue.assert_called_with([1])
+        self.queue.dequeue.assert_called_with([1])
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_dequeue_with_many_values_works(self):
         result = handle_request(self.app, 
                 environ('/rest/player', post_data='action=dequeue&entry_id=1,2'),
                 self.response)
-        self.rb.dequeue.assert_called_with([1, 2])
+        self.queue.dequeue.assert_called_with([1, 2])
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_shuffle_queue_works(self):
         result = handle_request(self.app, 
                 environ('/rest/player', post_data='action=shuffle_queue'),
                 self.response)
-        self.rb.shuffle_queue.assert_called_with()
+        self.queue.shuffle_queue.assert_called_with()
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_clear_queue_works(self):
         result = handle_request(self.app, 
                 environ('/rest/player', post_data='action=clear_queue'),
                 self.response)
-        self.rb.clear_play_queue.assert_called_with()
+        self.queue.clear_play_queue.assert_called_with()
         self.rb.get_playing_status.assert_called_with()
 
     def test_post_play_entry_works(self):

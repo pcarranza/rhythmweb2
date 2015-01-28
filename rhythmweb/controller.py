@@ -3,6 +3,7 @@ from collections import defaultdict
 
 from rhythmweb.model import get_song, get_playlist
 from rhythmweb.rb import RBHandler, RBEntry
+from rhythmweb import rb
 
 import logging
 log = logging.getLogger(__name__)
@@ -11,8 +12,12 @@ rb_handler = {}
 
 def set_shell(shell):
     rb_handler['rb'] = RBHandler(shell)
+    rb_handler['shell'] = shell
 
 def get_handler():
+    return rb_handler.get('rb', None)
+
+def get_shell():
     return rb_handler.get('rb', None)
 
 class Song(object):
@@ -41,25 +46,26 @@ class Queue(object):
 
     def __init__(self):
         self.rb = get_handler()
+        self.queue = rb.Queue(get_shell())
 
     def get_queue(self):
-        entries = self.rb.get_play_queue()
+        entries = self.queue.get_play_queue()
         queue = defaultdict(lambda:[])
         for entry in entries:
             queue['entries'].append(get_song(entry))
         return queue
 
     def enqueue(self, entry_id):
-        self.rb.enqueue(as_list(entry_id))
+        self.queue.enqueue(as_list(entry_id))
 
     def dequeue(self, entry_id):
-        self.rb.dequeue(as_list(entry_id))
+        self.queue.dequeue(as_list(entry_id))
 
     def shuffle_queue(self):
-        self.rb.shuffle_queue()
+        self.queue.shuffle_queue()
 
     def clear_queue(self):
-        self.rb.clear_play_queue()
+        self.queue.clear_play_queue()
 
 
 class Player(object):
