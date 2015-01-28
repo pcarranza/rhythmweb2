@@ -18,7 +18,7 @@ def get_handler():
     return rb_handler.get('rb', None)
 
 def get_shell():
-    return rb_handler.get('rb', None)
+    return rb_handler.get('shell', None)
 
 class Song(object):
 

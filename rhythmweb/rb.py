@@ -54,6 +54,7 @@ class RBHandler(object):
         self.player = shell.props.shell_player
         self.db = shell.props.db
 
+
         LINEAR_LOOP = "%s%s" % (ORDER_LINEAR, PLAY_LOOP)
         SHUFFLE_LOOP = "%s%s" % (ORDER_SHUFFLE, PLAY_LOOP)
 
@@ -342,10 +343,9 @@ class Queue(object):
         entries = self.get_play_queue()
         if entries:
             random.shuffle(entries)
-            queue = self.queue_source
             for i in range(0, len(entries)):
                 entry = self.db.entry_lookup_by_id(entries[i].id)
-                queue.move_entry(entry, i)
+                self.queue_source.move_entry(entry, i)
 
     def enqueue(self, entry_ids):
         log.debug("Enqueuing {}".format(entry_ids))
